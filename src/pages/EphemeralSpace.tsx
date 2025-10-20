@@ -103,21 +103,20 @@ const EphemeralSpace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="absolute top-8 left-8">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="text-white hover:bg-white/10"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
       </div>
 
-      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+      <Card className="w-full max-w-md backdrop-blur-xl bg-card/50 border-primary/20 shadow-glow-primary">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-white">
+          <CardTitle className="text-2xl">
             Create or Join an Ephemeral Room
           </CardTitle>
         </CardHeader>
@@ -125,13 +124,13 @@ const EphemeralSpace = () => {
           <Button
             onClick={createNewRoom}
             disabled={loading}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            className="w-full shadow-glow-primary"
             size="lg"
           >
             {loading ? "Creating..." : "Create New Room"}
           </Button>
 
-          <div className="text-center text-slate-400 text-sm">
+          <div className="text-center text-muted-foreground text-sm">
             OR JOIN AN EPHEMERAL ROOM
           </div>
 
@@ -142,12 +141,11 @@ const EphemeralSpace = () => {
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && joinRoom()}
-              className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500"
+              className="bg-background/50 border-primary/30 focus:border-primary"
             />
             <Button
               onClick={joinRoom}
               disabled={loading || !roomCode.trim()}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               Join
             </Button>
