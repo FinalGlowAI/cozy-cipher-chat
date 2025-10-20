@@ -7,6 +7,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Crown, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -14,12 +17,32 @@ interface UpgradeModalProps {
 }
 
 export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
+  const [loading, setLoading] = useState(false);
+  
   const features = [
     "Unlimited encryption & decryption",
     "Access to ephemeral chat rooms",
-    "Priority support",
-    "Ad-free experience",
+    "Access to image encryption",
+    "Premium support",
   ];
+
+  const handleUpgrade = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.functions.invoke('create-checkout');
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      toast.error('Failed to start checkout process');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,8 +77,12 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
           <div className="text-sm text-muted-foreground">per month</div>
         </div>
 
-        <Button className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
-          Upgrade Now
+        <Button 
+          className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+          onClick={handleUpgrade}
+          disabled={loading}
+        >
+          {loading ? "Loading..." : "Upgrade Now"}
         </Button>
         <Button variant="ghost" className="w-full" onClick={() => onOpenChange(false)}>
           Maybe Later

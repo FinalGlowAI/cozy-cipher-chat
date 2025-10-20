@@ -7,12 +7,14 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 import { Shield, Lock, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const Index = () => {
   const [actionsRemaining, setActionsRemaining] = useState(3);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
+  const { isPremium, loading: subscriptionLoading, refreshSubscription } = useSubscription();
 
   useEffect(() => {
     // Check authentication
@@ -27,6 +29,8 @@ const Index = () => {
       setSession(session);
       if (!session) {
         navigate("/auth");
+      } else {
+        refreshSubscription();
       }
     });
 
@@ -47,11 +51,24 @@ const Index = () => {
   }, [navigate]);
 
   const handleActionPerformed = () => {
+    if (isPremium) {
+      // Premium users have unlimited actions
+      return;
+    }
+    
     const newCount = actionsRemaining - 1;
     setActionsRemaining(newCount);
     localStorage.setItem("ocx_actions", newCount.toString());
     
     if (newCount === 0) {
+      setShowUpgradeModal(true);
+    }
+  };
+
+  const handlePremiumFeatureClick = (path: string) => {
+    if (isPremium) {
+      navigate(path);
+    } else {
       setShowUpgradeModal(true);
     }
   };
@@ -99,16 +116,18 @@ const Index = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate("/ephemeral")}
+                    onClick={() => handlePremiumFeatureClick("/ephemeral")}
+                    className={isPremium ? "" : "opacity-75"}
                   >
-                    Ephemeral Space
+                    Ephemeral Space {!isPremium && "🔒"}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate("/image-encryption")}
+                    onClick={() => handlePremiumFeatureClick("/image-encryption")}
+                    className={isPremium ? "" : "opacity-75"}
                   >
-                    Image Encryption
+                    Image Encryption {!isPremium && "🔒"}
                   </Button>
                 </div>
                 <Button
@@ -144,7 +163,7 @@ const Index = () => {
 
           <EncryptionPanel
             onActionPerformed={handleActionPerformed}
-            actionsRemaining={actionsRemaining}
+            actionsRemaining={isPremium ? Infinity : actionsRemaining}
           />
         </main>
 

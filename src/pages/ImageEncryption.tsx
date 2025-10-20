@@ -8,9 +8,11 @@ import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock } from "lucid
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const ImageEncryption = () => {
   const navigate = useNavigate();
+  const { isPremium, loading: subscriptionLoading } = useSubscription();
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageCode, setImageCode] = useState("");
@@ -19,6 +21,13 @@ const ImageEncryption = () => {
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
   const [storageStats, setStorageStats] = useState({ count: 0, size: 0 });
+
+  useEffect(() => {
+    if (!subscriptionLoading && !isPremium) {
+      toast.error("This feature is only available for premium users");
+      navigate("/");
+    }
+  }, [isPremium, subscriptionLoading, navigate]);
 
   useEffect(() => {
     // Cleanup expired images on mount

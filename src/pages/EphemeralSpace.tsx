@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { isPremium, loading: subscriptionLoading } = useSubscription();
+
+  useEffect(() => {
+    if (!subscriptionLoading && !isPremium) {
+      toast.error("This feature is only available for premium users");
+      navigate("/");
+    }
+  }, [isPremium, subscriptionLoading, navigate]);
 
   const createNewRoom = async () => {
     setLoading(true);
