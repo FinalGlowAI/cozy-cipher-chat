@@ -24,14 +24,12 @@ const Index = () => {
   }, []);
 
   const handleActionPerformed = () => {
-    if (actionsRemaining <= 1) {
-      setActionsRemaining(0);
-      localStorage.setItem("ocx_actions", "0");
+    const newCount = actionsRemaining - 1;
+    setActionsRemaining(newCount);
+    localStorage.setItem("ocx_actions", newCount.toString());
+    
+    if (newCount === 0) {
       setShowUpgradeModal(true);
-    } else {
-      const newCount = actionsRemaining - 1;
-      setActionsRemaining(newCount);
-      localStorage.setItem("ocx_actions", newCount.toString());
     }
   };
 
