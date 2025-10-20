@@ -14,6 +14,7 @@ import EphemeralSpace from "./pages/EphemeralSpace";
 import EphemeralRoom from "./pages/EphemeralRoom";
 import ImageEncryption from "./pages/ImageEncryption";
 import AdminDashboard from "./pages/AdminDashboard";
+import Install from "./pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/install" element={<Install />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/terms" element={<TermsOfUse />} />
