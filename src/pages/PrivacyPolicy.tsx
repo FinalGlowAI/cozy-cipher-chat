@@ -36,7 +36,7 @@ const PrivacyPolicy = () => {
           </div>
 
           <div className="space-y-6 text-muted-foreground">
-            <p className="text-sm">Last updated: {new Date().toLocaleDateString()}</p>
+            <p className="text-sm">Last updated: {new Date().toLocaleDateString('en-US')}</p>
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">

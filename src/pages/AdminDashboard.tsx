@@ -270,7 +270,7 @@ export default function AdminDashboard() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {new Date(user.created_at).toLocaleDateString()}
+                          {new Date(user.created_at).toLocaleDateString('en-US')}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
