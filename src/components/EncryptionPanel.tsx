@@ -47,6 +47,12 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
           setDecryptionKey("");
         }
       } else {
+        // Check if secure mode is enabled but no key provided
+        if (secureMode && !decryptionKey.trim()) {
+          toast.error("This message requires a decryption key. Please enter the key to decrypt.");
+          return;
+        }
+        
         if (secureMode && decryptionKey) {
           const decrypted = decryptWithKey(inputText, decryptionKey);
           setOutputText(decrypted);
@@ -60,9 +66,11 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
       toast.success(`${mode === "encrypt" ? "Encrypted" : "Decrypted"} successfully!`);
     } catch (error) {
       if (error instanceof Error && error.message === "Decryption key has expired") {
-        toast.error("This decryption key has expired and can no longer decrypt the message.");
+        toast.error("Decryption key has expired and can no longer decrypt this message.");
+      } else if (error instanceof Error && error.message === "Invalid encrypted text or key") {
+        toast.error("This message requires a decryption key. Please enable Secure Mode and enter the key.");
       } else {
-        toast.error("Processing failed. Please check your input.");
+        toast.error("Decryption failed. Please check your input and key.");
       }
     }
   };
