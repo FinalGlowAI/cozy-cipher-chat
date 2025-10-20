@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import EphemeralSpace from "./pages/EphemeralSpace";
 import EphemeralRoom from "./pages/EphemeralRoom";
 import ImageEncryption from "./pages/ImageEncryption";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/ephemeral" element={<EphemeralSpace />} />
           <Route path="/room/:roomCode" element={<EphemeralRoom />} />
           <Route path="/image-encryption" element={<ImageEncryption />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

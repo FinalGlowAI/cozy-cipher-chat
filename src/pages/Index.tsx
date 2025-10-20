@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { Shield, Lock, LogOut } from "lucide-react";
+import { Shield, Lock, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAdmin } from "@/hooks/useAdmin";
 
 const Index = () => {
   const [actionsRemaining, setActionsRemaining] = useState(3);
@@ -15,6 +16,7 @@ const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, refreshSubscription } = useSubscription();
+  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     // Check authentication
@@ -130,6 +132,17 @@ const Index = () => {
                     Image Encryption {!isPremium && "🔒"}
                   </Button>
                 </div>
+                {isAdmin && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigate("/admin")}
+                    className="gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Admin
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
