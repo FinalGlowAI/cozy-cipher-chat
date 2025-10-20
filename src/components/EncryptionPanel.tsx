@@ -26,10 +26,11 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
       return;
     }
 
-    if (actionsRemaining <= 0) {
-      toast.error("No actions remaining. Please upgrade or wait until tomorrow.");
-      return;
-    }
+    // Temporarily disabled for testing
+    // if (actionsRemaining <= 0) {
+    //   toast.error("No actions remaining. Please upgrade or wait until tomorrow.");
+    //   return;
+    // }
 
     try {
       if (mode === "encrypt") {
@@ -51,7 +52,8 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
           setOutputText(decrypted);
         }
       }
-      onActionPerformed();
+      // Temporarily disabled for testing
+      // onActionPerformed();
       toast.success(`${mode === "encrypt" ? "Encrypted" : "Decrypted"} successfully!`);
     } catch (error) {
       toast.error("Processing failed. Please check your input.");
@@ -153,7 +155,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
         <Button
           size="lg"
           onClick={handleProcess}
-          disabled={!inputText.trim() || actionsRemaining <= 0}
+          disabled={!inputText.trim()}
           className="px-8 gap-2 shadow-glow-primary"
         >
           {mode === "encrypt" ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
