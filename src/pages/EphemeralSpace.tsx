@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
-import { NeuralBackground } from "@/components/NeuralBackground";
 
 const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
@@ -114,9 +113,6 @@ const EphemeralSpace = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
-      {/* Neural Background Animation */}
-      <NeuralBackground key="neural-bg" />
-      
       <div className="absolute top-8 left-8 z-10">
         <Button
           variant="ghost"
