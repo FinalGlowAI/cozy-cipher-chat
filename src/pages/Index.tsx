@@ -1,12 +1,107 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from "react";
+import { EncryptionPanel } from "@/components/EncryptionPanel";
+import { UpgradeModal } from "@/components/UpgradeModal";
+import { Shield, Lock } from "lucide-react";
 
 const Index = () => {
+  const [actionsRemaining, setActionsRemaining] = useState(3);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  useEffect(() => {
+    // Load actions from localStorage
+    const saved = localStorage.getItem("ocx_actions");
+    const lastReset = localStorage.getItem("ocx_last_reset");
+    const today = new Date().toDateString();
+
+    if (lastReset !== today) {
+      // Reset daily
+      setActionsRemaining(3);
+      localStorage.setItem("ocx_actions", "3");
+      localStorage.setItem("ocx_last_reset", today);
+    } else if (saved) {
+      setActionsRemaining(parseInt(saved));
+    }
+  }, []);
+
+  const handleActionPerformed = () => {
+    if (actionsRemaining <= 1) {
+      setActionsRemaining(0);
+      localStorage.setItem("ocx_actions", "0");
+      setShowUpgradeModal(true);
+    } else {
+      const newCount = actionsRemaining - 1;
+      setActionsRemaining(newCount);
+      localStorage.setItem("ocx_actions", newCount.toString());
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-gradient-surface opacity-50" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
+
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="border-b border-primary/20 backdrop-blur-xl bg-card/30">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-primary rounded-lg">
+                  <Shield className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    OCX
+                  </h1>
+                  <p className="text-xs text-muted-foreground">Secure Messaging</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                <span>100% Private</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-12">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">
+              Encrypt Your Messages,
+              <br />
+              <span className="bg-gradient-primary bg-clip-text text-transparent">
+                Protect Your Privacy
+              </span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              OCX provides military-grade encryption for your messages. All encryption happens
+              locally on your device—no data is ever stored or transmitted to our servers.
+            </p>
+          </div>
+
+          <EncryptionPanel
+            onActionPerformed={handleActionPerformed}
+            actionsRemaining={actionsRemaining}
+          />
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-primary/20 backdrop-blur-xl bg-card/30 mt-20">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center text-sm text-muted-foreground">
+              <p>© 2024 OCX. Your privacy is our priority.</p>
+              <p className="mt-2">No data stored · Offline capable · Open source</p>
+            </div>
+          </div>
+        </footer>
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 };
