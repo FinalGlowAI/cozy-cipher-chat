@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
 import { useSubscription } from "@/hooks/useSubscription";
+import { NeuralBackground } from "@/components/NeuralBackground";
 
 const ImageEncryption = () => {
   const navigate = useNavigate();
@@ -129,6 +130,7 @@ const ImageEncryption = () => {
 
   return (
     <div className="min-h-screen relative">
+      <NeuralBackground key="neural-bg" />
       <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
         <Button
           variant="ghost"
