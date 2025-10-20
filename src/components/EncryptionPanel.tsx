@@ -20,17 +20,16 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
   const [decryptionKey, setDecryptionKey] = useState("");
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
 
-  useEffect(() => {
-    if (inputText.trim()) {
-      handleProcess();
-    } else {
-      setOutputText("");
-      setDecryptionKey("");
-    }
-  }, [inputText, secureMode, mode]);
-
   const handleProcess = () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim()) {
+      toast.error("Please enter some text first");
+      return;
+    }
+
+    if (actionsRemaining <= 0) {
+      toast.error("No actions remaining. Please upgrade or wait until tomorrow.");
+      return;
+    }
 
     try {
       if (mode === "encrypt") {
@@ -43,7 +42,6 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
           setOutputText(encrypted);
           setDecryptionKey("");
         }
-        onActionPerformed();
       } else {
         if (secureMode && decryptionKey) {
           const decrypted = decryptWithKey(inputText, decryptionKey);
@@ -52,8 +50,9 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
           const decrypted = decryptText(inputText);
           setOutputText(decrypted);
         }
-        onActionPerformed();
       }
+      onActionPerformed();
+      toast.success(`${mode === "encrypt" ? "Encrypted" : "Decrypted"} successfully!`);
     } catch (error) {
       toast.error("Processing failed. Please check your input.");
     }
@@ -148,6 +147,19 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
           </div>
         )}
       </Card>
+
+      {/* Process Button */}
+      <div className="flex justify-center">
+        <Button
+          size="lg"
+          onClick={handleProcess}
+          disabled={!inputText.trim() || actionsRemaining <= 0}
+          className="px-8 gap-2 shadow-glow-primary"
+        >
+          {mode === "encrypt" ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
+          OK - {mode === "encrypt" ? "Encrypt" : "Decrypt"} Message
+        </Button>
+      </div>
 
       {/* Output Panel */}
       <Card className="p-6 backdrop-blur-xl bg-card/50 border-accent/20 shadow-glow-accent">
