@@ -189,25 +189,43 @@ const ImageEncryption = () => {
                       <Camera className="h-12 w-12" />
                     </div>
                     <p className="text-muted-foreground">
-                      Select an image to encrypt
+                      Take a photo or choose an image to encrypt
                     </p>
-                    <Label htmlFor="image-upload">
-                      <div className="inline-block">
-                        <Button asChild variant="secondary">
-                          <span>Choose Image</span>
+                    <div className="flex gap-3 justify-center flex-wrap">
+                      <Label htmlFor="camera-capture">
+                        <Button asChild variant="default">
+                          <span className="gap-2">
+                            <Camera className="h-4 w-4" />
+                            Take Photo
+                          </span>
                         </Button>
-                      </div>
-                    </Label>
+                      </Label>
+                      <Label htmlFor="image-upload">
+                        <Button asChild variant="secondary">
+                          <span className="gap-2">
+                            <ImageIcon className="h-4 w-4" />
+                            Choose from Gallery
+                          </span>
+                        </Button>
+                      </Label>
+                    </div>
                     <input
-                      id="image-upload"
+                      id="camera-capture"
                       type="file"
                       accept="image/*"
                       capture="environment"
                       className="hidden"
                       onChange={handleImageUpload}
                     />
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
                     <p className="text-xs text-muted-foreground">
-                      Maximum file size: 5MB
+                      Maximum file size: 5MB · All processed locally
                     </p>
                   </div>
                 )}
