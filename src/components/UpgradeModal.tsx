@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Crown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ interface UpgradeModalProps {
 
 export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
   
   const features = [
     "Unlimited encryption & decryption",
@@ -29,7 +31,9 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
   const handleUpgrade = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.functions.invoke('create-checkout');
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { couponCode: couponCode.trim() || undefined }
+      });
       
       if (error) throw error;
       
@@ -77,7 +81,17 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
           <div className="text-sm text-muted-foreground">per month</div>
         </div>
 
-        <Button 
+        <div className="mb-4">
+          <Input
+            type="text"
+            placeholder="Enter coupon code (optional)"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value)}
+            className="w-full"
+          />
+        </div>
+
+        <Button
           className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
           onClick={handleUpgrade}
           disabled={loading}

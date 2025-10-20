@@ -28,6 +28,9 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
+    const body = await req.json();
+    const couponCode = body?.couponCode;
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
     });
@@ -38,7 +41,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -50,7 +53,41 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/`,
       cancel_url: `${req.headers.get("origin")}/`,
-    });
+    };
+
+    // Apply coupon code if provided
+    if (couponCode) {
+      try {
+        // Check if it's a promotion code
+        const promotionCodes = await stripe.promotionCodes.list({
+          code: couponCode,
+          active: true,
+          limit: 1,
+        });
+        
+        if (promotionCodes.data.length > 0) {
+          sessionConfig.discounts = [{
+            promotion_code: promotionCodes.data[0].id,
+          }];
+          console.log("Applied promotion code:", couponCode);
+        } else {
+          // Try as a coupon ID
+          try {
+            await stripe.coupons.retrieve(couponCode);
+            sessionConfig.discounts = [{
+              coupon: couponCode,
+            }];
+            console.log("Applied coupon:", couponCode);
+          } catch {
+            console.warn("Invalid coupon code provided:", couponCode);
+          }
+        }
+      } catch (error) {
+        console.warn("Error applying coupon:", error);
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
