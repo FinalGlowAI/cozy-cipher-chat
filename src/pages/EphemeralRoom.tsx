@@ -189,10 +189,10 @@ const EphemeralRoom = () => {
               {activeUsers.map((user, index) => (
                 <div
                   key={user.id}
-                  className="w-8 h-8 rounded-full border-2 border-background shadow-lg"
+                  className="w-6 h-6 rounded-full border-2 border-background shadow-lg"
                   style={{ 
                     backgroundColor: user.color,
-                    marginLeft: index > 0 ? '-8px' : '0',
+                    marginLeft: index > 0 ? '-6px' : '0',
                     zIndex: activeUsers.length - index
                   }}
                   title={`User ${index + 1}`}
