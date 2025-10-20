@@ -28,6 +28,7 @@ const EphemeralRoom = () => {
   const [loading, setLoading] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [userColor, setUserColor] = useState("");
+  const [activeUsers, setActiveUsers] = useState<{ id: string; color: string }[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const EphemeralRoom = () => {
   useEffect(() => {
     if (!roomId) return;
 
-    // Subscribe to realtime messages
+    // Subscribe to realtime messages and presence
     const channel = supabase
       .channel(`room_${roomId}`)
       .on(
@@ -56,12 +57,37 @@ const EphemeralRoom = () => {
           setMessages((current) => [...current, payload.new as Message]);
         }
       )
-      .subscribe();
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const users = Object.values(state).flat().map((presence: any) => ({
+          id: presence.user_id,
+          color: presence.color,
+        }));
+        setActiveUsers(users);
+      })
+      .on("presence", { event: "join" }, ({ newPresences }) => {
+        console.log("User joined:", newPresences);
+      })
+      .on("presence", { event: "leave" }, ({ leftPresences }) => {
+        console.log("User left:", leftPresences);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await channel.track({
+              user_id: user.id,
+              color: userColor,
+              online_at: new Date().toISOString(),
+            });
+          }
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId]);
+  }, [roomId, userColor]);
 
   useEffect(() => {
     scrollToBottom();
@@ -145,26 +171,47 @@ const EphemeralRoom = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+      <div className="p-4 border-b border-border bg-card/50 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => navigate("/ephemeral")}
-            className="text-white hover:bg-white/10"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Leave Room
           </Button>
           
+          {/* Active Users Indicator */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              {activeUsers.map((user, index) => (
+                <div
+                  key={user.id}
+                  className="w-8 h-8 rounded-full border-2 border-background shadow-lg"
+                  style={{ 
+                    backgroundColor: user.color,
+                    marginLeft: index > 0 ? '-8px' : '0',
+                    zIndex: activeUsers.length - index
+                  }}
+                  title={`User ${index + 1}`}
+                />
+              ))}
+            </div>
+            {activeUsers.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                {activeUsers.length} {activeUsers.length === 1 ? 'user' : 'users'}
+              </span>
+            )}
+          </div>
+
           <div className="flex items-center gap-2">
-            <span className="text-white font-mono text-lg">{roomCode}</span>
+            <span className="font-mono text-lg text-primary">{roomCode}</span>
             <Button
               variant="ghost"
               size="icon"
               onClick={copyRoomCode}
-              className="text-white hover:bg-white/10"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -176,14 +223,14 @@ const EphemeralRoom = () => {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.length === 0 ? (
-            <div className="text-center text-slate-400 mt-8">
+            <div className="text-center text-muted-foreground mt-8">
               No messages yet. Start the conversation!
             </div>
           ) : (
             messages.map((message) => (
               <Card
                 key={message.id}
-                className="bg-slate-800/30 border-slate-700 backdrop-blur-sm"
+                className="backdrop-blur-xl bg-card/50 border-primary/20"
                 style={{ borderLeftColor: message.user_color, borderLeftWidth: "4px" }}
               >
                 <CardContent className="p-4">
@@ -192,7 +239,7 @@ const EphemeralRoom = () => {
                       className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
                       style={{ backgroundColor: message.user_color }}
                     />
-                    <p className="text-white text-sm flex-1 break-words">{message.content}</p>
+                    <p className="text-foreground text-sm flex-1 break-words">{message.content}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -203,7 +250,7 @@ const EphemeralRoom = () => {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+      <div className="p-4 border-t border-border bg-card/50 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto flex gap-2">
           <Textarea
             value={newMessage}
@@ -215,13 +262,13 @@ const EphemeralRoom = () => {
               }
             }}
             placeholder="Type your message..."
-            className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 resize-none"
+            className="bg-background/50 border-primary/30 focus:border-primary resize-none"
             rows={2}
           />
           <Button
             onClick={sendMessage}
             disabled={loading || !newMessage.trim()}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className="shadow-glow-primary"
             size="icon"
           >
             <Send className="h-4 w-4" />
