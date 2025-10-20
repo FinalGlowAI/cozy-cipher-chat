@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { encryptText, decryptText } from "@/lib/crypto";
+import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
 
 const ImageEncryption = () => {
   const navigate = useNavigate();
@@ -16,6 +17,23 @@ const ImageEncryption = () => {
   const [outputCode, setOutputCode] = useState("");
   const [decryptedImage, setDecryptedImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [validity, setValidity] = useState<string>("60"); // minutes
+  const [storageStats, setStorageStats] = useState({ count: 0, size: 0 });
+
+  useEffect(() => {
+    // Cleanup expired images on mount
+    cleanupExpiredImages();
+    updateStorageStats();
+  }, []);
+
+  const updateStorageStats = async () => {
+    try {
+      const stats = await getStorageStats();
+      setStorageStats(stats);
+    } catch (error) {
+      console.error("Failed to get storage stats:", error);
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,35 +50,46 @@ const ImageEncryption = () => {
     }
   };
 
-  const handleEncrypt = () => {
+  const handleEncrypt = async () => {
     if (!selectedImage) {
       toast.error("Please select an image first");
       return;
     }
     try {
-      const encrypted = encryptText(selectedImage);
-      setOutputCode(encrypted);
-      toast.success("Image encrypted successfully!");
+      const expirationMinutes = validity === "never" ? null : parseInt(validity);
+      const code = await storeImage(selectedImage, expirationMinutes);
+      setOutputCode(code);
+      await updateStorageStats();
+      
+      const validityNum = expirationMinutes || 0;
+      const expiryText = validity === "never" 
+        ? "never expires" 
+        : `expires in ${validityNum >= 60 ? validityNum / 60 + "h" : validityNum + "min"}`;
+      toast.success(`Image encrypted! Code ${expiryText}`);
     } catch (error) {
       toast.error("Encryption failed. Please try again.");
     }
   };
 
-  const handleDecrypt = () => {
+  const handleDecrypt = async () => {
     if (!imageCode.trim()) {
       toast.error("Please enter an image code");
       return;
     }
     try {
-      const decrypted = decryptText(imageCode);
-      if (!decrypted.startsWith("data:image")) {
-        toast.error("Invalid image code. This code does not contain a valid image.");
-        return;
-      }
-      setDecryptedImage(decrypted);
+      const imageData = await retrieveImage(imageCode);
+      setDecryptedImage(imageData);
       toast.success("Image decrypted successfully!");
     } catch (error) {
-      toast.error("Decryption failed. Please check your code.");
+      if (error instanceof Error) {
+        if (error.message === "Code not found") {
+          toast.error("Invalid code. Please check and try again.");
+        } else if (error.message === "Code has expired") {
+          toast.error("This code has expired and is no longer valid.");
+        } else {
+          toast.error("Decryption failed. Please try again.");
+        }
+      }
     }
   };
 
@@ -83,6 +112,12 @@ const ImageEncryption = () => {
     setDecryptedImage(null);
   };
 
+  const formatSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -101,8 +136,13 @@ const ImageEncryption = () => {
               Image Encryption
             </h1>
             <p className="text-muted-foreground">
-              Convert images to secure codes - nothing is stored
+              Get a 6-character code - stored locally in your browser
             </p>
+            {storageStats.count > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {storageStats.count} image{storageStats.count !== 1 ? "s" : ""} stored ({formatSize(storageStats.size)})
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-center gap-4 mb-8">
@@ -164,27 +204,64 @@ const ImageEncryption = () => {
                 )}
               </div>
 
+              {selectedImage && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Code Validity
+                  </Label>
+                  <RadioGroup value={validity} onValueChange={setValidity}>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="5" id="5min" />
+                        <Label htmlFor="5min" className="cursor-pointer">5 min</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="15" id="15min" />
+                        <Label htmlFor="15min" className="cursor-pointer">15 min</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="30" id="30min" />
+                        <Label htmlFor="30min" className="cursor-pointer">30 min</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="60" id="1h" />
+                        <Label htmlFor="1h" className="cursor-pointer">1 hour</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="720" id="12h" />
+                        <Label htmlFor="12h" className="cursor-pointer">12 hours</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="never" id="never" />
+                        <Label htmlFor="never" className="cursor-pointer">Never</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+
               <Button
                 onClick={handleEncrypt}
                 className="w-full"
                 disabled={!selectedImage}
               >
-                Encrypt Image
+                Generate Code
               </Button>
 
               {outputCode && (
                 <div className="space-y-2">
-                  <Label>Your Encrypted Code</Label>
+                  <Label>Your 6-Character Code</Label>
                   <div className="relative">
-                    <Textarea
+                    <Input
                       value={outputCode}
                       readOnly
-                      className="min-h-[120px] font-mono text-xs"
+                      className="text-center text-2xl font-bold tracking-wider"
                     />
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="absolute top-2 right-2"
+                      className="absolute top-1/2 -translate-y-1/2 right-2"
                       onClick={handleCopy}
                     >
                       {copied ? (
@@ -195,7 +272,7 @@ const ImageEncryption = () => {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Share this code to allow others to view your image
+                    Share this code to allow others to view your image on this browser
                   </p>
                 </div>
               )}
@@ -203,12 +280,13 @@ const ImageEncryption = () => {
           ) : (
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label>Enter Image Code</Label>
-                <Textarea
+                <Label>Enter 6-Character Code</Label>
+                <Input
                   value={imageCode}
-                  onChange={(e) => setImageCode(e.target.value)}
-                  placeholder="Paste the encrypted image code here..."
-                  className="min-h-[120px] font-mono text-xs"
+                  onChange={(e) => setImageCode(e.target.value.toUpperCase())}
+                  placeholder="e.g., K7X9A2"
+                  className="text-center text-2xl font-bold tracking-wider uppercase"
+                  maxLength={6}
                 />
               </div>
 
