@@ -167,6 +167,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_free_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_premium_user: {
         Args: { user_id: string }
         Returns: boolean
