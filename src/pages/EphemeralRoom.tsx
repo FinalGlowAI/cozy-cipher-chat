@@ -174,7 +174,7 @@ const EphemeralRoom = () => {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Neural Background Animation */}
-      <NeuralBackground />
+      <NeuralBackground key="neural-bg" />
       
       {/* Header */}
       <div className="p-4 border-b border-border bg-card/50 backdrop-blur-xl relative z-10">

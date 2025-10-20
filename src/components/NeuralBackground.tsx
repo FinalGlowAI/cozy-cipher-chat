@@ -1,13 +1,14 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-function Particles() {
+function Particles({ isMobile }: { isMobile: boolean }) {
   const particlesRef = useRef<THREE.Points>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
   const sparksRef = useRef<THREE.Points>(null);
   
-  const particleCount = 100;
+  const particleCount = isMobile ? 30 : 100;
   const connectionDistance = 2;
 
   // Create particles
@@ -141,11 +142,35 @@ function Particles() {
 }
 
 export function NeuralBackground() {
+  const isMobile = useIsMobile();
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    // Check if WebGL is available
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) {
+      setHasError(true);
+    }
+  }, []);
+
+  if (hasError) {
+    return null;
+  }
+
   return (
-    <div className="fixed inset-0 -z-10 opacity-40">
-      <Canvas camera={{ position: [0, 0, 8], fov: 75 }}>
+    <div className="fixed inset-0 -z-10 opacity-40 pointer-events-none">
+      <Canvas 
+        camera={{ position: [0, 0, 8], fov: 75 }}
+        onCreated={({ gl }) => {
+          gl.domElement.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault();
+            setHasError(true);
+          });
+        }}
+      >
         <color attach="background" args={['#0a0a0f']} />
-        <Particles />
+        <Particles isMobile={isMobile} />
       </Canvas>
     </div>
   );

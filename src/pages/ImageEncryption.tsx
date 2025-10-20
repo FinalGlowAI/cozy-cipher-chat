@@ -131,7 +131,7 @@ const ImageEncryption = () => {
   return (
     <div className="min-h-screen relative">
       {/* Neural Background Animation */}
-      <NeuralBackground />
+      <NeuralBackground key="neural-bg" />
       
       <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
         <Button

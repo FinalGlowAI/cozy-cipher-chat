@@ -115,7 +115,7 @@ const EphemeralSpace = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       {/* Neural Background Animation */}
-      <NeuralBackground />
+      <NeuralBackground key="neural-bg" />
       
       <div className="absolute top-8 left-8 z-10">
         <Button

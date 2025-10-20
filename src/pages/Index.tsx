@@ -89,7 +89,7 @@ const Index = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Neural Background Animation */}
-      <NeuralBackground />
+      <NeuralBackground key="neural-bg" />
       
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-surface opacity-30" />
