@@ -171,7 +171,7 @@ const EphemeralRoom = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-border bg-card/50 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
