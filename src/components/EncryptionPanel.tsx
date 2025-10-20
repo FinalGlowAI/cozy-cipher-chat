@@ -28,11 +28,10 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
       return;
     }
 
-    // Temporarily disabled for testing
-    // if (actionsRemaining <= 0) {
-    //   toast.error("No actions remaining. Please upgrade or wait until tomorrow.");
-    //   return;
-    // }
+    if (actionsRemaining <= 0) {
+      toast.error("No actions remaining. Please upgrade or wait until tomorrow.");
+      return;
+    }
 
     try {
       if (mode === "encrypt") {
@@ -61,8 +60,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
           setOutputText(decrypted);
         }
       }
-      // Temporarily disabled for testing
-      // onActionPerformed();
+      onActionPerformed();
       toast.success(`${mode === "encrypt" ? "Encrypted" : "Decrypted"} successfully!`);
     } catch (error) {
       if (error instanceof Error && error.message === "Decryption key has expired") {
