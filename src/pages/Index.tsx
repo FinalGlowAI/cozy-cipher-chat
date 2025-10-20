@@ -96,6 +96,13 @@ const Index = () => {
                   <span>100% Private</span>
                 </div>
                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate("/ephemeral")}
+                >
+                  Ephemeral Space
+                </Button>
+                <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
