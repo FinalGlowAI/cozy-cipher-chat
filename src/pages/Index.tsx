@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { NeuralBackground } from "@/components/NeuralBackground";
 import { Shield, Lock, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -87,8 +88,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* Neural Background Animation */}
+      <NeuralBackground />
+      
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-surface opacity-50" />
+      <div className="absolute inset-0 bg-gradient-surface opacity-30" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
