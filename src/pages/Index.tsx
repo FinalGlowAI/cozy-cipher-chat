@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { Shield, Lock, LogOut, Settings } from "lucide-react";
+import { Lock, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
   const [actionsRemaining, setActionsRemaining] = useState(3);
@@ -101,9 +102,7 @@ const Index = () => {
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-primary rounded-lg">
-                  <Shield className="h-6 w-6 text-primary-foreground" />
-                </div>
+                <img src={ocxLogo} alt="OCX Logo" className="h-12 w-12 object-contain" />
                 <div>
                   <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                     OCX
