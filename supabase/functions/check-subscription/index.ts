@@ -43,6 +43,29 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if user is in free_users table (admin-granted access)
+    const { data: freeUser, error: freeUserError } = await supabaseClient
+      .from('free_users')
+      .select('*')
+      .eq('email', user.email)
+      .maybeSingle();
+    
+    if (freeUserError) {
+      logStep("Error checking free_users", { error: freeUserError.message });
+    }
+    
+    if (freeUser) {
+      logStep("User is a free user with admin-granted access", { email: user.email });
+      return new Response(JSON.stringify({
+        subscribed: true,
+        subscription_end: null,
+        is_free_user: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
