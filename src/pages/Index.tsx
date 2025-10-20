@@ -109,8 +109,8 @@ const Index = () => {
                   <p className="text-xs text-muted-foreground">Secure Messaging</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
                   <Lock className="h-4 w-4" />
                   <span>100% Private</span>
                 </div>
@@ -121,7 +121,8 @@ const Index = () => {
                     onClick={() => handlePremiumFeatureClick("/ephemeral")}
                     className={isPremium ? "" : "opacity-75"}
                   >
-                    Ephemeral Space {!isPremium && "🔒"}
+                    <span className="hidden md:inline">Ephemeral Space {!isPremium && "🔒"}</span>
+                    <span className="md:hidden">💬 {!isPremium && "🔒"}</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -129,7 +130,8 @@ const Index = () => {
                     onClick={() => handlePremiumFeatureClick("/image-encryption")}
                     className={isPremium ? "" : "opacity-75"}
                   >
-                    Image Encryption {!isPremium && "🔒"}
+                    <span className="hidden md:inline">Image Encryption {!isPremium && "🔒"}</span>
+                    <span className="md:hidden">🖼️ {!isPremium && "🔒"}</span>
                   </Button>
                 </div>
                 {isAdmin && (
@@ -140,7 +142,7 @@ const Index = () => {
                     className="gap-2"
                   >
                     <Settings className="h-4 w-4" />
-                    Admin
+                    <span className="hidden md:inline">Admin</span>
                   </Button>
                 )}
                 <Button
@@ -150,7 +152,7 @@ const Index = () => {
                   className="gap-2"
                 >
                   <LogOut className="h-4 w-4" />
-                  Logout
+                  <span className="hidden md:inline">Logout</span>
                 </Button>
               </div>
             </div>
