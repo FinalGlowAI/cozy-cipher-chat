@@ -17,12 +17,22 @@ export const decryptText = (encrypted: string): string => {
   }
 };
 
-export const encryptWithKey = (text: string): { encrypted: string; key: string } => {
+export const encryptWithKey = (text: string, expirationMinutes?: number): { encrypted: string; key: string } => {
   // Generate a random key
   const key = generateRandomKey(32);
   const encrypted = xorCipher(text, key);
+  
+  // Calculate expiration timestamp if provided
+  const expiresAt = expirationMinutes ? Date.now() + (expirationMinutes * 60 * 1000) : null;
+  
+  // Create payload with expiration info
+  const payload = {
+    data: encrypted,
+    expiresAt
+  };
+  
   return {
-    encrypted: btoa(encrypted),
+    encrypted: btoa(JSON.stringify(payload)),
     key: btoa(key)
   };
 };
@@ -31,8 +41,30 @@ export const decryptWithKey = (encrypted: string, key: string): string => {
   try {
     const decoded = atob(encrypted);
     const decodedKey = atob(key);
+    
+    // Try to parse as JSON payload (new format with expiration)
+    try {
+      const payload = JSON.parse(decoded);
+      
+      // Check if it has expiration info
+      if (payload.expiresAt !== undefined) {
+        // Check if expired
+        if (payload.expiresAt && Date.now() > payload.expiresAt) {
+          throw new Error("Decryption key has expired");
+        }
+        // Decrypt the actual data
+        return xorCipher(payload.data, decodedKey);
+      }
+    } catch (jsonError) {
+      // If JSON parsing fails, treat as old format (backward compatibility)
+    }
+    
+    // Old format - direct decryption
     return xorCipher(decoded, decodedKey);
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message === "Decryption key has expired") {
+      throw error;
+    }
     throw new Error("Invalid encrypted text or key");
   }
 };
