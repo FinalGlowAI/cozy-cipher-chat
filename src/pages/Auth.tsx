@@ -64,7 +64,53 @@ const Auth = () => {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      <Card className="w-full max-w-md relative z-10 border-primary/20 bg-card/80 backdrop-blur-xl">
+      <div className="w-full max-w-6xl relative z-10 grid md:grid-cols-2 gap-8 items-center">
+        <div className="hidden md:block space-y-8">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-bold text-foreground mb-2">Join 100,000+ Users</h2>
+            <p className="text-muted-foreground">Who trust us with their secure communications</p>
+          </div>
+          
+          <div className="space-y-4">
+            <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-primary">★</span>
+                  ))}
+                </div>
+                <p className="text-foreground mb-4">"The most secure messaging platform I've used. Love the encryption features!"</p>
+                <p className="text-sm text-muted-foreground font-semibold">- Sarah Chen, Security Analyst</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-primary">★</span>
+                  ))}
+                </div>
+                <p className="text-foreground mb-4">"Finally, a platform where I can trust my data is truly private. Highly recommend!"</p>
+                <p className="text-sm text-muted-foreground font-semibold">- Michael Rodriguez, Developer</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-primary">★</span>
+                  ))}
+                </div>
+                <p className="text-foreground mb-4">"Seamless experience with top-notch security. This is the future of messaging."</p>
+                <p className="text-sm text-muted-foreground font-semibold">- Emma Williams, Privacy Advocate</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <Card className="w-full border-primary/20 bg-card/80 backdrop-blur-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             <img src={ocxLogo} alt="OCX Logo" className="h-20 w-20 object-contain" />
@@ -146,6 +192,7 @@ const Auth = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
