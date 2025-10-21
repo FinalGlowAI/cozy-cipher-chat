@@ -58,13 +58,26 @@ const EphemeralRoom = () => {
           setMessages((current) => [...current, payload.new as Message]);
         }
       )
-      .on("presence", { event: "sync" }, () => {
+      .on("presence", { event: "sync" }, async () => {
         const state = channel.presenceState();
         const users = Object.values(state).flat().map((presence: any) => ({
           id: presence.user_id,
           color: presence.color,
         }));
         setActiveUsers(users);
+        
+        // If no users left, clean up all messages
+        if (users.length === 0 && roomId) {
+          try {
+            await supabase
+              .from("ephemeral_messages")
+              .delete()
+              .eq("room_id", roomId);
+            setMessages([]);
+          } catch (error) {
+            console.error("Error cleaning up messages:", error);
+          }
+        }
       })
       .on("presence", { event: "join" }, ({ newPresences }) => {
         console.log("User joined:", newPresences);
