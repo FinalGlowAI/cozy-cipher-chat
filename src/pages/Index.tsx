@@ -134,6 +134,27 @@ const Index = () => {
                     <span className="hidden md:inline">Image Encryption {!isPremium && "🔒"}</span>
                     <span className="md:hidden">🖼️ {!isPremium && "🔒"}</span>
                   </Button>
+                  {isPremium && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const { data, error } = await supabase.functions.invoke('customer-portal');
+                          if (error) throw error;
+                          if (data?.url) {
+                            window.open(data.url, '_blank');
+                          }
+                        } catch (error) {
+                          toast.error("Failed to open subscription portal");
+                          console.error(error);
+                        }
+                      }}
+                    >
+                      <span className="hidden md:inline">Manage Subscription</span>
+                      <span className="md:hidden">⚙️</span>
+                    </Button>
+                  )}
                 </div>
                 {isAdmin && (
                   <Button
