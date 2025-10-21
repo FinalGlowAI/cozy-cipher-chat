@@ -76,7 +76,7 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
 
         <div className="text-center mb-6">
           <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            $7.99
+            $8.40
           </div>
           <div className="text-sm text-muted-foreground">per month</div>
         </div>
