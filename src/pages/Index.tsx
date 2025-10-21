@@ -216,6 +216,13 @@ const Index = () => {
                 >
                   Privacy Policy
                 </Button>
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/refund-policy")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Refund Policy
+                </Button>
                 {isPremium && (
                   <Button
                     variant="link"

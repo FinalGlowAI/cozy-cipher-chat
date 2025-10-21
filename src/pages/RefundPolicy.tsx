@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Shield, ArrowLeft } from "lucide-react";
 
-const AboutUs = () => {
+const RefundPolicy = () => {
   const navigate = useNavigate();
 
   return (
@@ -31,56 +31,69 @@ const AboutUs = () => {
               <Shield className="h-6 w-6 text-primary-foreground" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              About OCX
+              Refund Policy
             </h1>
           </div>
 
           <div className="space-y-6 text-muted-foreground">
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">Our Mission</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">General Policy</h2>
               <p>
-                At OCX, we believe that privacy is a fundamental right. Our mission is to provide
-                military-grade encryption tools that are accessible to everyone, ensuring that your
-                sensitive communications remain private and secure.
+                At OCX, we strive to provide the best encryption service possible. We understand
+                that circumstances may arise where you need to request a refund.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">What We Do</h2>
-              <p>
-                OCX specializes in client-side encryption technology. All encryption and decryption
-                happens locally on your device, meaning your data never travels to our servers in an
-                unencrypted state. This approach ensures maximum privacy and security for your
-                communications.
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Eligibility</h2>
+              <p className="mb-3">
+                Refund requests may be considered under the following conditions:
               </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">Our Technology</h2>
-              <p>
-                We use industry-standard AES-256 encryption combined with secure key derivation
-                functions. Our technology ensures the highest standards of security and
-                transparency for your encrypted communications.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">Why Choose OCX</h2>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>100% client-side encryption - your data never leaves your device unencrypted</li>
-                <li>No data storage - we don't store your messages or encryption keys</li>
-                <li>Easy to use - powerful encryption made simple</li>
-                <li>Offline capable - works without an internet connection</li>
+                <li>Request is made within 14 days of the initial purchase</li>
+                <li>Technical issues that prevent you from using the service</li>
+                <li>Accidental duplicate purchases</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">How to Request a Refund</h2>
+              <p>
+                To request a refund, please contact us at{" "}
+                <a
+                  href="mailto:ocodexapp@gmail.com"
+                  className="text-primary hover:underline"
+                >
+                  ocodexapp@gmail.com
+                </a>
+                {" "}with your purchase details and reason for the refund request. We will review
+                your request and respond within 5-7 business days.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Processing Time</h2>
+              <p>
+                Once approved, refunds will be processed within 7-10 business days and will be
+                returned to the original payment method used for the purchase.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Non-Refundable Items</h2>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Subscriptions that have been active for more than 14 days</li>
+                <li>Partial month refunds for subscription services</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">Contact Us</h2>
               <p>
-                Have questions or need support? We're here to help. Reach out to us at{" "}
+                If you have any questions about our refund policy, please contact us at{" "}
                 <a
                   href="mailto:ocodexapp@gmail.com"
-                  className="text-primary hover:underline font-semibold"
+                  className="text-primary hover:underline"
                 >
                   ocodexapp@gmail.com
                 </a>
@@ -93,4 +106,4 @@ const AboutUs = () => {
   );
 };
 
-export default AboutUs;
+export default RefundPolicy;

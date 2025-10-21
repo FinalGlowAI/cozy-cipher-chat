@@ -9,6 +9,7 @@ import AboutUs from "./pages/AboutUs";
 import Disclaimer from "./pages/Disclaimer";
 import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
 import NotFound from "./pages/NotFound";
 import EphemeralSpace from "./pages/EphemeralSpace";
 import EphemeralRoom from "./pages/EphemeralRoom";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/terms" element={<TermsOfUse />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/ephemeral" element={<EphemeralSpace />} />
           <Route path="/room/:roomCode" element={<EphemeralRoom />} />
           <Route path="/image-encryption" element={<ImageEncryption />} />
