@@ -8,12 +8,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ArrowLeft, Trash2, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Loader2, Check, X } from "lucide-react";
 
 type FreeUser = {
   id: string;
   email: string;
   features: string[];
+  created_at: string;
+};
+
+type Testimonial = {
+  id: string;
+  user_name: string;
+  user_title: string | null;
+  comment: string;
+  rating: number;
+  is_approved: boolean;
   created_at: string;
 };
 
@@ -28,6 +38,8 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const [freeUsers, setFreeUsers] = useState<FreeUser[]>([]);
+  const [pendingTestimonials, setPendingTestimonials] = useState<Testimonial[]>([]);
+  const [approvedTestimonials, setApprovedTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [newEmail, setNewEmail] = useState("");
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
@@ -43,6 +55,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isAdmin) {
       fetchFreeUsers();
+      fetchTestimonials();
     }
   }, [isAdmin]);
 
@@ -147,6 +160,67 @@ export default function AdminDashboard() {
     );
   };
 
+  const fetchTestimonials = async () => {
+    try {
+      const { data: pending, error: pendingError } = await supabase
+        .from("testimonials")
+        .select("*")
+        .eq("is_approved", false)
+        .order("created_at", { ascending: false });
+
+      const { data: approved, error: approvedError } = await supabase
+        .from("testimonials")
+        .select("*")
+        .eq("is_approved", true)
+        .order("created_at", { ascending: false });
+
+      if (pendingError) throw pendingError;
+      if (approvedError) throw approvedError;
+
+      setPendingTestimonials(pending || []);
+      setApprovedTestimonials(approved || []);
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+      toast.error("Failed to load testimonials");
+    }
+  };
+
+  const handleApproveTestimonial = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("testimonials")
+        .update({ is_approved: true })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Testimonial approved");
+      fetchTestimonials();
+    } catch (error) {
+      console.error("Error approving testimonial:", error);
+      toast.error("Failed to approve testimonial");
+    }
+  };
+
+  const handleDeleteTestimonial = async (id: string, userName: string) => {
+    if (!confirm(`Delete testimonial from ${userName}?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("testimonials")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Testimonial deleted");
+      fetchTestimonials();
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      toast.error("Failed to delete testimonial");
+    }
+  };
+
   if (adminLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -168,11 +242,129 @@ export default function AdminDashboard() {
           </Button>
           <div>
             <h1 className="text-4xl font-bold gradient-text">Admin Dashboard</h1>
-            <p className="text-muted-foreground mt-2">Manage free user access</p>
+            <p className="text-muted-foreground mt-2">Manage free user access and testimonials</p>
           </div>
         </div>
 
         <div className="grid gap-6">
+          {/* Pending Testimonials */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Testimonials ({pendingTestimonials.length})</CardTitle>
+              <CardDescription>Review and approve user testimonials</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {pendingTestimonials.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No pending testimonials</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Comment</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Submitted</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingTestimonials.map((testimonial) => (
+                      <TableRow key={testimonial.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{testimonial.user_name}</p>
+                            {testimonial.user_title && (
+                              <p className="text-xs text-muted-foreground">{testimonial.user_title}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-md">
+                          <p className="line-clamp-2">{testimonial.comment}</p>
+                        </TableCell>
+                        <TableCell>{testimonial.rating}/5</TableCell>
+                        <TableCell>
+                          {new Date(testimonial.created_at).toLocaleDateString('en-US')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleApproveTestimonial(testimonial.id)}
+                            >
+                              <Check className="h-4 w-4 text-green-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteTestimonial(testimonial.id, testimonial.user_name)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Approved Testimonials */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Approved Testimonials ({approvedTestimonials.length})</CardTitle>
+              <CardDescription>Published testimonials visible to users</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {approvedTestimonials.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No approved testimonials</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Comment</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Published</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {approvedTestimonials.map((testimonial) => (
+                      <TableRow key={testimonial.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{testimonial.user_name}</p>
+                            {testimonial.user_title && (
+                              <p className="text-xs text-muted-foreground">{testimonial.user_title}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-md">
+                          <p className="line-clamp-2">{testimonial.comment}</p>
+                        </TableCell>
+                        <TableCell>{testimonial.rating}/5</TableCell>
+                        <TableCell>
+                          {new Date(testimonial.created_at).toLocaleDateString('en-US')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteTestimonial(testimonial.id, testimonial.user_name)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
           {/* Add Free User */}
           <Card>
             <CardHeader>
