@@ -1,32 +1,5 @@
-// IndexedDB utility for storing encrypted images locally
-
-const DB_NAME = "OCX_ImageStore";
-const STORE_NAME = "encrypted_images";
-const DB_VERSION = 1;
-
-interface StoredImage {
-  code: string;
-  imageData: string;
-  expiresAt: number | null; // timestamp in ms, null for never expire
-  createdAt: number;
-}
-
-// Initialize IndexedDB
-const openDB = (): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "code" });
-      }
-    };
-  });
-};
+// Supabase utility for storing encrypted images
+import { supabase } from "@/integrations/supabase/client";
 
 // Generate random 6-character code
 export const generateShortCode = (): string => {
@@ -40,15 +13,13 @@ export const generateShortCode = (): string => {
 
 // Check if code already exists
 const codeExists = async (code: string): Promise<boolean> => {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(code);
-
-    request.onsuccess = () => resolve(!!request.result);
-    request.onerror = () => reject(request.error);
-  });
+  const { data, error } = await supabase
+    .from("encrypted_images")
+    .select("code")
+    .eq("code", code)
+    .single();
+  
+  return !error && !!data;
 };
 
 // Store encrypted image with code and expiration
@@ -63,123 +34,146 @@ export const storeImage = async (
     code = generateShortCode();
   }
 
-  const db = await openDB();
-  const now = Date.now();
-  const expiresAt = expirationMinutes ? now + expirationMinutes * 60 * 1000 : null;
+  // Convert base64 to blob
+  const base64Data = imageData.split(',')[1];
+  const byteCharacters = atob(base64Data);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: 'image/png' });
 
-  const storedImage: StoredImage = {
-    code,
-    imageData,
-    expiresAt,
-    createdAt: now,
-  };
+  // Upload to storage
+  const storagePath = `${code}.png`;
+  const { error: uploadError } = await supabase.storage
+    .from('encrypted_images')
+    .upload(storagePath, blob);
 
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.add(storedImage);
+  if (uploadError) {
+    throw new Error(`Failed to upload image: ${uploadError.message}`);
+  }
 
-    request.onsuccess = () => resolve(code);
-    request.onerror = () => reject(request.error);
-  });
+  // Store metadata in database
+  const expiresAt = expirationMinutes 
+    ? new Date(Date.now() + expirationMinutes * 60 * 1000).toISOString()
+    : null;
+
+  const { error: dbError } = await supabase
+    .from('encrypted_images')
+    .insert({
+      code,
+      storage_path: storagePath,
+      expires_at: expiresAt,
+    });
+
+  if (dbError) {
+    // Clean up uploaded file if database insert fails
+    await supabase.storage.from('encrypted_images').remove([storagePath]);
+    throw new Error(`Failed to store image metadata: ${dbError.message}`);
+  }
+
+  return code;
 };
 
 // Retrieve image by code
 export const retrieveImage = async (code: string): Promise<string> => {
   await cleanupExpiredImages(); // Clean up before retrieval
 
-  const db = await openDB();
+  // Get metadata from database
+  const { data, error } = await supabase
+    .from('encrypted_images')
+    .select('*')
+    .eq('code', code.toUpperCase())
+    .single();
+
+  if (error || !data) {
+    throw new Error("Code not found");
+  }
+
+  // Check expiration
+  if (data.expires_at && new Date(data.expires_at) < new Date()) {
+    // Delete expired entry
+    await deleteImage(code);
+    throw new Error("Code has expired");
+  }
+
+  // Download image from storage
+  const { data: imageBlob, error: downloadError } = await supabase.storage
+    .from('encrypted_images')
+    .download(data.storage_path);
+
+  if (downloadError || !imageBlob) {
+    throw new Error(`Failed to download image: ${downloadError?.message}`);
+  }
+
+  // Convert blob to base64
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(code.toUpperCase());
-
-    request.onsuccess = () => {
-      const result = request.result as StoredImage | undefined;
-      
-      if (!result) {
-        reject(new Error("Code not found"));
-        return;
-      }
-
-      // Check expiration
-      if (result.expiresAt && Date.now() > result.expiresAt) {
-        // Delete expired entry
-        deleteImage(code);
-        reject(new Error("Code has expired"));
-        return;
-      }
-
-      resolve(result.imageData);
-    };
-    request.onerror = () => reject(request.error);
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(imageBlob);
   });
 };
 
 // Delete image by code
 export const deleteImage = async (code: string): Promise<void> => {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.delete(code.toUpperCase());
+  // Get storage path before deleting
+  const { data } = await supabase
+    .from('encrypted_images')
+    .select('storage_path')
+    .eq('code', code.toUpperCase())
+    .single();
 
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  if (data?.storage_path) {
+    // Delete from storage
+    await supabase.storage
+      .from('encrypted_images')
+      .remove([data.storage_path]);
+  }
+
+  // Delete from database
+  await supabase
+    .from('encrypted_images')
+    .delete()
+    .eq('code', code.toUpperCase());
 };
 
 // Clean up expired images
 export const cleanupExpiredImages = async (): Promise<number> => {
-  const db = await openDB();
-  const now = Date.now();
-  let deletedCount = 0;
-
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.openCursor();
-
-    request.onsuccess = (event) => {
-      const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-      if (cursor) {
-        const image = cursor.value as StoredImage;
-        if (image.expiresAt && now > image.expiresAt) {
-          cursor.delete();
-          deletedCount++;
-        }
-        cursor.continue();
-      } else {
-        resolve(deletedCount);
-      }
-    };
-    request.onerror = () => reject(request.error);
-  });
+  const { data, error } = await supabase.rpc('cleanup_expired_encrypted_images');
+  
+  if (error) {
+    console.error('Error cleaning up expired images:', error);
+    return 0;
+  }
+  
+  return data || 0;
 };
 
 // Get storage statistics
 export const getStorageStats = async (): Promise<{ count: number; size: number }> => {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const countRequest = store.count();
-    const getAllRequest = store.getAll();
+  // Get count from database
+  const { count, error: countError } = await supabase
+    .from('encrypted_images')
+    .select('*', { count: 'exact', head: true });
 
-    let count = 0;
-    let size = 0;
+  if (countError) {
+    console.error('Error getting storage stats:', countError);
+    return { count: 0, size: 0 };
+  }
 
-    countRequest.onsuccess = () => {
-      count = countRequest.result;
-    };
+  // Get storage bucket size
+  const { data: files, error: listError } = await supabase.storage
+    .from('encrypted_images')
+    .list();
 
-    getAllRequest.onsuccess = () => {
-      const allImages = getAllRequest.result as StoredImage[];
-      size = allImages.reduce((total, img) => total + img.imageData.length, 0);
-      resolve({ count, size });
-    };
+  if (listError) {
+    console.error('Error listing storage files:', listError);
+    return { count: count || 0, size: 0 };
+  }
 
-    countRequest.onerror = () => reject(countRequest.error);
-    getAllRequest.onerror = () => reject(getAllRequest.error);
-  });
+  const size = files?.reduce((total, file) => total + (file.metadata?.size || 0), 0) || 0;
+
+  return { count: count || 0, size };
 };
