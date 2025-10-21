@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      encrypted_images: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string | null
+          storage_path: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          storage_path: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          storage_path?: string
+        }
+        Relationships: []
+      }
       ephemeral_messages: {
         Row: {
           content: string
@@ -186,6 +207,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_encrypted_images: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       generate_room_code: {
         Args: Record<PropertyKey, never>
         Returns: string
