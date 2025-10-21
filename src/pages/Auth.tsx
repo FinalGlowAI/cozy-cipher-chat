@@ -7,7 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ocxLogo from "@/assets/ocx-logo.png";
+
+interface Testimonial {
+  id: string;
+  user_name: string;
+  user_title: string | null;
+  comment: string;
+  rating: number;
+  created_at: string;
+}
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,6 +26,10 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
+  const [newTestimonial, setNewTestimonial] = useState({ name: "", title: "", comment: "", rating: 5 });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,7 +39,55 @@ const Auth = () => {
         navigate("/");
       }
     });
+
+    // Fetch testimonials
+    const fetchTestimonials = async () => {
+      const { data, error } = await supabase
+        .from("testimonials")
+        .select("*")
+        .eq("is_approved", true)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (data && !error) {
+        setTestimonials(data);
+      }
+    };
+
+    fetchTestimonials();
+
+    // Subscribe to new testimonials
+    const channel = supabase
+      .channel("testimonials-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "testimonials",
+          filter: "is_approved=eq.true",
+        },
+        (payload) => {
+          setTestimonials((prev) => [payload.new as Testimonial, ...prev].slice(0, 10));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [navigate]);
+
+  // Auto-rotate testimonials
+  useEffect(() => {
+    if (testimonials.length === 0) return;
+    
+    const interval = setInterval(() => {
+      setCurrentTestimonialIndex((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [testimonials.length]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +121,30 @@ const Auth = () => {
     }
   };
 
+  const handleSubmitTestimonial = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newTestimonial.name.trim() || !newTestimonial.comment.trim()) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const { error } = await supabase.from("testimonials").insert({
+      user_name: newTestimonial.name.trim(),
+      user_title: newTestimonial.title.trim() || null,
+      comment: newTestimonial.comment.trim(),
+      rating: newTestimonial.rating,
+    });
+
+    if (error) {
+      toast.error("Failed to submit testimonial");
+    } else {
+      toast.success("Thank you! Your testimonial will be reviewed.");
+      setNewTestimonial({ name: "", title: "", comment: "", rating: 5 });
+      setIsDialogOpen(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-surface opacity-50" />
@@ -71,42 +158,90 @@ const Auth = () => {
             <p className="text-muted-foreground">Who trust us with their secure communications</p>
           </div>
           
-          <div className="space-y-4">
-            <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
-              <CardContent className="pt-6">
-                <div className="flex gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-primary">★</span>
-                  ))}
-                </div>
-                <p className="text-foreground mb-4">"The most secure messaging platform I've used. Love the encryption features!"</p>
-                <p className="text-sm text-muted-foreground font-semibold">- Sarah Chen, Security Analyst</p>
-              </CardContent>
-            </Card>
+          <div className="space-y-4 min-h-[400px] flex flex-col">
+            {testimonials.length > 0 ? (
+              <Card className="border-primary/20 bg-card/60 backdrop-blur-sm transition-all duration-500 flex-1">
+                <CardContent className="pt-6">
+                  <div className="flex gap-1 mb-3">
+                    {[...Array(testimonials[currentTestimonialIndex].rating)].map((_, i) => (
+                      <span key={i} className="text-primary">★</span>
+                    ))}
+                  </div>
+                  <p className="text-foreground mb-4">"{testimonials[currentTestimonialIndex].comment}"</p>
+                  <p className="text-sm text-muted-foreground font-semibold">
+                    - {testimonials[currentTestimonialIndex].user_name}
+                    {testimonials[currentTestimonialIndex].user_title && `, ${testimonials[currentTestimonialIndex].user_title}`}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-primary/20 bg-card/60 backdrop-blur-sm flex-1">
+                <CardContent className="pt-6">
+                  <p className="text-muted-foreground text-center">Loading testimonials...</p>
+                </CardContent>
+              </Card>
+            )}
 
-            <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
-              <CardContent className="pt-6">
-                <div className="flex gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-primary">★</span>
-                  ))}
-                </div>
-                <p className="text-foreground mb-4">"Finally, a platform where I can trust my data is truly private. Highly recommend!"</p>
-                <p className="text-sm text-muted-foreground font-semibold">- Michael Rodriguez, Developer</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
-              <CardContent className="pt-6">
-                <div className="flex gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-primary">★</span>
-                  ))}
-                </div>
-                <p className="text-foreground mb-4">"Seamless experience with top-notch security. This is the future of messaging."</p>
-                <p className="text-sm text-muted-foreground font-semibold">- Emma Williams, Privacy Advocate</p>
-              </CardContent>
-            </Card>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">Share Your Experience</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Share Your Testimonial</DialogTitle>
+                  <DialogDescription>
+                    Tell us about your experience. Your testimonial will be reviewed before appearing on the page.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmitTestimonial} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="testimonial-name">Name *</Label>
+                    <Input
+                      id="testimonial-name"
+                      value={newTestimonial.name}
+                      onChange={(e) => setNewTestimonial({ ...newTestimonial, name: e.target.value })}
+                      placeholder="Your name"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="testimonial-title">Title (Optional)</Label>
+                    <Input
+                      id="testimonial-title"
+                      value={newTestimonial.title}
+                      onChange={(e) => setNewTestimonial({ ...newTestimonial, title: e.target.value })}
+                      placeholder="e.g., Security Analyst"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="testimonial-comment">Your Experience *</Label>
+                    <Textarea
+                      id="testimonial-comment"
+                      value={newTestimonial.comment}
+                      onChange={(e) => setNewTestimonial({ ...newTestimonial, comment: e.target.value })}
+                      placeholder="Share your thoughts..."
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rating</Label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <button
+                          key={rating}
+                          type="button"
+                          onClick={() => setNewTestimonial({ ...newTestimonial, rating })}
+                          className={`text-2xl ${rating <= newTestimonial.rating ? "text-primary" : "text-muted-foreground"}`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full">Submit Testimonial</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
