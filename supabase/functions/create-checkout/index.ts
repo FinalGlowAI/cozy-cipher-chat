@@ -46,7 +46,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SKMtp08kwkpmCxjPEFPy1zb",
+          price: "price_1SKhTi21KLfTwdbbYQke0M5P",
           quantity: 1,
         },
       ],
