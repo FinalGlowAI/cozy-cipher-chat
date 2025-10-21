@@ -134,27 +134,14 @@ const Index = () => {
                     <span className="hidden md:inline">Image Encryption {!isPremium && "🔒"}</span>
                     <span className="md:hidden">🖼️ {!isPremium && "🔒"}</span>
                   </Button>
-                  {isPremium && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const { data, error } = await supabase.functions.invoke('customer-portal');
-                          if (error) throw error;
-                          if (data?.url) {
-                            window.open(data.url, '_blank');
-                          }
-                        } catch (error) {
-                          toast.error("Failed to open subscription portal");
-                          console.error(error);
-                        }
-                      }}
-                    >
-                      <span className="hidden md:inline">Manage Subscription</span>
-                      <span className="md:hidden">⚙️</span>
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/subscription")}
+                  >
+                    <span className="hidden md:inline">Subscription</span>
+                    <span className="md:hidden">💎</span>
+                  </Button>
                 </div>
                 {isAdmin && (
                   <Button
@@ -237,6 +224,26 @@ const Index = () => {
                 >
                   Privacy Policy
                 </Button>
+                {isPremium && (
+                  <Button
+                    variant="link"
+                    onClick={async () => {
+                      try {
+                        const { data, error } = await supabase.functions.invoke('customer-portal');
+                        if (error) throw error;
+                        if (data?.url) {
+                          window.open(data.url, '_blank');
+                        }
+                      } catch (error) {
+                        toast.error("Failed to open subscription portal");
+                        console.error(error);
+                      }
+                    }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Manage Subscription
+                  </Button>
+                )}
               </div>
               <div className="text-sm text-muted-foreground">
                 <p>© 2024 OCX. Your privacy is our priority.</p>
