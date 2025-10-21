@@ -134,14 +134,6 @@ const Index = () => {
                     <span className="hidden md:inline">Image Encryption {!isPremium && "🔒"}</span>
                     <span className="md:hidden">🖼️ {!isPremium && "🔒"}</span>
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate("/subscription")}
-                  >
-                    <span className="hidden md:inline">Subscription</span>
-                    <span className="md:hidden">💎</span>
-                  </Button>
                 </div>
                 {isAdmin && (
                   <Button
