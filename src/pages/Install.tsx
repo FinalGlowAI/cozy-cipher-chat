@@ -108,9 +108,23 @@ const Install = () => {
                   <p className="text-sm text-muted-foreground text-center">
                     To install this app:
                   </p>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p><strong>iPhone/iPad:</strong> Tap Share → Add to Home Screen</p>
-                    <p><strong>Android:</strong> Tap Menu → Install App or Add to Home Screen</p>
+                  <div className="space-y-3 text-sm">
+                    <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                      <p className="font-semibold text-foreground mb-2">📱 iPhone/iPad (Safari only):</p>
+                      <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                        <li>Tap the <strong>Share button</strong> (square with arrow up)</li>
+                        <li><strong>Scroll down</strong> in the menu</li>
+                        <li>Tap <strong>"Add to Home Screen"</strong></li>
+                        <li>Tap "Add" to confirm</li>
+                      </ol>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        ⚠️ Must use Safari browser - won't work in Chrome or other browsers
+                      </p>
+                    </div>
+                    <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                      <p className="font-semibold text-foreground mb-2">🤖 Android:</p>
+                      <p className="text-muted-foreground">Tap Menu → "Install App" or "Add to Home Screen"</p>
+                    </div>
                   </div>
                 </div>
               )}
