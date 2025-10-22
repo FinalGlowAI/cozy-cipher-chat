@@ -27,6 +27,16 @@ type Testimonial = {
   created_at: string;
 };
 
+type UserWithSubscription = {
+  id: string;
+  email: string;
+  created_at: string;
+  subscription_status: string;
+  is_active: boolean;
+  current_period_end: string | null;
+  last_sign_in: string | null;
+};
+
 const AVAILABLE_FEATURES = [
   "encryption",
   "decryption",
@@ -40,7 +50,9 @@ export default function AdminDashboard() {
   const [freeUsers, setFreeUsers] = useState<FreeUser[]>([]);
   const [pendingTestimonials, setPendingTestimonials] = useState<Testimonial[]>([]);
   const [approvedTestimonials, setApprovedTestimonials] = useState<Testimonial[]>([]);
+  const [allUsers, setAllUsers] = useState<UserWithSubscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(true);
   const [newEmail, setNewEmail] = useState("");
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -56,8 +68,31 @@ export default function AdminDashboard() {
     if (isAdmin) {
       fetchFreeUsers();
       fetchTestimonials();
+      fetchAllUsers();
     }
   }, [isAdmin]);
+
+  const fetchAllUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.functions.invoke('list-users-with-subscriptions', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      setAllUsers(data.users || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users");
+    } finally {
+      setUsersLoading(false);
+    }
+  };
 
   const fetchFreeUsers = async () => {
     try {
@@ -247,6 +282,72 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid gap-6">
+          {/* All Users with Subscription Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle>All Users ({allUsers.length})</CardTitle>
+              <CardDescription>View all users and their subscription status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {usersLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : allUsers.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No users found</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Active</TableHead>
+                      <TableHead>Subscription End</TableHead>
+                      <TableHead>Joined</TableHead>
+                      <TableHead>Last Sign In</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.email}</TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            user.is_active 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                          }`}>
+                            {user.subscription_status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {user.is_active ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <X className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {user.current_period_end 
+                            ? new Date(user.current_period_end).toLocaleDateString('en-US')
+                            : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(user.created_at).toLocaleDateString('en-US')}
+                        </TableCell>
+                        <TableCell>
+                          {user.last_sign_in 
+                            ? new Date(user.last_sign_in).toLocaleDateString('en-US')
+                            : 'Never'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Pending Testimonials */}
           <Card>
             <CardHeader>
