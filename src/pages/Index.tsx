@@ -16,6 +16,7 @@ const Index = () => {
   const [actionsRemaining, setActionsRemaining] = useState(3);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, refreshSubscription } = useSubscription();
   const { isAdmin } = useAdmin();
@@ -33,6 +34,9 @@ const Index = () => {
       setSession(session);
       if (!session) {
         navigate("/auth");
+        // Clear localStorage when user logs out or is deleted
+        localStorage.removeItem("ocx_actions");
+        localStorage.removeItem("ocx_last_reset");
       } else {
         refreshSubscription();
       }
@@ -53,6 +57,22 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Reset action count when subscription expires (premium -> free)
+  useEffect(() => {
+    if (!subscriptionLoading && previousPremiumStatus !== null) {
+      // User went from premium to free (subscription expired/cancelled)
+      if (previousPremiumStatus && !isPremium) {
+        setActionsRemaining(3);
+        localStorage.setItem("ocx_actions", "3");
+        localStorage.setItem("ocx_last_reset", new Date().toDateString());
+        toast.info("Your subscription has ended. You now have 3 daily actions.");
+      }
+    }
+    if (!subscriptionLoading) {
+      setPreviousPremiumStatus(isPremium);
+    }
+  }, [isPremium, subscriptionLoading, previousPremiumStatus]);
 
   const handleActionPerformed = () => {
     if (isPremium) {
