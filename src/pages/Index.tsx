@@ -180,6 +180,7 @@ const Index = () => {
           <EncryptionPanel
             onActionPerformed={handleActionPerformed}
             actionsRemaining={isPremium ? Infinity : actionsRemaining}
+            onUpgradeNeeded={() => setShowUpgradeModal(true)}
           />
         </main>
 

@@ -12,9 +12,10 @@ import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/
 interface EncryptionPanelProps {
   onActionPerformed: () => void;
   actionsRemaining: number;
+  onUpgradeNeeded?: () => void;
 }
 
-export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: EncryptionPanelProps) => {
+export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgradeNeeded }: EncryptionPanelProps) => {
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
   const [secureMode, setSecureMode] = useState(false);
@@ -29,7 +30,11 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining }: Encrypt
     }
 
     if (actionsRemaining <= 0) {
-      toast.error("No actions remaining. Please upgrade or wait until tomorrow.");
+      if (onUpgradeNeeded) {
+        onUpgradeNeeded();
+      } else {
+        toast.error("No actions remaining. Please upgrade or wait until tomorrow.");
+      }
       return;
     }
 

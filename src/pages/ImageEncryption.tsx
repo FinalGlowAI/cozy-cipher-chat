@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
 import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import {
   Dialog,
   DialogContent,
@@ -30,13 +31,23 @@ const ImageEncryption = () => {
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
   const [storageStats, setStorageStats] = useState({ count: 0, size: 0 });
+  const [actionsRemaining, setActionsRemaining] = useState(3);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
-    if (!subscriptionLoading && !isPremium) {
-      toast.error("This feature is only available for premium users");
-      navigate("/");
+    // Load actions from localStorage for image encryption
+    const saved = localStorage.getItem("ocx_image_actions");
+    const lastReset = localStorage.getItem("ocx_image_last_reset");
+    const today = new Date().toDateString();
+
+    if (lastReset !== today) {
+      setActionsRemaining(3);
+      localStorage.setItem("ocx_image_actions", "3");
+      localStorage.setItem("ocx_image_last_reset", today);
+    } else if (saved) {
+      setActionsRemaining(parseInt(saved));
     }
-  }, [isPremium, subscriptionLoading, navigate]);
+  }, []);
 
   useEffect(() => {
     // Cleanup expired images on mount
@@ -68,16 +79,37 @@ const ImageEncryption = () => {
     }
   };
 
+  const handleActionPerformed = () => {
+    if (isPremium) {
+      return;
+    }
+    
+    const newCount = actionsRemaining - 1;
+    setActionsRemaining(newCount);
+    localStorage.setItem("ocx_image_actions", newCount.toString());
+    
+    if (newCount === 0) {
+      setShowUpgradeModal(true);
+    }
+  };
+
   const handleEncrypt = async () => {
     if (!selectedImage) {
       toast.error("Please select an image first");
       return;
     }
+
+    if (!isPremium && actionsRemaining <= 0) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     try {
       const expirationMinutes = validity === "never" ? null : parseInt(validity);
       const code = await storeImage(selectedImage, expirationMinutes);
       setOutputCode(code);
       await updateStorageStats();
+      handleActionPerformed();
       
       const validityNum = expirationMinutes || 0;
       const expiryText = validity === "never" 
@@ -94,9 +126,16 @@ const ImageEncryption = () => {
       toast.error("Please enter an image code");
       return;
     }
+
+    if (!isPremium && actionsRemaining <= 0) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     try {
       const imageData = await retrieveImage(imageCode);
       setDecryptedImage(imageData);
+      handleActionPerformed();
       toast.success("Image decrypted successfully!");
     } catch (error) {
       if (error instanceof Error) {
@@ -371,7 +410,19 @@ const ImageEncryption = () => {
             </div>
           )}
         </div>
+
+        {/* Actions Remaining */}
+        {!isPremium && (
+          <div className="text-center mt-6">
+            <p className="text-sm text-muted-foreground">
+              Free actions remaining today: <span className="font-bold text-primary">{actionsRemaining}</span>
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 };
