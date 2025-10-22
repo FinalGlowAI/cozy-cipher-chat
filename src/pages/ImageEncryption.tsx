@@ -4,12 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock } from "lucide-react";
+import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
 import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const ImageEncryption = () => {
   const navigate = useNavigate();
@@ -154,6 +162,33 @@ const ImageEncryption = () => {
                 {storageStats.count} image{storageStats.count !== 1 ? "s" : ""} stored ({formatSize(storageStats.size)})
               </p>
             )}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="mt-4">
+                  <Info className="mr-2 h-4 w-4" />
+                  How it Works
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="backdrop-blur-xl bg-card/95 border-primary/20">
+                <DialogHeader>
+                  <DialogTitle>How Image Encryption Works</DialogTitle>
+                  <DialogDescription className="space-y-3 text-left pt-4">
+                    <p>
+                      <strong>📸 Upload Your Image:</strong> Select an image from your device or take a photo. All processing happens locally in your browser for maximum privacy.
+                    </p>
+                    <p>
+                      <strong>⏰ Set Expiration:</strong> Choose how long the code should remain valid—from 5 minutes to never. The image is stored securely and will be automatically deleted after expiration.
+                    </p>
+                    <p>
+                      <strong>🔑 Get a Unique Code:</strong> Receive a 6-character code that you can share. Anyone with this code can decrypt and view the image using this app.
+                    </p>
+                    <p>
+                      <strong>🔓 Decrypt Anytime:</strong> Enter a valid code in decrypt mode to retrieve and view the encrypted image. Expired codes will no longer work.
+                    </p>
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="flex items-center justify-center gap-4 mb-8">
