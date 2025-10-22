@@ -5,9 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
@@ -130,6 +138,33 @@ const EphemeralSpace = () => {
           <CardTitle className="text-2xl">
             Create or Join an Ephemeral Room
           </CardTitle>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="mt-2">
+                <Info className="mr-2 h-4 w-4" />
+                How it Works
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="backdrop-blur-xl bg-card/95 border-primary/20">
+              <DialogHeader>
+                <DialogTitle>How Ephemeral Rooms Work</DialogTitle>
+                <DialogDescription className="space-y-3 text-left pt-4">
+                  <p>
+                    <strong>🔒 Temporary & Secure:</strong> Ephemeral rooms are temporary chat spaces with end-to-end encryption. All messages are automatically deleted when the last user leaves.
+                  </p>
+                  <p>
+                    <strong>📝 Create a Room:</strong> Click "Create New Room" to generate a unique room code. Share this code with people you want to chat with securely.
+                  </p>
+                  <p>
+                    <strong>🚪 Join a Room:</strong> Enter a room code or paste a room link to join an existing conversation. You'll see who's active in real-time.
+                  </p>
+                  <p>
+                    <strong>🗑️ Complete Privacy:</strong> When everyone leaves the room, all messages are permanently erased. No history, no traces—perfect for sensitive conversations.
+                  </p>
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
