@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useFreeUser } from "@/hooks/useFreeUser";
+import { useSessionTracking } from "@/hooks/useSessionTracking";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import ocxLogo from "@/assets/ocx-logo.png";
 
@@ -22,6 +23,7 @@ const Index = () => {
   const { isPremium, loading: subscriptionLoading, refreshSubscription } = useSubscription();
   const { isAdmin } = useAdmin();
   const { isFreeUser } = useFreeUser();
+  const { updateSessionActivity, removeSession } = useSessionTracking();
 
   useEffect(() => {
     let isMounted = true;
@@ -57,11 +59,22 @@ const Index = () => {
       setActionsRemaining(parseInt(saved));
     }
 
+    // Update session activity periodically
+    const sessionId = localStorage.getItem("ocx_session_id");
+    let activityInterval: NodeJS.Timeout | null = null;
+    
+    if (session?.user && sessionId) {
+      activityInterval = setInterval(() => {
+        updateSessionActivity(sessionId);
+      }, 2 * 60 * 1000); // Update every 2 minutes
+    }
+
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      if (activityInterval) clearInterval(activityInterval);
     };
-  }, [refreshSubscription]);
+  }, [refreshSubscription, session, updateSessionActivity]);
 
   // Reset action count when subscription expires (premium -> free)
   useEffect(() => {
@@ -103,6 +116,11 @@ const Index = () => {
   };
 
   const handleLogout = async () => {
+    const sessionId = localStorage.getItem("ocx_session_id");
+    if (sessionId) {
+      await removeSession(sessionId);
+      localStorage.removeItem("ocx_session_id");
+    }
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
     navigate("/auth");
