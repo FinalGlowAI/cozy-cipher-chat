@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
@@ -16,7 +16,7 @@ import ocxLogo from "@/assets/ocx-logo.png";
 const Index = () => {
   const [actionsRemaining, setActionsRemaining] = useState(3);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, refreshSubscription } = useSubscription();
@@ -24,18 +24,18 @@ const Index = () => {
   const { isFreeUser } = useFreeUser();
 
   useEffect(() => {
-    // Check authentication
+    let isMounted = true;
+
+    // Check authentication once on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
       setSession(session);
-      if (!session) {
-        navigate("/auth");
-      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
       setSession(session);
       if (!session) {
-        navigate("/auth");
         // Clear localStorage when user logs out or is deleted
         localStorage.removeItem("ocx_actions");
         localStorage.removeItem("ocx_last_reset");
@@ -43,6 +43,11 @@ const Index = () => {
         refreshSubscription();
       }
     });
+
+    // Fallback: if session hasn't resolved in 4s, treat as logged out
+    const timeoutId = setTimeout(() => {
+      setSession(prev => (prev === undefined ? null : prev));
+    }, 4000);
 
     // Load actions from localStorage
     const saved = localStorage.getItem("ocx_actions");
@@ -57,8 +62,12 @@ const Index = () => {
       setActionsRemaining(parseInt(saved));
     }
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
+  }, [refreshSubscription]);
 
   // Reset action count when subscription expires (premium -> free)
   useEffect(() => {
@@ -105,7 +114,7 @@ const Index = () => {
     navigate("/auth");
   };
 
-  if (!session) {
+  if (session === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -114,6 +123,10 @@ const Index = () => {
         </div>
       </div>
     );
+  }
+
+  if (!session) {
+    return <Navigate to="/auth" replace />;
   }
 
   return (
