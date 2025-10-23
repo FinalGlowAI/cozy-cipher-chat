@@ -70,11 +70,20 @@ export const decryptWithKey = (encrypted: string, key: string): string => {
 };
 
 const xorCipher = (text: string, key: string): string => {
-  let result = "";
-  for (let i = 0; i < text.length; i++) {
-    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  // Encode text as UTF-8 bytes to properly handle emojis and all Unicode characters
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  
+  const textBytes = encoder.encode(text);
+  const keyBytes = encoder.encode(key);
+  const resultBytes = new Uint8Array(textBytes.length);
+  
+  for (let i = 0; i < textBytes.length; i++) {
+    resultBytes[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
   }
-  return result;
+  
+  // Convert bytes to string for base64 encoding
+  return decoder.decode(resultBytes);
 };
 
 const generateRandomKey = (length: number): string => {
