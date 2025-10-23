@@ -70,27 +70,11 @@ export const decryptWithKey = (encrypted: string, key: string): string => {
 };
 
 const xorCipher = (text: string, key: string): string => {
-  const encoder = new TextEncoder();
-  
-  // Check if text is a binary string (from atob) or regular text
-  let textBytes: Uint8Array;
-  if (text.split('').every(char => char.charCodeAt(0) <= 255)) {
-    // Binary string from atob - convert each char to byte
-    textBytes = new Uint8Array(text.split('').map(char => char.charCodeAt(0)));
-  } else {
-    // Regular text - encode as UTF-8
-    textBytes = encoder.encode(text);
+  let result = "";
+  for (let i = 0; i < text.length; i++) {
+    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
   }
-  
-  const keyBytes = encoder.encode(key);
-  const resultBytes = new Uint8Array(textBytes.length);
-  
-  for (let i = 0; i < textBytes.length; i++) {
-    resultBytes[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
-  }
-  
-  // Convert bytes to binary string for base64 encoding
-  return String.fromCharCode(...resultBytes);
+  return result;
 };
 
 const generateRandomKey = (length: number): string => {
