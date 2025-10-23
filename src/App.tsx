@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useSessionManager } from "@/hooks/useSessionManager";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AboutUs from "./pages/AboutUs";
@@ -20,29 +21,37 @@ import Subscription from "./pages/Subscription";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  useSessionManager();
+  
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/install" element={<Install />} />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/disclaimer" element={<Disclaimer />} />
+      <Route path="/terms" element={<TermsOfUse />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/refund-policy" element={<RefundPolicy />} />
+      <Route path="/ephemeral" element={<EphemeralSpace />} />
+      <Route path="/room/:roomCode" element={<EphemeralRoom />} />
+      <Route path="/image-encryption" element={<ImageEncryption />} />
+      <Route path="/subscription" element={<Subscription />} />
+      <Route path="/admin" element={<AdminDashboard />} />
+      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/install" element={<Install />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/disclaimer" element={<Disclaimer />} />
-          <Route path="/terms" element={<TermsOfUse />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/refund-policy" element={<RefundPolicy />} />
-          <Route path="/ephemeral" element={<EphemeralSpace />} />
-          <Route path="/room/:roomCode" element={<EphemeralRoom />} />
-          <Route path="/image-encryption" element={<ImageEncryption />} />
-          <Route path="/subscription" element={<Subscription />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
