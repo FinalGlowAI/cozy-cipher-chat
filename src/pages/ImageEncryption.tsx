@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info } from "lucide-react";
+import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
@@ -54,6 +54,51 @@ const ImageEncryption = () => {
     cleanupExpiredImages();
     updateStorageStats();
   }, []);
+
+  // Screenshot prevention
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Detect common screenshot shortcuts
+      const isScreenshot = 
+        e.key === 'PrintScreen' ||
+        (e.key === 'F12') ||
+        (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) || // Mac screenshots
+        (e.ctrlKey && e.key === 'p') || // Print
+        (e.metaKey && e.shiftKey && e.key === 's'); // Windows Snip & Sketch
+
+      if (isScreenshot) {
+        e.preventDefault();
+        toast.error("Screenshots are disabled for security", {
+          icon: <Shield className="h-4 w-4" />,
+          description: "This protects your encrypted images"
+        });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && (selectedImage || decryptedImage)) {
+        toast.error("Screenshot attempt detected", {
+          icon: <Shield className="h-4 w-4" />,
+        });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Disable right-click context menu
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      toast.error("Right-click is disabled for security");
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [selectedImage, decryptedImage]);
 
   const updateStorageStats = async () => {
     try {
@@ -176,7 +221,7 @@ const ImageEncryption = () => {
   };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative select-none">
       <NeuralBackground key="neural-bg" />
       <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
         <Button
@@ -249,7 +294,8 @@ const ImageEncryption = () => {
                     <img
                       src={selectedImage}
                       alt="Selected"
-                      className="max-h-64 mx-auto rounded-lg"
+                      className="max-h-64 mx-auto rounded-lg pointer-events-none"
+                      draggable="false"
                     />
                     <Button
                       variant="outline"
@@ -403,7 +449,8 @@ const ImageEncryption = () => {
                   <img
                     src={decryptedImage}
                     alt="Decrypted"
-                    className="max-w-full rounded-lg mx-auto"
+                    className="max-w-full rounded-lg mx-auto pointer-events-none"
+                    draggable="false"
                   />
                 </div>
               )}
