@@ -70,11 +70,18 @@ export const decryptWithKey = (encrypted: string, key: string): string => {
 };
 
 const xorCipher = (text: string, key: string): string => {
-  // Encode text as UTF-8 bytes to properly handle emojis and all Unicode characters
   const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
   
-  const textBytes = encoder.encode(text);
+  // Check if text is a binary string (from atob) or regular text
+  let textBytes: Uint8Array;
+  if (text.split('').every(char => char.charCodeAt(0) <= 255)) {
+    // Binary string from atob - convert each char to byte
+    textBytes = new Uint8Array(text.split('').map(char => char.charCodeAt(0)));
+  } else {
+    // Regular text - encode as UTF-8
+    textBytes = encoder.encode(text);
+  }
+  
   const keyBytes = encoder.encode(key);
   const resultBytes = new Uint8Array(textBytes.length);
   
@@ -82,8 +89,8 @@ const xorCipher = (text: string, key: string): string => {
     resultBytes[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
   }
   
-  // Convert bytes to string for base64 encoding
-  return decoder.decode(resultBytes);
+  // Convert bytes to binary string for base64 encoding
+  return String.fromCharCode(...resultBytes);
 };
 
 const generateRandomKey = (length: number): string => {
