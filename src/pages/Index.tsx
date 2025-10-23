@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
@@ -9,45 +9,31 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
-import { useFreeUser } from "@/hooks/useFreeUser";
-import { useSessionTracking } from "@/hooks/useSessionTracking";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
   const [actionsRemaining, setActionsRemaining] = useState(3);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [session, setSession] = useState<Session | null>(null);
   const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, refreshSubscription } = useSubscription();
   const { isAdmin } = useAdmin();
-  const { isFreeUser } = useFreeUser();
-  const { updateSessionActivity, removeSession } = useSessionTracking();
 
   useEffect(() => {
-    let isMounted = true;
-
-    // Safety fallback to avoid indefinite loading if session resolution hangs
-    const safetyTimeout = setTimeout(() => {
-      setSession((prev) => (prev === undefined ? null : prev));
-    }, 7000);
-
-    // Check authentication once on mount
+    // Check authentication
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) return;
-      clearTimeout(safetyTimeout);
-      setSession(session ?? null);
-    }).catch(() => {
-      // In case of unexpected errors, fail closed
-      if (isMounted) setSession(null);
+      setSession(session);
+      if (!session) {
+        navigate("/auth");
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return;
-      clearTimeout(safetyTimeout);
-      setSession(session ?? null);
+      setSession(session);
       if (!session) {
+        navigate("/auth");
         // Clear localStorage when user logs out or is deleted
         localStorage.removeItem("ocx_actions");
         localStorage.removeItem("ocx_last_reset");
@@ -69,24 +55,8 @@ const Index = () => {
       setActionsRemaining(parseInt(saved));
     }
 
-    return () => {
-      isMounted = false;
-      clearTimeout(safetyTimeout);
-      subscription.unsubscribe();
-    };
-  }, [refreshSubscription]);
-
-  // Update session activity periodically (separate effect, runs only when we have a session)
-  useEffect(() => {
-    const sessionId = localStorage.getItem("ocx_session_id");
-    if (!session?.user || !sessionId) return;
-
-    const activityInterval = setInterval(() => {
-      updateSessionActivity(sessionId);
-    }, 2 * 60 * 1000); // Update every 2 minutes
-
-    return () => clearInterval(activityInterval);
-  }, [session?.user, updateSessionActivity]);
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   // Reset action count when subscription expires (premium -> free)
   useEffect(() => {
@@ -105,8 +75,8 @@ const Index = () => {
   }, [isPremium, subscriptionLoading, previousPremiumStatus]);
 
   const handleActionPerformed = () => {
-    if (isPremium || isAdmin || isFreeUser) {
-      // Premium users, admins, and free users have unlimited actions
+    if (isPremium || isAdmin) {
+      // Premium users and admins have unlimited actions
       return;
     }
     
@@ -120,7 +90,7 @@ const Index = () => {
   };
 
   const handlePremiumFeatureClick = (path: string) => {
-    if (isPremium || isAdmin || isFreeUser) {
+    if (isPremium || isAdmin) {
       navigate(path);
     } else {
       setShowUpgradeModal(true);
@@ -128,29 +98,13 @@ const Index = () => {
   };
 
   const handleLogout = async () => {
-    const sessionId = localStorage.getItem("ocx_session_id");
-    if (sessionId) {
-      await removeSession(sessionId);
-      localStorage.removeItem("ocx_session_id");
-    }
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
     navigate("/auth");
   };
 
-  if (session === undefined) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!session) {
-    return <Navigate to="/auth" replace />;
+    return null;
   }
 
   return (
@@ -186,19 +140,19 @@ const Index = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handlePremiumFeatureClick("/ephemeral")}
-                    className={isPremium || isAdmin || isFreeUser ? "" : "opacity-75"}
+                    className={isPremium || isAdmin ? "" : "opacity-75"}
                   >
-                    <span className="hidden md:inline">Ephemeral Space {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
-                    <span className="md:hidden">💬 {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
+                    <span className="hidden md:inline">Ephemeral Space {!isPremium && !isAdmin && "🔒"}</span>
+                    <span className="md:hidden">💬 {!isPremium && !isAdmin && "🔒"}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePremiumFeatureClick("/image-encryption")}
-                    className={isPremium || isAdmin || isFreeUser ? "" : "opacity-75"}
+                    className={isPremium || isAdmin ? "" : "opacity-75"}
                   >
-                    <span className="hidden md:inline">Image Encryption {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
-                    <span className="md:hidden">🖼️ {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
+                    <span className="hidden md:inline">Image Encryption {!isPremium && !isAdmin && "🔒"}</span>
+                    <span className="md:hidden">🖼️ {!isPremium && !isAdmin && "🔒"}</span>
                   </Button>
                 </div>
                 {isAdmin && (
@@ -245,7 +199,7 @@ const Index = () => {
 
           <EncryptionPanel
             onActionPerformed={handleActionPerformed}
-            actionsRemaining={isPremium || isAdmin || isFreeUser ? Infinity : actionsRemaining}
+            actionsRemaining={isPremium || isAdmin ? Infinity : actionsRemaining}
             onUpgradeNeeded={() => setShowUpgradeModal(true)}
           />
         </main>

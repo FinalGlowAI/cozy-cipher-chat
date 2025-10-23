@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ocxLogo from "@/assets/ocx-logo.png";
-import { useSessionTracking } from "@/hooks/useSessionTracking";
 
 interface Testimonial {
   id: string;
@@ -32,7 +31,6 @@ const Auth = () => {
   const [newTestimonial, setNewTestimonial] = useState({ name: "", title: "", comment: "", rating: 5 });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const navigate = useNavigate();
-  const { checkActiveSession, createSession } = useSessionTracking();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -97,28 +95,11 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        
-        // Check if user already has an active session
-        if (data.user) {
-          const hasActiveSession = await checkActiveSession(data.user.id);
-          if (hasActiveSession) {
-            toast.warning("This email is already active in another session. The previous session will be replaced.", {
-              duration: 5000,
-            });
-          }
-          
-          // Create new session for this login
-          const sessionId = await createSession(data.user.id);
-          if (sessionId) {
-            localStorage.setItem("ocx_session_id", sessionId);
-          }
-        }
-        
         toast.success("Successfully logged in!");
         navigate("/");
       } else {
