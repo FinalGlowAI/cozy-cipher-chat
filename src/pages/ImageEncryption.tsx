@@ -31,32 +31,15 @@ const ImageEncryption = () => {
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
   const [storageStats, setStorageStats] = useState({ count: 0, size: 0 });
-  const [actionsRemaining, setActionsRemaining] = useState(5);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [shieldActive, setShieldActive] = useState(false);
+
+  // Block non-premium users
   useEffect(() => {
-    // Load actions from localStorage for image encryption
-    const saved = localStorage.getItem("ocx_image_actions");
-    const lastReset = localStorage.getItem("ocx_image_last_reset");
-    const version = localStorage.getItem("ocx_image_version");
-    const today = new Date().toDateString();
-    const currentVersion = "2"; // Updated to 5 daily actions
-
-    // Force update for version change
-    if (version !== currentVersion) {
-      setActionsRemaining(5);
-      localStorage.setItem("ocx_image_actions", "5");
-      localStorage.setItem("ocx_image_last_reset", today);
-      localStorage.setItem("ocx_image_version", currentVersion);
-    } else if (lastReset !== today) {
-      setActionsRemaining(5);
-      localStorage.setItem("ocx_image_actions", "5");
-      localStorage.setItem("ocx_image_last_reset", today);
-    } else if (saved) {
-      setActionsRemaining(parseInt(saved));
+    if (!subscriptionLoading && !isPremium) {
+      setShowUpgradeModal(true);
     }
-  }, []);
-
+  }, [isPremium, subscriptionLoading]);
   useEffect(() => {
     // Cleanup expired images on mount
     cleanupExpiredImages();
@@ -113,20 +96,12 @@ const ImageEncryption = () => {
     window.addEventListener("blur", handleWindowBlur);
     window.addEventListener("focus", handleWindowFocus);
 
-    // Disable right-click context menu
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-      toast.error("Right-click is disabled for security");
-    };
-    document.addEventListener("contextmenu", handleContextMenu);
-
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
       window.removeEventListener("focus", handleWindowFocus);
-      document.removeEventListener("contextmenu", handleContextMenu);
     };
   }, [selectedImage, decryptedImage]);
 
@@ -154,28 +129,14 @@ const ImageEncryption = () => {
     }
   };
 
-  const handleActionPerformed = () => {
-    if (isPremium) {
+  const handleEncrypt = async () => {
+    if (!isPremium) {
+      setShowUpgradeModal(true);
       return;
     }
-    
-    const newCount = actionsRemaining - 1;
-    setActionsRemaining(newCount);
-    localStorage.setItem("ocx_image_actions", newCount.toString());
-    
-    if (newCount === 0) {
-      setShowUpgradeModal(true);
-    }
-  };
 
-  const handleEncrypt = async () => {
     if (!selectedImage) {
       toast.error("Please select an image first");
-      return;
-    }
-
-    if (!isPremium && actionsRemaining <= 0) {
-      setShowUpgradeModal(true);
       return;
     }
 
@@ -184,7 +145,6 @@ const ImageEncryption = () => {
       const code = await storeImage(selectedImage, expirationMinutes);
       setOutputCode(code);
       await updateStorageStats();
-      handleActionPerformed();
       
       const validityNum = expirationMinutes || 0;
       const expiryText = validity === "never" 
@@ -197,20 +157,19 @@ const ImageEncryption = () => {
   };
 
   const handleDecrypt = async () => {
-    if (!imageCode.trim()) {
-      toast.error("Please enter an image code");
+    if (!isPremium) {
+      setShowUpgradeModal(true);
       return;
     }
 
-    if (!isPremium && actionsRemaining <= 0) {
-      setShowUpgradeModal(true);
+    if (!imageCode.trim()) {
+      toast.error("Please enter an image code");
       return;
     }
 
     try {
       const imageData = await retrieveImage(imageCode);
       setDecryptedImage(imageData);
-      handleActionPerformed();
       toast.success("Image decrypted successfully!");
     } catch (error) {
       if (error instanceof Error) {
@@ -501,15 +460,6 @@ const ImageEncryption = () => {
             </div>
           )}
         </div>
-
-        {/* Actions Remaining */}
-        {!isPremium && (
-          <div className="text-center mt-6">
-            <p className="text-sm text-muted-foreground">
-              Free actions remaining today: <span className="font-bold text-primary">{actionsRemaining}</span>
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Upgrade Modal */}
