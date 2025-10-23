@@ -33,7 +33,7 @@ const ImageEncryption = () => {
   const [storageStats, setStorageStats] = useState({ count: 0, size: 0 });
   const [actionsRemaining, setActionsRemaining] = useState(5);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-
+  const [shieldActive, setShieldActive] = useState(false);
   useEffect(() => {
     // Load actions from localStorage for image encryption
     const saved = localStorage.getItem("ocx_image_actions");
@@ -63,48 +63,70 @@ const ImageEncryption = () => {
     updateStorageStats();
   }, []);
 
-  // Screenshot prevention
+  // Screenshot prevention / deterrence
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Detect common screenshot shortcuts
-      const isScreenshot = 
-        e.key === 'PrintScreen' ||
-        (e.key === 'F12') ||
-        (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) || // Mac screenshots
-        (e.ctrlKey && e.key === 'p') || // Print
-        (e.metaKey && e.shiftKey && e.key === 's'); // Windows Snip & Sketch
+      const isScreenshot =
+        e.key === "PrintScreen" ||
+        e.key === "F12" ||
+        (e.metaKey && e.shiftKey && (e.key === "3" || e.key === "4" || e.key === "5")) || // Mac screenshots
+        (e.ctrlKey && e.key.toLowerCase() === "p") || // Print
+        (e.metaKey && e.shiftKey && e.key.toLowerCase() === "s"); // Windows Snip & Sketch
 
       if (isScreenshot) {
         e.preventDefault();
         toast.error("Screenshots are disabled for security", {
           icon: <Shield className="h-4 w-4" />,
-          description: "This protects your encrypted images"
+          description: "This protects your encrypted images",
         });
+      }
+    };
+
+    const handleKeyUp = async (e: KeyboardEvent) => {
+      if (e.key === "PrintScreen") {
+        try {
+          // Attempt to clear clipboard so OS screenshot cannot be pasted
+          await navigator.clipboard.writeText("Screenshots disabled");
+        } catch {}
       }
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden && (selectedImage || decryptedImage)) {
-        toast.error("Screenshot attempt detected", {
-          icon: <Shield className="h-4 w-4" />,
-        });
+      const hasSensitive = !!(selectedImage || decryptedImage);
+      if (document.hidden && hasSensitive) {
+        setShieldActive(true);
+        toast.error("Screenshot attempt detected", { icon: <Shield className="h-4 w-4" /> });
+      } else if (!document.hidden) {
+        setShieldActive(false);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const handleWindowBlur = () => {
+      if (selectedImage || decryptedImage) setShieldActive(true);
+    };
+    const handleWindowFocus = () => setShieldActive(false);
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
+    window.addEventListener("focus", handleWindowFocus);
 
     // Disable right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       toast.error("Right-click is disabled for security");
     };
-    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("contextmenu", handleContextMenu);
     };
   }, [selectedImage, decryptedImage]);
 
@@ -299,12 +321,19 @@ const ImageEncryption = () => {
               <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                 {selectedImage ? (
                   <div className="space-y-4">
-                    <img
-                      src={selectedImage}
-                      alt="Selected"
-                      className="max-h-64 mx-auto rounded-lg pointer-events-none"
-                      draggable="false"
-                    />
+                    <div className="relative">
+                      <img
+                        src={selectedImage}
+                        alt="Selected"
+                        className={`max-h-64 mx-auto rounded-lg pointer-events-none ${shieldActive ? 'blur-md' : ''}`}
+                        draggable="false"
+                      />
+                      {shieldActive && (
+                        <div className="absolute inset-0 rounded-lg bg-background/60 backdrop-blur-sm flex items-center justify-center text-xs">
+                          Protected while window is unfocused
+                        </div>
+                      )}
+                    </div>
                     <Button
                       variant="outline"
                       onClick={() => setSelectedImage(null)}
@@ -454,12 +483,19 @@ const ImageEncryption = () => {
               {decryptedImage && (
                 <div className="border border-border rounded-lg p-4">
                   <Label className="mb-2 block">Decrypted Image</Label>
-                  <img
-                    src={decryptedImage}
-                    alt="Decrypted"
-                    className="max-w-full rounded-lg mx-auto pointer-events-none"
-                    draggable="false"
-                  />
+                  <div className="relative">
+                    <img
+                      src={decryptedImage}
+                      alt="Decrypted"
+                      className={`max-w-full rounded-lg mx-auto pointer-events-none ${shieldActive ? 'blur-md' : ''}`}
+                      draggable="false"
+                    />
+                    {shieldActive && (
+                      <div className="absolute inset-0 rounded-lg bg-background/60 backdrop-blur-sm flex items-center justify-center text-xs">
+                        Protected while window is unfocused
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
