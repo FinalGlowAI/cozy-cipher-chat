@@ -38,9 +38,17 @@ const ImageEncryption = () => {
     // Load actions from localStorage for image encryption
     const saved = localStorage.getItem("ocx_image_actions");
     const lastReset = localStorage.getItem("ocx_image_last_reset");
+    const version = localStorage.getItem("ocx_image_version");
     const today = new Date().toDateString();
+    const currentVersion = "2"; // Updated to 5 daily actions
 
-    if (lastReset !== today) {
+    // Force update for version change
+    if (version !== currentVersion) {
+      setActionsRemaining(5);
+      localStorage.setItem("ocx_image_actions", "5");
+      localStorage.setItem("ocx_image_last_reset", today);
+      localStorage.setItem("ocx_image_version", currentVersion);
+    } else if (lastReset !== today) {
       setActionsRemaining(5);
       localStorage.setItem("ocx_image_actions", "5");
       localStorage.setItem("ocx_image_last_reset", today);
