@@ -28,15 +28,25 @@ const Index = () => {
   useEffect(() => {
     let isMounted = true;
 
+    // Safety fallback to avoid indefinite loading if session resolution hangs
+    const safetyTimeout = setTimeout(() => {
+      setSession((prev) => (prev === undefined ? null : prev));
+    }, 7000);
+
     // Check authentication once on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return;
-      setSession(session);
+      clearTimeout(safetyTimeout);
+      setSession(session ?? null);
+    }).catch(() => {
+      // In case of unexpected errors, fail closed
+      if (isMounted) setSession(null);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return;
-      setSession(session);
+      clearTimeout(safetyTimeout);
+      setSession(session ?? null);
       if (!session) {
         // Clear localStorage when user logs out or is deleted
         localStorage.removeItem("ocx_actions");
@@ -59,22 +69,24 @@ const Index = () => {
       setActionsRemaining(parseInt(saved));
     }
 
-    // Update session activity periodically
-    const sessionId = localStorage.getItem("ocx_session_id");
-    let activityInterval: NodeJS.Timeout | null = null;
-    
-    if (session?.user && sessionId) {
-      activityInterval = setInterval(() => {
-        updateSessionActivity(sessionId);
-      }, 2 * 60 * 1000); // Update every 2 minutes
-    }
-
     return () => {
       isMounted = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
-      if (activityInterval) clearInterval(activityInterval);
     };
-  }, [refreshSubscription, session, updateSessionActivity]);
+  }, [refreshSubscription]);
+
+  // Update session activity periodically (separate effect, runs only when we have a session)
+  useEffect(() => {
+    const sessionId = localStorage.getItem("ocx_session_id");
+    if (!session?.user || !sessionId) return;
+
+    const activityInterval = setInterval(() => {
+      updateSessionActivity(sessionId);
+    }, 2 * 60 * 1000); // Update every 2 minutes
+
+    return () => clearInterval(activityInterval);
+  }, [session?.user, updateSessionActivity]);
 
   // Reset action count when subscription expires (premium -> free)
   useEffect(() => {
