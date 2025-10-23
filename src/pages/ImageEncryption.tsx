@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info, Shield } from "lucide-react";
+import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
@@ -31,79 +31,29 @@ const ImageEncryption = () => {
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
   const [storageStats, setStorageStats] = useState({ count: 0, size: 0 });
+  const [actionsRemaining, setActionsRemaining] = useState(3);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [shieldActive, setShieldActive] = useState(false);
 
-  // Block non-premium users
   useEffect(() => {
-    if (!subscriptionLoading && !isPremium) {
-      setShowUpgradeModal(true);
+    // Load actions from localStorage for image encryption
+    const saved = localStorage.getItem("ocx_image_actions");
+    const lastReset = localStorage.getItem("ocx_image_last_reset");
+    const today = new Date().toDateString();
+
+    if (lastReset !== today) {
+      setActionsRemaining(3);
+      localStorage.setItem("ocx_image_actions", "3");
+      localStorage.setItem("ocx_image_last_reset", today);
+    } else if (saved) {
+      setActionsRemaining(parseInt(saved));
     }
-  }, [isPremium, subscriptionLoading]);
+  }, []);
+
   useEffect(() => {
     // Cleanup expired images on mount
     cleanupExpiredImages();
     updateStorageStats();
   }, []);
-
-  // Screenshot prevention / deterrence
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Detect common screenshot shortcuts
-      const isScreenshot =
-        e.key === "PrintScreen" ||
-        e.key === "F12" ||
-        (e.metaKey && e.shiftKey && (e.key === "3" || e.key === "4" || e.key === "5")) || // Mac screenshots
-        (e.ctrlKey && e.key.toLowerCase() === "p") || // Print
-        (e.metaKey && e.shiftKey && e.key.toLowerCase() === "s"); // Windows Snip & Sketch
-
-      if (isScreenshot) {
-        e.preventDefault();
-        toast.error("Screenshots are disabled for security", {
-          icon: <Shield className="h-4 w-4" />,
-          description: "This protects your encrypted images",
-        });
-      }
-    };
-
-    const handleKeyUp = async (e: KeyboardEvent) => {
-      if (e.key === "PrintScreen") {
-        try {
-          // Attempt to clear clipboard so OS screenshot cannot be pasted
-          await navigator.clipboard.writeText("Screenshots disabled");
-        } catch {}
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      const hasSensitive = !!(selectedImage || decryptedImage);
-      if (document.hidden && hasSensitive) {
-        setShieldActive(true);
-        toast.error("Screenshot attempt detected", { icon: <Shield className="h-4 w-4" /> });
-      } else if (!document.hidden) {
-        setShieldActive(false);
-      }
-    };
-
-    const handleWindowBlur = () => {
-      if (selectedImage || decryptedImage) setShieldActive(true);
-    };
-    const handleWindowFocus = () => setShieldActive(false);
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keyup", handleKeyUp);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("blur", handleWindowBlur);
-    window.addEventListener("focus", handleWindowFocus);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("keyup", handleKeyUp);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("blur", handleWindowBlur);
-      window.removeEventListener("focus", handleWindowFocus);
-    };
-  }, [selectedImage, decryptedImage]);
 
   const updateStorageStats = async () => {
     try {
@@ -129,14 +79,28 @@ const ImageEncryption = () => {
     }
   };
 
-  const handleEncrypt = async () => {
-    if (!isPremium) {
+  const handleActionPerformed = () => {
+    if (isPremium) {
+      return;
+    }
+    
+    const newCount = actionsRemaining - 1;
+    setActionsRemaining(newCount);
+    localStorage.setItem("ocx_image_actions", newCount.toString());
+    
+    if (newCount === 0) {
       setShowUpgradeModal(true);
+    }
+  };
+
+  const handleEncrypt = async () => {
+    if (!selectedImage) {
+      toast.error("Please select an image first");
       return;
     }
 
-    if (!selectedImage) {
-      toast.error("Please select an image first");
+    if (!isPremium && actionsRemaining <= 0) {
+      setShowUpgradeModal(true);
       return;
     }
 
@@ -145,6 +109,7 @@ const ImageEncryption = () => {
       const code = await storeImage(selectedImage, expirationMinutes);
       setOutputCode(code);
       await updateStorageStats();
+      handleActionPerformed();
       
       const validityNum = expirationMinutes || 0;
       const expiryText = validity === "never" 
@@ -157,19 +122,20 @@ const ImageEncryption = () => {
   };
 
   const handleDecrypt = async () => {
-    if (!isPremium) {
-      setShowUpgradeModal(true);
+    if (!imageCode.trim()) {
+      toast.error("Please enter an image code");
       return;
     }
 
-    if (!imageCode.trim()) {
-      toast.error("Please enter an image code");
+    if (!isPremium && actionsRemaining <= 0) {
+      setShowUpgradeModal(true);
       return;
     }
 
     try {
       const imageData = await retrieveImage(imageCode);
       setDecryptedImage(imageData);
+      handleActionPerformed();
       toast.success("Image decrypted successfully!");
     } catch (error) {
       if (error instanceof Error) {
@@ -210,7 +176,7 @@ const ImageEncryption = () => {
   };
 
   return (
-    <div className="min-h-screen relative select-none">
+    <div className="min-h-screen relative">
       <NeuralBackground key="neural-bg" />
       <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
         <Button
@@ -280,19 +246,11 @@ const ImageEncryption = () => {
               <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                 {selectedImage ? (
                   <div className="space-y-4">
-                    <div className="relative">
-                      <img
-                        src={selectedImage}
-                        alt="Selected"
-                        className={`max-h-64 mx-auto rounded-lg pointer-events-none ${shieldActive ? 'blur-md' : ''}`}
-                        draggable="false"
-                      />
-                      {shieldActive && (
-                        <div className="absolute inset-0 rounded-lg bg-background/60 backdrop-blur-sm flex items-center justify-center text-xs">
-                          Protected while window is unfocused
-                        </div>
-                      )}
-                    </div>
+                    <img
+                      src={selectedImage}
+                      alt="Selected"
+                      className="max-h-64 mx-auto rounded-lg"
+                    />
                     <Button
                       variant="outline"
                       onClick={() => setSelectedImage(null)}
@@ -442,24 +400,25 @@ const ImageEncryption = () => {
               {decryptedImage && (
                 <div className="border border-border rounded-lg p-4">
                   <Label className="mb-2 block">Decrypted Image</Label>
-                  <div className="relative">
-                    <img
-                      src={decryptedImage}
-                      alt="Decrypted"
-                      className={`max-w-full rounded-lg mx-auto pointer-events-none ${shieldActive ? 'blur-md' : ''}`}
-                      draggable="false"
-                    />
-                    {shieldActive && (
-                      <div className="absolute inset-0 rounded-lg bg-background/60 backdrop-blur-sm flex items-center justify-center text-xs">
-                        Protected while window is unfocused
-                      </div>
-                    )}
-                  </div>
+                  <img
+                    src={decryptedImage}
+                    alt="Decrypted"
+                    className="max-w-full rounded-lg mx-auto"
+                  />
                 </div>
               )}
             </div>
           )}
         </div>
+
+        {/* Actions Remaining */}
+        {!isPremium && (
+          <div className="text-center mt-6">
+            <p className="text-sm text-muted-foreground">
+              Free actions remaining today: <span className="font-bold text-primary">{actionsRemaining}</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Upgrade Modal */}

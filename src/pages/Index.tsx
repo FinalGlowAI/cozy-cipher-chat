@@ -13,7 +13,7 @@ import { NeuralBackground } from "@/components/NeuralBackground";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
-  const [actionsRemaining, setActionsRemaining] = useState(5);
+  const [actionsRemaining, setActionsRemaining] = useState(3);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
@@ -45,19 +45,11 @@ const Index = () => {
     // Load actions from localStorage
     const saved = localStorage.getItem("ocx_actions");
     const lastReset = localStorage.getItem("ocx_last_reset");
-    const version = localStorage.getItem("ocx_actions_version");
     const today = new Date().toDateString();
-    const currentVersion = "2"; // Updated to 5 daily actions
 
-    // Force update for version change
-    if (version !== currentVersion) {
-      setActionsRemaining(5);
-      localStorage.setItem("ocx_actions", "5");
-      localStorage.setItem("ocx_last_reset", today);
-      localStorage.setItem("ocx_actions_version", currentVersion);
-    } else if (lastReset !== today) {
-      setActionsRemaining(5);
-      localStorage.setItem("ocx_actions", "5");
+    if (lastReset !== today) {
+      setActionsRemaining(3);
+      localStorage.setItem("ocx_actions", "3");
       localStorage.setItem("ocx_last_reset", today);
     } else if (saved) {
       setActionsRemaining(parseInt(saved));
@@ -71,10 +63,10 @@ const Index = () => {
     if (!subscriptionLoading && previousPremiumStatus !== null) {
       // User went from premium to free (subscription expired/cancelled)
       if (previousPremiumStatus && !isPremium) {
-        setActionsRemaining(5);
-        localStorage.setItem("ocx_actions", "5");
+        setActionsRemaining(3);
+        localStorage.setItem("ocx_actions", "3");
         localStorage.setItem("ocx_last_reset", new Date().toDateString());
-        toast.info("Your subscription has ended. You now have 5 daily actions.");
+        toast.info("Your subscription has ended. You now have 3 daily actions.");
       }
     }
     if (!subscriptionLoading) {
@@ -83,8 +75,8 @@ const Index = () => {
   }, [isPremium, subscriptionLoading, previousPremiumStatus]);
 
   const handleActionPerformed = () => {
-    if (isPremium || isAdmin) {
-      // Premium users and admins have unlimited actions
+    if (isPremium) {
+      // Premium users have unlimited actions
       return;
     }
     
@@ -98,7 +90,7 @@ const Index = () => {
   };
 
   const handlePremiumFeatureClick = (path: string) => {
-    if (isPremium || isAdmin) {
+    if (isPremium) {
       navigate(path);
     } else {
       setShowUpgradeModal(true);
@@ -106,19 +98,9 @@ const Index = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Logout error:', error);
-        toast.error("Error logging out. Please try again.");
-        return;
-      }
-      toast.success("Logged out successfully");
-      navigate("/auth");
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error("Error logging out. Please try again.");
-    }
+    await supabase.auth.signOut();
+    toast.success("Logged out successfully");
+    navigate("/auth");
   };
 
   if (!session) {
@@ -158,19 +140,19 @@ const Index = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handlePremiumFeatureClick("/ephemeral")}
-                    className={isPremium || isAdmin ? "" : "opacity-75"}
+                    className={isPremium ? "" : "opacity-75"}
                   >
-                    <span className="hidden md:inline">Ephemeral Space {!isPremium && !isAdmin && "🔒"}</span>
-                    <span className="md:hidden">💬 {!isPremium && !isAdmin && "🔒"}</span>
+                    <span className="hidden md:inline">Ephemeral Space {!isPremium && "🔒"}</span>
+                    <span className="md:hidden">💬 {!isPremium && "🔒"}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePremiumFeatureClick("/image-encryption")}
-                    className={isPremium || isAdmin ? "" : "opacity-75"}
+                    className={isPremium ? "" : "opacity-75"}
                   >
-                    <span className="hidden md:inline">Image Encryption {!isPremium && !isAdmin && "🔒"}</span>
-                    <span className="md:hidden">🖼️ {!isPremium && !isAdmin && "🔒"}</span>
+                    <span className="hidden md:inline">Image Encryption {!isPremium && "🔒"}</span>
+                    <span className="md:hidden">🖼️ {!isPremium && "🔒"}</span>
                   </Button>
                 </div>
                 {isAdmin && (
@@ -217,7 +199,7 @@ const Index = () => {
 
           <EncryptionPanel
             onActionPerformed={handleActionPerformed}
-            actionsRemaining={isPremium || isAdmin ? Infinity : actionsRemaining}
+            actionsRemaining={isPremium ? Infinity : actionsRemaining}
             onUpgradeNeeded={() => setShowUpgradeModal(true)}
           />
         </main>

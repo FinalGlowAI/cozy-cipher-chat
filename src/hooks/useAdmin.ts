@@ -37,19 +37,6 @@ export const useAdmin = () => {
     };
 
     checkAdminStatus();
-
-    // Listen for auth state changes to refresh admin status
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setLoading(true);
-        checkAdminStatus();
-      } else if (event === 'SIGNED_OUT') {
-        setIsAdmin(false);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   return { isAdmin, loading };

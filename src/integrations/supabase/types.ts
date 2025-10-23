@@ -14,30 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      active_sessions: {
-        Row: {
-          created_at: string
-          id: string
-          last_active: string
-          session_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          last_active?: string
-          session_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          last_active?: string
-          session_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       encrypted_images: {
         Row: {
           code: string
@@ -231,8 +207,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_encrypted_images: { Args: never; Returns: number }
-      generate_room_code: { Args: never; Returns: string }
+      cleanup_expired_encrypted_images: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      generate_room_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -240,8 +222,14 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_free_user: { Args: never; Returns: boolean }
-      is_premium_user: { Args: { user_id: string }; Returns: boolean }
+      is_free_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_premium_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user"
