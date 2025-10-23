@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { Lock, LogOut, Settings } from "lucide-react";
+import { Lock, LogOut, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -15,25 +15,38 @@ import ocxLogo from "@/assets/ocx-logo.png";
 const Index = () => {
   const [actionsRemaining, setActionsRemaining] = useState(3);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, refreshSubscription } = useSubscription();
   const { isAdmin } = useAdmin();
 
   useEffect(() => {
-    // Check authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (!session) {
-        navigate("/auth");
-      }
-    });
+    let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (!session) {
-        navigate("/auth");
+    // Safety to avoid indefinite loading
+    const safetyTimeout = setTimeout(() => {
+      if (!mounted) return;
+      setSession((prev) => (prev === undefined ? null : prev));
+    }, 7000);
+
+    // Check authentication once on mount
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        if (!mounted) return;
+        clearTimeout(safetyTimeout);
+        setSession(session ?? null);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setSession(null);
+      });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+      if (!mounted) return;
+      clearTimeout(safetyTimeout);
+      setSession(sess ?? null);
+      if (!sess) {
         // Clear localStorage when user logs out or is deleted
         localStorage.removeItem("ocx_actions");
         localStorage.removeItem("ocx_last_reset");
@@ -55,8 +68,19 @@ const Index = () => {
       setActionsRemaining(parseInt(saved));
     }
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
+  }, [refreshSubscription]);
+
+  // Redirect to auth when session is confirmed missing
+  useEffect(() => {
+    if (session === null) {
+      navigate("/auth", { replace: true });
+    }
+  }, [session, navigate]);
 
   // Reset action count when subscription expires (premium -> free)
   useEffect(() => {
@@ -103,8 +127,28 @@ const Index = () => {
     navigate("/auth");
   };
 
-  if (!session) {
-    return null;
+  if (session === undefined) {
+    return (
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+        <NeuralBackground key="neural-bg" />
+        <div className="relative z-10 flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span>Loading your session…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (session === null) {
+    return (
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+        <NeuralBackground key="neural-bg" />
+        <div className="relative z-10 flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span>Redirecting…</span>
+        </div>
+      </div>
+    );
   }
 
   return (
