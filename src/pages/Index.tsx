@@ -75,8 +75,8 @@ const Index = () => {
   }, [isPremium, subscriptionLoading, previousPremiumStatus]);
 
   const handleActionPerformed = () => {
-    if (isPremium) {
-      // Premium users have unlimited actions
+    if (isPremium || isAdmin) {
+      // Premium users and admins have unlimited actions
       return;
     }
     
@@ -90,7 +90,7 @@ const Index = () => {
   };
 
   const handlePremiumFeatureClick = (path: string) => {
-    if (isPremium) {
+    if (isPremium || isAdmin) {
       navigate(path);
     } else {
       setShowUpgradeModal(true);
@@ -140,19 +140,19 @@ const Index = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handlePremiumFeatureClick("/ephemeral")}
-                    className={isPremium ? "" : "opacity-75"}
+                    className={isPremium || isAdmin ? "" : "opacity-75"}
                   >
-                    <span className="hidden md:inline">Ephemeral Space {!isPremium && "🔒"}</span>
-                    <span className="md:hidden">💬 {!isPremium && "🔒"}</span>
+                    <span className="hidden md:inline">Ephemeral Space {!isPremium && !isAdmin && "🔒"}</span>
+                    <span className="md:hidden">💬 {!isPremium && !isAdmin && "🔒"}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePremiumFeatureClick("/image-encryption")}
-                    className={isPremium ? "" : "opacity-75"}
+                    className={isPremium || isAdmin ? "" : "opacity-75"}
                   >
-                    <span className="hidden md:inline">Image Encryption {!isPremium && "🔒"}</span>
-                    <span className="md:hidden">🖼️ {!isPremium && "🔒"}</span>
+                    <span className="hidden md:inline">Image Encryption {!isPremium && !isAdmin && "🔒"}</span>
+                    <span className="md:hidden">🖼️ {!isPremium && !isAdmin && "🔒"}</span>
                   </Button>
                 </div>
                 {isAdmin && (
@@ -199,7 +199,7 @@ const Index = () => {
 
           <EncryptionPanel
             onActionPerformed={handleActionPerformed}
-            actionsRemaining={isPremium ? Infinity : actionsRemaining}
+            actionsRemaining={isPremium || isAdmin ? Infinity : actionsRemaining}
             onUpgradeNeeded={() => setShowUpgradeModal(true)}
           />
         </main>
