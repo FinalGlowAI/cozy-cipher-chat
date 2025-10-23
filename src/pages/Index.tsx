@@ -106,9 +106,19 @@ const Index = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out successfully");
-    navigate("/auth");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        toast.error("Error logging out. Please try again.");
+        return;
+      }
+      toast.success("Logged out successfully");
+      navigate("/auth");
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error("Error logging out. Please try again.");
+    }
   };
 
   if (!session) {
