@@ -44,11 +44,6 @@ const Index = () => {
       }
     });
 
-    // Fallback: if session hasn't resolved in 4s, treat as logged out
-    const timeoutId = setTimeout(() => {
-      setSession(prev => (prev === undefined ? null : prev));
-    }, 4000);
-
     // Load actions from localStorage
     const saved = localStorage.getItem("ocx_actions");
     const lastReset = localStorage.getItem("ocx_last_reset");
@@ -64,7 +59,6 @@ const Index = () => {
 
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, [refreshSubscription]);
