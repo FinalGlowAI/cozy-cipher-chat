@@ -7,9 +7,13 @@ export const useFreeUser = () => {
 
   useEffect(() => {
     const checkFreeUserStatus = async () => {
+      console.log('[useFreeUser] Starting free user check...');
       try {
         const { data: { user } } = await supabase.auth.getUser();
+        console.log('[useFreeUser] User:', user?.id, user?.email);
+        
         if (!user?.email) {
+          console.log('[useFreeUser] No user or email found');
           setIsFreeUser(false);
           setLoading(false);
           return;
@@ -22,15 +26,17 @@ export const useFreeUser = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Error checking free user status:', error);
+          console.error('[useFreeUser] Error checking free user status:', error);
           setIsFreeUser(false);
         } else {
+          console.log('[useFreeUser] Free user status:', !!data);
           setIsFreeUser(!!data);
         }
       } catch (error) {
-        console.error('Error checking free user status:', error);
+        console.error('[useFreeUser] Exception:', error);
         setIsFreeUser(false);
       } finally {
+        console.log('[useFreeUser] Check complete');
         setLoading(false);
       }
     };
