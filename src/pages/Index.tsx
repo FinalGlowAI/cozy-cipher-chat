@@ -13,7 +13,7 @@ import { NeuralBackground } from "@/components/NeuralBackground";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
-  const [actionsRemaining, setActionsRemaining] = useState(3);
+  const [actionsRemaining, setActionsRemaining] = useState(5);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
@@ -45,11 +45,19 @@ const Index = () => {
     // Load actions from localStorage
     const saved = localStorage.getItem("ocx_actions");
     const lastReset = localStorage.getItem("ocx_last_reset");
+    const version = localStorage.getItem("ocx_actions_version");
     const today = new Date().toDateString();
+    const currentVersion = "2"; // Updated to 5 daily actions
 
-    if (lastReset !== today) {
-      setActionsRemaining(3);
-      localStorage.setItem("ocx_actions", "3");
+    // Force update for version change
+    if (version !== currentVersion) {
+      setActionsRemaining(5);
+      localStorage.setItem("ocx_actions", "5");
+      localStorage.setItem("ocx_last_reset", today);
+      localStorage.setItem("ocx_actions_version", currentVersion);
+    } else if (lastReset !== today) {
+      setActionsRemaining(5);
+      localStorage.setItem("ocx_actions", "5");
       localStorage.setItem("ocx_last_reset", today);
     } else if (saved) {
       setActionsRemaining(parseInt(saved));
@@ -63,10 +71,10 @@ const Index = () => {
     if (!subscriptionLoading && previousPremiumStatus !== null) {
       // User went from premium to free (subscription expired/cancelled)
       if (previousPremiumStatus && !isPremium) {
-        setActionsRemaining(3);
-        localStorage.setItem("ocx_actions", "3");
+        setActionsRemaining(5);
+        localStorage.setItem("ocx_actions", "5");
         localStorage.setItem("ocx_last_reset", new Date().toDateString());
-        toast.info("Your subscription has ended. You now have 3 daily actions.");
+        toast.info("Your subscription has ended. You now have 5 daily actions.");
       }
     }
     if (!subscriptionLoading) {
