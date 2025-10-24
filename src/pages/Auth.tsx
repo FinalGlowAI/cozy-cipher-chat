@@ -146,16 +146,16 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-6 sm:p-6 md:p-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-surface opacity-50" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      <div className="w-full max-w-6xl relative z-10 grid md:grid-cols-2 gap-8 items-center">
-        <div className="hidden md:block space-y-8">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-foreground mb-2">Join 100,000+ Users</h2>
-            <p className="text-muted-foreground">Who trust us with their secure communications</p>
+      <div className="w-full max-w-6xl relative z-10 grid md:grid-cols-2 gap-6 sm:gap-8 items-center">
+        <div className="hidden md:block space-y-6 lg:space-y-8">
+          <div className="text-center mb-6 lg:mb-8">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">Join 100,000+ Users</h2>
+            <p className="text-sm lg:text-base text-muted-foreground">Who trust us with their secure communications</p>
           </div>
           
           <div className="space-y-4 min-h-[400px] flex flex-col">
@@ -184,7 +184,7 @@ const Auth = () => {
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">Share Your Experience</Button>
+                <Button variant="outline" className="w-full min-h-[44px]">Share Your Experience</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -238,7 +238,7 @@ const Auth = () => {
                       ))}
                     </div>
                   </div>
-                  <Button type="submit" className="w-full">Submit Testimonial</Button>
+                  <Button type="submit" className="w-full min-h-[44px]">Submit Testimonial</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -246,23 +246,23 @@ const Auth = () => {
         </div>
 
         <Card className="w-full border-primary/20 bg-card/80 backdrop-blur-xl">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <img src={ocxLogo} alt="OCX Logo" className="h-20 w-20 object-contain" />
+        <CardHeader className="space-y-2 sm:space-y-3 text-center px-4 sm:px-6 pt-6 sm:pt-8">
+          <div className="flex justify-center mb-3 sm:mb-4">
+            <img src={ocxLogo} alt="OCX Logo" className="h-16 w-16 sm:h-20 sm:w-20 object-contain" />
           </div>
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-xl sm:text-2xl font-bold">
             {isLogin ? "Welcome Back" : "Create Account"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm sm:text-base">
             {isLogin
               ? "Sign in to access your secure messaging"
               : "Sign up to start encrypting your messages"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
+        <CardContent className="px-4 sm:px-6 pb-6 sm:pb-8">
+          <form onSubmit={handleAuth} className="space-y-4 sm:space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -270,10 +270,11 @@ const Auth = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="min-h-[44px] text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -282,24 +283,26 @@ const Auth = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                className="min-h-[44px] text-base"
               />
             </div>
             {!isLogin && (
-              <div className="flex items-start space-x-2">
+              <div className="flex items-start space-x-3 py-2">
                 <Checkbox
                   id="terms"
                   checked={agreedToTerms}
                   onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                  className="mt-0.5"
                 />
                 <label
                   htmlFor="terms"
-                  className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="text-sm sm:text-base text-muted-foreground leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   I agree to the{" "}
                   <button
                     type="button"
                     onClick={() => navigate("/terms")}
-                    className="text-primary hover:underline"
+                    className="text-primary hover:underline inline-block min-h-[24px]"
                   >
                     Terms of Use
                   </button>
@@ -308,17 +311,17 @@ const Auth = () => {
             )}
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full min-h-[48px] text-base font-medium" 
               disabled={loading || (!isLogin && !agreedToTerms)}
             >
               {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-5 sm:mt-6 text-center">
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
+              className="text-primary hover:underline text-sm sm:text-base min-h-[44px] inline-flex items-center"
             >
               {isLogin
                 ? "Don't have an account? Sign up"
