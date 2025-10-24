@@ -22,7 +22,8 @@ import {
 
 const ImageEncryption = () => {
   const navigate = useNavigate();
-  const { isPremium, loading: subscriptionLoading } = useSubscription();
+  const { isPremium, isFreeUser, loading: subscriptionLoading } = useSubscription();
+  const hasUnlimitedAccess = isPremium || isFreeUser;
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageCode, setImageCode] = useState("");
@@ -80,7 +81,7 @@ const ImageEncryption = () => {
   };
 
   const handleActionPerformed = () => {
-    if (isPremium) {
+    if (hasUnlimitedAccess) {
       return;
     }
     
@@ -99,7 +100,7 @@ const ImageEncryption = () => {
       return;
     }
 
-    if (!isPremium && actionsRemaining <= 0) {
+    if (!hasUnlimitedAccess && actionsRemaining <= 0) {
       setShowUpgradeModal(true);
       return;
     }
@@ -127,7 +128,7 @@ const ImageEncryption = () => {
       return;
     }
 
-    if (!isPremium && actionsRemaining <= 0) {
+    if (!hasUnlimitedAccess && actionsRemaining <= 0) {
       setShowUpgradeModal(true);
       return;
     }
@@ -412,7 +413,7 @@ const ImageEncryption = () => {
         </div>
 
         {/* Actions Remaining */}
-        {!isPremium && (
+        {!hasUnlimitedAccess && (
           <div className="text-center mt-6">
             <p className="text-sm text-muted-foreground">
               Free actions remaining today: <span className="font-bold text-primary">{actionsRemaining}</span>
