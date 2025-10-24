@@ -21,14 +21,14 @@ const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { isPremium, loading: subscriptionLoading } = useSubscription();
+  const { isPremium, isFreeUser, loading: subscriptionLoading } = useSubscription();
 
   useEffect(() => {
-    if (!subscriptionLoading && !isPremium) {
+    if (!subscriptionLoading && !isPremium && !isFreeUser) {
       toast.error("This feature is only available for premium users");
       navigate("/");
     }
-  }, [isPremium, subscriptionLoading, navigate]);
+  }, [isPremium, isFreeUser, subscriptionLoading, navigate]);
 
   const createNewRoom = async () => {
     setLoading(true);

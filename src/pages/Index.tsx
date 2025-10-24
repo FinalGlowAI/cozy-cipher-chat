@@ -18,7 +18,7 @@ const Index = () => {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
   const navigate = useNavigate();
-  const { isPremium, loading: subscriptionLoading, refreshSubscription } = useSubscription();
+  const { isPremium, isFreeUser, loading: subscriptionLoading, refreshSubscription } = useSubscription();
   const { isAdmin } = useAdmin();
 
   useEffect(() => {
@@ -99,8 +99,8 @@ const Index = () => {
   }, [isPremium, subscriptionLoading, previousPremiumStatus]);
 
   const handleActionPerformed = () => {
-    if (isPremium || isAdmin) {
-      // Premium users and admins have unlimited actions
+    if (isPremium || isAdmin || isFreeUser) {
+      // Premium users, admins, and free users (admin-granted) have unlimited actions
       return;
     }
     
@@ -114,7 +114,7 @@ const Index = () => {
   };
 
   const handlePremiumFeatureClick = (path: string) => {
-    if (isPremium || isAdmin) {
+    if (isPremium || isAdmin || isFreeUser) {
       navigate(path);
     } else {
       setShowUpgradeModal(true);
@@ -184,19 +184,19 @@ const Index = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handlePremiumFeatureClick("/ephemeral")}
-                    className={isPremium || isAdmin ? "" : "opacity-75"}
+                    className={isPremium || isAdmin || isFreeUser ? "" : "opacity-75"}
                   >
-                    <span className="hidden md:inline">Ephemeral Space {!isPremium && !isAdmin && "🔒"}</span>
-                    <span className="md:hidden">💬 {!isPremium && !isAdmin && "🔒"}</span>
+                    <span className="hidden md:inline">Ephemeral Space {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
+                    <span className="md:hidden">💬 {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePremiumFeatureClick("/image-encryption")}
-                    className={isPremium || isAdmin ? "" : "opacity-75"}
+                    className={isPremium || isAdmin || isFreeUser ? "" : "opacity-75"}
                   >
-                    <span className="hidden md:inline">Image Encryption {!isPremium && !isAdmin && "🔒"}</span>
-                    <span className="md:hidden">🖼️ {!isPremium && !isAdmin && "🔒"}</span>
+                    <span className="hidden md:inline">Image Encryption {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
+                    <span className="md:hidden">🖼️ {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
                   </Button>
                 </div>
                 {isAdmin && (
@@ -243,7 +243,7 @@ const Index = () => {
 
           <EncryptionPanel
             onActionPerformed={handleActionPerformed}
-            actionsRemaining={isPremium || isAdmin ? Infinity : actionsRemaining}
+            actionsRemaining={isPremium || isAdmin || isFreeUser ? Infinity : actionsRemaining}
             onUpgradeNeeded={() => setShowUpgradeModal(true)}
           />
         </main>
