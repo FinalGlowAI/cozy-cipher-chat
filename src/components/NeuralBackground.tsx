@@ -8,18 +8,18 @@ function Particles({ isMobile }: { isMobile: boolean }) {
   const linesRef = useRef<THREE.LineSegments>(null);
   const sparksRef = useRef<THREE.Points>(null);
   
-  const particleCount = isMobile ? 30 : 100;
-  const connectionDistance = 2;
+  const particleCount = isMobile ? 40 : 150;
+  const connectionDistance = 3;
 
-  // Create particles
+  // Create particles with larger spread to fill viewport
   const particles = useMemo(() => {
     const positions = new Float32Array(particleCount * 3);
     const velocities = new Float32Array(particleCount * 3);
     
     for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+      positions[i * 3] = (Math.random() - 0.5) * 40;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 40;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
       
       velocities[i * 3] = (Math.random() - 0.5) * 0.02;
       velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.02;
@@ -43,10 +43,10 @@ function Particles({ isMobile }: { isMobile: boolean }) {
       positions[i * 3 + 1] += particles.velocities[i * 3 + 1];
       positions[i * 3 + 2] += particles.velocities[i * 3 + 2];
       
-      // Bounce off boundaries
-      if (Math.abs(positions[i * 3]) > 10) particles.velocities[i * 3] *= -1;
-      if (Math.abs(positions[i * 3 + 1]) > 10) particles.velocities[i * 3 + 1] *= -1;
-      if (Math.abs(positions[i * 3 + 2]) > 5) particles.velocities[i * 3 + 2] *= -1;
+      // Bounce off boundaries - expanded for full viewport coverage
+      if (Math.abs(positions[i * 3]) > 20) particles.velocities[i * 3] *= -1;
+      if (Math.abs(positions[i * 3 + 1]) > 20) particles.velocities[i * 3 + 1] *= -1;
+      if (Math.abs(positions[i * 3 + 2]) > 10) particles.velocities[i * 3 + 2] *= -1;
     }
     
     // Create connections and sparks
@@ -159,9 +159,9 @@ export function NeuralBackground() {
   }
 
   return (
-    <div className="fixed inset-0 -z-10 opacity-40 pointer-events-none">
+    <div className="fixed inset-0 -z-10 opacity-40 pointer-events-none w-screen h-screen">
       <Canvas 
-        camera={{ position: [0, 0, 8], fov: 75 }}
+        camera={{ position: [0, 0, 12], fov: 90 }}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (e) => {
             e.preventDefault();
