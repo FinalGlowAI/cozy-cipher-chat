@@ -32,7 +32,7 @@ const ImageEncryption = () => {
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
   const [storageStats, setStorageStats] = useState({ count: 0, size: 0 });
-  const [actionsRemaining, setActionsRemaining] = useState(3);
+  const [actionsRemaining, setActionsRemaining] = useState(5);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
@@ -42,8 +42,8 @@ const ImageEncryption = () => {
     const today = new Date().toDateString();
 
     if (lastReset !== today) {
-      setActionsRemaining(3);
-      localStorage.setItem("ocx_image_actions", "3");
+      setActionsRemaining(5);
+      localStorage.setItem("ocx_image_actions", "5");
       localStorage.setItem("ocx_image_last_reset", today);
     } else if (saved) {
       setActionsRemaining(parseInt(saved));
