@@ -55,7 +55,9 @@ All colors MUST be HSL.
   body {
     @apply text-foreground;
     background-color: hsl(225 25% 8%);
-    background-image: url('/neural-crypto-bg.jpg');
+    background-image: 
+      linear-gradient(rgba(10, 10, 15, 0.85), rgba(10, 10, 15, 0.85)),
+      url('/neural-crypto-bg.jpg');
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
