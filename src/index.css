@@ -53,16 +53,26 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply text-foreground;
-    background-color: #0a0a0f;
-    background-image: 
-      linear-gradient(rgba(10, 10, 15, 0.92), rgba(10, 10, 15, 0.92)),
-      url('/neural-crypto-bg.jpg');
-    background-size: cover;
-    background-position: center center;
+    @apply bg-background text-foreground;
+    background-image: url('/neural-crypto-bg.jpg');
+    background-size: 110%;
+    background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed;
-    min-height: 100vh;
-    min-height: 100svh;
+    animation: background-drift 20s ease-in-out infinite;
+  }
+
+  @keyframes background-drift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    25% {
+      background-position: 100% 50%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    75% {
+      background-position: 0% 100%;
+    }
   }
 }
