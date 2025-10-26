@@ -53,7 +53,8 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: hsl(225 25% 8%);
     background-image: url('/neural-crypto-bg.jpg');
     background-size: cover;
     background-position: center center;
