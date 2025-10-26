@@ -159,7 +159,7 @@ export function NeuralBackground() {
   }
 
   return (
-    <div className="fixed inset-0 -z-10 opacity-70 pointer-events-none w-screen h-screen min-h-screen">
+    <div className="fixed inset-0 -z-10 opacity-60 pointer-events-none w-screen h-screen min-h-screen">
       <Canvas 
         camera={{ position: [0, 0, 12], fov: 90 }}
         onCreated={({ gl }) => {
