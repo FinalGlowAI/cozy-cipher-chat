@@ -152,15 +152,17 @@ const Index = () => {
   }
 
   return (
-    <div className="app-layout">
+    <div className="min-h-screen relative overflow-hidden">
       <NeuralBackground key="neural-bg" />
       {/* Background Effects */}
-      <div className="fixed inset-0 bg-gradient-surface opacity-30 -z-10" />
-      <div className="fixed top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse -z-10" />
-      <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000 -z-10" />
+      <div className="absolute inset-0 bg-gradient-surface opacity-30" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      {/* Header */}
-      <header className="app-header border-b border-primary/20 backdrop-blur-xl bg-card/30">
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="border-b border-primary/20 backdrop-blur-xl bg-card/30">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -222,18 +224,17 @@ const Index = () => {
           </div>
         </header>
 
-      {/* Main Content */}
-      <main className="app-main">
-        <div className="container mx-auto px-4 py-6 space-y-6">
-          <div className="text-center">
-            <h2 className="text-[var(--fs-h1)] font-bold mb-3">
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-12">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">
               Encrypt Your Messages,
               <br />
               <span className="bg-gradient-primary bg-clip-text text-transparent">
                 Protect Your Privacy
               </span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-[var(--fs-base)]">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               Transform your sensitive messages into secure, unreadable formats with just a few
               clicks. Whether you're sharing confidential business information or personal messages,
               OCX ensures your communications stay private.
@@ -245,11 +246,10 @@ const Index = () => {
             actionsRemaining={isPremium || isAdmin || isFreeUser ? Infinity : actionsRemaining}
             onUpgradeNeeded={() => setShowUpgradeModal(true)}
           />
-        </div>
-      </main>
+        </main>
 
-      {/* Footer */}
-      <footer className="app-footer border-t border-primary/20 backdrop-blur-xl bg-card/30">
+        {/* Footer */}
+        <footer className="border-t border-primary/20 backdrop-blur-xl bg-card/30 mt-20">
           <div className="container mx-auto px-4 py-8">
             <div className="text-center">
               <div className="flex flex-wrap justify-center gap-4 mb-4">
@@ -316,6 +316,7 @@ const Index = () => {
             </div>
           </div>
         </footer>
+      </div>
 
       {/* Upgrade Modal */}
       <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
