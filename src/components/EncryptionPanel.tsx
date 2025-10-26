@@ -101,7 +101,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-4">
       {/* Mode Toggle */}
       <div className="flex items-center justify-center gap-4">
         <Button
@@ -123,7 +123,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
       </div>
 
       {/* Secure Mode Toggle */}
-      <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20">
+      <Card className="p-3 backdrop-blur-xl bg-card/50 border-primary/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-5 w-5 text-primary" />
@@ -181,7 +181,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
       </Card>
 
       {/* Input Panel */}
-      <Card className="p-6 backdrop-blur-xl bg-card/50 border-primary/20 shadow-glow-primary">
+      <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20 shadow-glow-primary">
         <Label className="text-sm font-medium mb-2 block">
           {mode === "encrypt" ? "Plain Text" : "Encrypted Text"}
         </Label>
@@ -189,7 +189,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder={mode === "encrypt" ? "Type your message here..." : "Paste encrypted text here..."}
-          className="min-h-[150px] resize-none bg-background/50 border-primary/30 focus:border-primary"
+          className="min-h-[120px] resize-none bg-background/50 border-primary/30 focus:border-primary"
         />
         {mode === "decrypt" && secureMode && (
           <div className="mt-4">
@@ -198,7 +198,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
               value={decryptionKey}
               onChange={(e) => setDecryptionKey(e.target.value)}
               placeholder="Paste your decryption key here..."
-              className="min-h-[80px] resize-none bg-background/50 border-primary/30 focus:border-primary"
+              className="min-h-[60px] resize-none bg-background/50 border-primary/30 focus:border-primary"
             />
           </div>
         )}
@@ -218,7 +218,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
       </div>
 
       {/* Output Panel */}
-      <Card className="p-6 backdrop-blur-xl bg-card/50 border-accent/20 shadow-glow-accent">
+      <Card className="p-4 backdrop-blur-xl bg-card/50 border-accent/20 shadow-glow-accent">
         <div className="flex items-center justify-between mb-2">
           <Label className="text-sm font-medium">
             {mode === "encrypt" ? "Encrypted Text" : "Decrypted Text"}
@@ -246,7 +246,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
           value={outputText}
           readOnly
           placeholder={mode === "encrypt" ? "Encrypted text will appear here..." : "Decrypted text will appear here..."}
-          className="min-h-[150px] resize-none bg-background/50 border-accent/30"
+          className="min-h-[120px] resize-none bg-background/50 border-accent/30"
         />
         {mode === "encrypt" && secureMode && decryptionKey && (
           <div className="mt-4">
@@ -263,7 +263,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
             <Textarea
               value={decryptionKey}
               readOnly
-              className="min-h-[80px] resize-none bg-background/50 border-accent/30 font-mono text-sm"
+              className="min-h-[60px] resize-none bg-background/50 border-accent/30 font-mono text-sm"
             />
           </div>
         )}
