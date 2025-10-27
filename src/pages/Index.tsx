@@ -87,10 +87,10 @@ const Index = () => {
     if (!subscriptionLoading && previousPremiumStatus !== null) {
       // User went from premium to free (subscription expired/cancelled)
       if (previousPremiumStatus && !isPremium) {
-        setActionsRemaining(3);
-        localStorage.setItem("ocx_actions", "3");
+        setActionsRemaining(5);
+        localStorage.setItem("ocx_actions", "5");
         localStorage.setItem("ocx_last_reset", new Date().toDateString());
-        toast.info("Your subscription has ended. You now have 3 daily actions.");
+        toast.info("Your subscription has ended. You now have 5 daily actions.");
       }
     }
     if (!subscriptionLoading) {
