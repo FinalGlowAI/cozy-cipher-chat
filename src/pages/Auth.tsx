@@ -154,8 +154,8 @@ const Auth = () => {
       <div className="w-full max-w-6xl relative z-10 grid md:grid-cols-2 gap-6 sm:gap-8 items-center">
         <div className="hidden md:block space-y-6 lg:space-y-8">
           <div className="text-center mb-6 lg:mb-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">Join us today and encrypt your messages and images before you even send them</h2>
-            <p className="text-sm lg:text-base text-muted-foreground">Experience true end-to-end encryption</p>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">Join 100,000+ Users</h2>
+            <p className="text-sm lg:text-base text-muted-foreground">Who trust us with their secure communications</p>
           </div>
           
           <div className="space-y-4 min-h-[400px] flex flex-col">
