@@ -31,7 +31,6 @@ const ImageEncryption = () => {
   const [decryptedImage, setDecryptedImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
-  const [storageStats, setStorageStats] = useState({ count: 0, size: 0 });
   const [actionsRemaining, setActionsRemaining] = useState(5);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -53,17 +52,7 @@ const ImageEncryption = () => {
   useEffect(() => {
     // Cleanup expired images on mount
     cleanupExpiredImages();
-    updateStorageStats();
   }, []);
-
-  const updateStorageStats = async () => {
-    try {
-      const stats = await getStorageStats();
-      setStorageStats(stats);
-    } catch (error) {
-      console.error("Failed to get storage stats:", error);
-    }
-  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,7 +98,6 @@ const ImageEncryption = () => {
       const expirationMinutes = validity === "never" ? null : parseInt(validity);
       const code = await storeImage(selectedImage, expirationMinutes);
       setOutputCode(code);
-      await updateStorageStats();
       handleActionPerformed();
       
       const validityNum = expirationMinutes || 0;
@@ -170,12 +158,6 @@ const ImageEncryption = () => {
     setDecryptedImage(null);
   };
 
-  const formatSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-  };
-
   return (
     <div className="min-h-screen relative">
       <NeuralBackground key="neural-bg" />
@@ -197,11 +179,6 @@ const ImageEncryption = () => {
             <p className="text-muted-foreground">
               Get a 6-character code - stored locally in your browser
             </p>
-            {storageStats.count > 0 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                {storageStats.count} image{storageStats.count !== 1 ? "s" : ""} stored ({formatSize(storageStats.size)})
-              </p>
-            )}
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="sm" className="mt-4">
