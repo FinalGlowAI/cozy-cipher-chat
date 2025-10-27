@@ -35,6 +35,9 @@ type UserWithSubscription = {
   is_active: boolean;
   current_period_end: string | null;
   last_sign_in: string | null;
+  stripe_customer_id: string | null;
+  has_payment_method: boolean;
+  payment_status: string | null;
 };
 
 const AVAILABLE_FEATURES = [
@@ -302,6 +305,8 @@ export default function AdminDashboard() {
                       <TableHead>Email</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Active</TableHead>
+                      <TableHead>Payment Status</TableHead>
+                      <TableHead>Payment Method</TableHead>
                       <TableHead>Subscription End</TableHead>
                       <TableHead>Joined</TableHead>
                       <TableHead>Last Sign In</TableHead>
@@ -325,6 +330,32 @@ export default function AdminDashboard() {
                             <Check className="h-4 w-4 text-green-500" />
                           ) : (
                             <X className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {user.payment_status ? (
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              user.payment_status === 'paid'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : user.payment_status === 'open'
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }`}>
+                              {user.payment_status}
+                            </span>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {user.stripe_customer_id ? (
+                            user.has_payment_method ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <X className="h-4 w-4 text-red-500" />
+                            )
+                          ) : (
+                            '-'
                           )}
                         </TableCell>
                         <TableCell>

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +51,10 @@ serve(async (req) => {
 
     logStep("Admin verified", { userId: user.id });
 
+    // Initialize Stripe
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" }) : null;
+
     // Fetch all users from auth
     const { data: { users }, error: usersError } = await supabaseClient.auth.admin.listUsers();
     if (usersError) throw usersError;
@@ -74,13 +79,16 @@ serve(async (req) => {
     const subsMap = new Map(subscriptions?.map(s => [s.user_id, s]) || []);
     const freeUsersMap = new Map(freeUsers?.map(f => [f.email, f]) || []);
 
-    // Combine data
-    const usersWithStatus = users.map(u => {
+    // Combine data with Stripe payment details
+    const usersWithStatus = await Promise.all(users.map(async (u) => {
       const subscription = subsMap.get(u.id);
       const freeUser = freeUsersMap.get(u.email || '');
       
       let status = 'free';
       let isActive = false;
+      let stripeCustomerId = subscription?.stripe_customer_id || null;
+      let hasPaymentMethod = false;
+      let paymentStatus = null;
       
       if (freeUser) {
         status = 'free (admin granted)';
@@ -93,6 +101,32 @@ serve(async (req) => {
             isActive = endDate > new Date();
           }
         }
+
+        // Fetch Stripe payment details if available
+        if (stripe && subscription.stripe_customer_id) {
+          try {
+            const customer = await stripe.customers.retrieve(subscription.stripe_customer_id);
+            if (!customer.deleted) {
+              // Check for payment methods
+              const paymentMethods = await stripe.paymentMethods.list({
+                customer: subscription.stripe_customer_id,
+                limit: 1,
+              });
+              hasPaymentMethod = paymentMethods.data.length > 0;
+
+              // Get latest invoice if subscription exists
+              if (subscription.stripe_subscription_id) {
+                const stripeSub = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
+                if (stripeSub.latest_invoice) {
+                  const invoice = await stripe.invoices.retrieve(stripeSub.latest_invoice as string);
+                  paymentStatus = invoice.status; // paid, open, void, uncollectible
+                }
+              }
+            }
+          } catch (error) {
+            logStep("Stripe fetch error", { customerId: subscription.stripe_customer_id, error: String(error) });
+          }
+        }
       }
 
       return {
@@ -103,8 +137,11 @@ serve(async (req) => {
         is_active: isActive,
         current_period_end: subscription?.current_period_end || null,
         last_sign_in: u.last_sign_in_at,
+        stripe_customer_id: stripeCustomerId,
+        has_payment_method: hasPaymentMethod,
+        payment_status: paymentStatus,
       };
-    });
+    }));
 
     logStep("Processed user data", { count: usersWithStatus.length });
 
