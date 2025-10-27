@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const useSubscription = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [isFreeUser, setIsFreeUser] = useState(false);
+  const [isBasicUser, setIsBasicUser] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const checkSubscription = async () => {
@@ -12,6 +13,7 @@ export const useSubscription = () => {
       if (!session) {
         setIsPremium(false);
         setIsFreeUser(false);
+        setIsBasicUser(false);
         setLoading(false);
         return;
       }
@@ -22,14 +24,17 @@ export const useSubscription = () => {
         console.error('Error checking subscription:', error);
         setIsPremium(false);
         setIsFreeUser(false);
+        setIsBasicUser(false);
       } else {
         setIsPremium(data?.subscribed || false);
         setIsFreeUser(data?.is_free_user || false);
+        setIsBasicUser(data?.is_basic_user || false);
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
       setIsPremium(false);
       setIsFreeUser(false);
+      setIsBasicUser(false);
     } finally {
       setLoading(false);
     }
@@ -44,5 +49,5 @@ export const useSubscription = () => {
     return () => clearInterval(interval);
   }, []);
 
-  return { isPremium, isFreeUser, loading, refreshSubscription: checkSubscription };
+  return { isPremium, isFreeUser, isBasicUser, loading, refreshSubscription: checkSubscription };
 };

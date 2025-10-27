@@ -70,7 +70,7 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
-      logStep("No customer found, updating unsubscribed state");
+      logStep("No customer found, user is basic free tier");
       
       // Update or insert subscription record
       const { error: upsertError } = await supabaseClient
@@ -89,7 +89,10 @@ serve(async (req) => {
         logStep("Error updating subscription", { error: upsertError.message });
       }
       
-      return new Response(JSON.stringify({ subscribed: false }), {
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        is_basic_user: true
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -133,7 +136,7 @@ serve(async (req) => {
         logStep("Error updating subscription", { error: upsertError.message });
       }
     } else {
-      logStep("No active subscription found");
+      logStep("No active subscription found, user is basic free tier");
       
       // Update subscription record to free
       const { error: upsertError } = await supabaseClient
@@ -155,7 +158,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
-      subscription_end: subscriptionEnd
+      subscription_end: subscriptionEnd,
+      is_basic_user: !hasActiveSub
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

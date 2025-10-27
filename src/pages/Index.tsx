@@ -18,7 +18,7 @@ const Index = () => {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
   const navigate = useNavigate();
-  const { isPremium, isFreeUser, loading: subscriptionLoading, refreshSubscription } = useSubscription();
+  const { isPremium, isFreeUser, isBasicUser, loading: subscriptionLoading, refreshSubscription } = useSubscription();
   const { isAdmin } = useAdmin();
 
   useEffect(() => {
