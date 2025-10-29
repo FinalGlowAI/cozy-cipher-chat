@@ -232,6 +232,7 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_encrypted_images: { Args: never; Returns: number }
+      delete_encrypted_image: { Args: { _code: string }; Returns: string }
       generate_room_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -242,6 +243,15 @@ export type Database = {
       }
       is_free_user: { Args: never; Returns: boolean }
       is_premium_user: { Args: { user_id: string }; Returns: boolean }
+      retrieve_encrypted_image: {
+        Args: { _code: string }
+        Returns: {
+          code: string
+          created_at: string
+          expires_at: string
+          storage_path: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"

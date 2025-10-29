@@ -80,28 +80,21 @@ export const storeImage = async (
 export const retrieveImage = async (code: string): Promise<string> => {
   await cleanupExpiredImages(); // Clean up before retrieval
 
-  // Get metadata from database
-  const { data, error } = await supabase
-    .from('encrypted_images')
-    .select('*')
-    .eq('code', code.toUpperCase())
-    .single();
+  // Use security definer function to get metadata (prevents enumeration attacks)
+  const { data, error } = await supabase.rpc('retrieve_encrypted_image', {
+    _code: code.toUpperCase()
+  });
 
-  if (error || !data) {
-    throw new Error("Code not found");
+  if (error || !data || data.length === 0) {
+    throw new Error("Code not found or expired");
   }
 
-  // Check expiration
-  if (data.expires_at && new Date(data.expires_at) < new Date()) {
-    // Delete expired entry
-    await deleteImage(code);
-    throw new Error("Code has expired");
-  }
+  const imageData = data[0];
 
   // Download image from storage
   const { data: imageBlob, error: downloadError } = await supabase.storage
     .from('encrypted_images')
-    .download(data.storage_path);
+    .download(imageData.storage_path);
 
   if (downloadError || !imageBlob) {
     throw new Error(`Failed to download image: ${downloadError?.message}`);
@@ -118,25 +111,14 @@ export const retrieveImage = async (code: string): Promise<string> => {
 
 // Delete image by code
 export const deleteImage = async (code: string): Promise<void> => {
-  // Get storage path before deleting
-  const { data } = await supabase
-    .from('encrypted_images')
-    .select('storage_path')
-    .eq('code', code.toUpperCase())
-    .single();
+  // Use security definer function to delete (verifies code ownership)
+  const { error } = await supabase.rpc('delete_encrypted_image', {
+    _code: code.toUpperCase()
+  });
 
-  if (data?.storage_path) {
-    // Delete from storage
-    await supabase.storage
-      .from('encrypted_images')
-      .remove([data.storage_path]);
+  if (error) {
+    throw new Error(`Failed to delete image: ${error.message}`);
   }
-
-  // Delete from database
-  await supabase
-    .from('encrypted_images')
-    .delete()
-    .eq('code', code.toUpperCase());
 };
 
 // Clean up expired images
