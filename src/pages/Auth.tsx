@@ -30,15 +30,18 @@ const Auth = () => {
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
   const [newTestimonial, setNewTestimonial] = useState({ name: "", title: "", comment: "", rating: 5 });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/");
-      }
-    });
+    // Check if user is already logged in (but not if we're in the middle of signing up)
+    if (!isSigningUp) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          navigate("/");
+        }
+      });
+    }
 
     // Fetch testimonials
     const fetchTestimonials = async () => {
@@ -76,7 +79,7 @@ const Auth = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [navigate]);
+  }, [navigate, isSigningUp]);
 
   // Auto-rotate testimonials
   useEffect(() => {
@@ -103,6 +106,7 @@ const Auth = () => {
         toast.success("Successfully logged in!");
         navigate("/");
       } else {
+        setIsSigningUp(true);
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -112,10 +116,15 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Account created successfully!");
-        navigate("/");
+        // Wait briefly for session to be fully established before navigating
+        setTimeout(() => {
+          setIsSigningUp(false);
+          navigate("/");
+        }, 150);
       }
     } catch (error: any) {
       toast.error(error.message);
+      setIsSigningUp(false);
     } finally {
       setLoading(false);
     }
