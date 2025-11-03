@@ -5,13 +5,20 @@ const XOR_KEY = "OCX_SECURE_KEY_2024";
 
 export const encryptText = (text: string): string => {
   const encrypted = xorCipher(text, XOR_KEY);
-  return btoa(encrypted);
+  // Handle Unicode by converting to base64 safely
+  return btoa(encodeURIComponent(encrypted).replace(/%([0-9A-F]{2})/g, (_, p1) => 
+    String.fromCharCode(parseInt(p1, 16))
+  ));
 };
 
 export const decryptText = (encrypted: string): string => {
   try {
     const decoded = atob(encrypted);
-    return xorCipher(decoded, XOR_KEY);
+    // Handle Unicode by decoding safely
+    const decoded2 = decodeURIComponent(Array.from(decoded).map(c => 
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join(''));
+    return xorCipher(decoded2, XOR_KEY);
   } catch {
     throw new Error("Invalid encrypted text");
   }
@@ -31,20 +38,37 @@ export const encryptWithKey = (text: string, expirationMinutes?: number): { encr
     expiresAt
   };
   
+  // Handle Unicode safely
+  const jsonString = JSON.stringify(payload);
+  const encoded = btoa(encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g, (_, p1) => 
+    String.fromCharCode(parseInt(p1, 16))
+  ));
+  const encodedKey = btoa(encodeURIComponent(key).replace(/%([0-9A-F]{2})/g, (_, p1) => 
+    String.fromCharCode(parseInt(p1, 16))
+  ));
+  
   return {
-    encrypted: btoa(JSON.stringify(payload)),
-    key: btoa(key)
+    encrypted: encoded,
+    key: encodedKey
   };
 };
 
 export const decryptWithKey = (encrypted: string, key: string): string => {
   try {
     const decoded = atob(encrypted);
-    const decodedKey = atob(key);
+    // Handle Unicode decoding
+    const decodedString = decodeURIComponent(Array.from(decoded).map(c => 
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join(''));
+    
+    const decodedKeyRaw = atob(key);
+    const decodedKey = decodeURIComponent(Array.from(decodedKeyRaw).map(c => 
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join(''));
     
     // Try to parse as JSON payload (new format with expiration)
     try {
-      const payload = JSON.parse(decoded);
+      const payload = JSON.parse(decodedString);
       
       // Check if it has expiration info
       if (payload.expiresAt !== undefined) {
@@ -60,7 +84,7 @@ export const decryptWithKey = (encrypted: string, key: string): string => {
     }
     
     // Old format - direct decryption
-    return xorCipher(decoded, decodedKey);
+    return xorCipher(decodedString, decodedKey);
   } catch (error) {
     if (error instanceof Error && error.message === "Decryption key has expired") {
       throw error;
