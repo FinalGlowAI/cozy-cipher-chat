@@ -4,18 +4,53 @@
 const XOR_KEY = "OCX_SECURE_KEY_2024";
 
 export const encryptText = (text: string): string => {
+  // Generate random IV (16 bytes)
+  const iv = new Uint8Array(16);
+  crypto.getRandomValues(iv);
+  
   const plainBytes = textEncoder.encode(text);
   const keyBytes = textEncoder.encode(XOR_KEY);
-  const encryptedBytes = xorBytes(plainBytes, keyBytes);
-  return bytesToBase64(encryptedBytes);
+  
+  // Combine IV with key for encryption
+  const combinedKey = new Uint8Array(iv.length + keyBytes.length);
+  combinedKey.set(iv);
+  combinedKey.set(keyBytes, iv.length);
+  
+  const encryptedBytes = xorBytes(plainBytes, combinedKey);
+  
+  // Prepend IV to encrypted data
+  const result = new Uint8Array(iv.length + encryptedBytes.length);
+  result.set(iv);
+  result.set(encryptedBytes, iv.length);
+  
+  return bytesToBase64(result);
 };
 
 export const decryptText = (encrypted: string): string => {
   try {
-    const encBytes = base64ToBytes(encrypted);
-    const keyBytes = textEncoder.encode(XOR_KEY);
-    const plainBytes = xorBytes(encBytes, keyBytes);
-    return textDecoder.decode(plainBytes);
+    const dataWithIV = base64ToBytes(encrypted);
+    
+    // Check if it has IV (new format, length > 16)
+    if (dataWithIV.length > 16) {
+      // Extract IV (first 16 bytes)
+      const iv = dataWithIV.slice(0, 16);
+      const encBytes = dataWithIV.slice(16);
+      
+      const keyBytes = textEncoder.encode(XOR_KEY);
+      
+      // Combine IV with key for decryption
+      const combinedKey = new Uint8Array(iv.length + keyBytes.length);
+      combinedKey.set(iv);
+      combinedKey.set(keyBytes, iv.length);
+      
+      const plainBytes = xorBytes(encBytes, combinedKey);
+      return textDecoder.decode(plainBytes);
+    } else {
+      // Old format without IV
+      const keyBytes = textEncoder.encode(XOR_KEY);
+      const plainBytes = xorBytes(dataWithIV, keyBytes);
+      return textDecoder.decode(plainBytes);
+    }
   } catch {
     // Fallback to old format (backward compatibility)
     try {
