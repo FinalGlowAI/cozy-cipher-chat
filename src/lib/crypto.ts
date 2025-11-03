@@ -4,48 +4,52 @@
 const XOR_KEY = "OCX_SECURE_KEY_2024";
 
 export const encryptText = (text: string): string => {
-  const encrypted = xorCipher(text, XOR_KEY);
-  // Handle Unicode by converting to base64 safely
-  return btoa(encodeURIComponent(encrypted).replace(/%([0-9A-F]{2})/g, (_, p1) => 
-    String.fromCharCode(parseInt(p1, 16))
-  ));
+  const plainBytes = textEncoder.encode(text);
+  const keyBytes = textEncoder.encode(XOR_KEY);
+  const encryptedBytes = xorBytes(plainBytes, keyBytes);
+  return bytesToBase64(encryptedBytes);
 };
 
 export const decryptText = (encrypted: string): string => {
   try {
-    const decoded = atob(encrypted);
-    // Handle Unicode by decoding safely
-    const decoded2 = decodeURIComponent(Array.from(decoded).map(c => 
-      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    ).join(''));
-    return xorCipher(decoded2, XOR_KEY);
+    const encBytes = base64ToBytes(encrypted);
+    const keyBytes = textEncoder.encode(XOR_KEY);
+    const plainBytes = xorBytes(encBytes, keyBytes);
+    return textDecoder.decode(plainBytes);
   } catch {
-    throw new Error("Invalid encrypted text");
+    // Fallback to old format (backward compatibility)
+    try {
+      const decoded = atob(encrypted);
+      const decoded2 = decodeURIComponent(Array.from(decoded).map(c => 
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join(''));
+      return xorCipher(decoded2, XOR_KEY);
+    } catch {
+      throw new Error("Invalid encrypted text");
+    }
   }
 };
 
 export const encryptWithKey = (text: string, expirationMinutes?: number): { encrypted: string; key: string } => {
   // Generate a random key
   const key = generateRandomKey(32);
-  const encrypted = xorCipher(text, key);
+
+  // Encrypt using byte-wise XOR
+  const plainBytes = textEncoder.encode(text);
+  const keyBytes = textEncoder.encode(key);
+  const encryptedBytes = xorBytes(plainBytes, keyBytes);
   
   // Calculate expiration timestamp if provided
   const expiresAt = expirationMinutes ? Date.now() + (expirationMinutes * 60 * 1000) : null;
   
-  // Create payload with expiration info
+  // Create payload with expiration info and base64-encoded data
   const payload = {
-    data: encrypted,
+    data: bytesToBase64(encryptedBytes),
     expiresAt
   };
   
-  // Handle Unicode safely
-  const jsonString = JSON.stringify(payload);
-  const encoded = btoa(encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g, (_, p1) => 
-    String.fromCharCode(parseInt(p1, 16))
-  ));
-  const encodedKey = btoa(encodeURIComponent(key).replace(/%([0-9A-F]{2})/g, (_, p1) => 
-    String.fromCharCode(parseInt(p1, 16))
-  ));
+  const encoded = utf8ToBase64(JSON.stringify(payload));
+  const encodedKey = utf8ToBase64(key);
   
   return {
     encrypted: encoded,
@@ -55,16 +59,8 @@ export const encryptWithKey = (text: string, expirationMinutes?: number): { encr
 
 export const decryptWithKey = (encrypted: string, key: string): string => {
   try {
-    const decoded = atob(encrypted);
-    // Handle Unicode decoding
-    const decodedString = decodeURIComponent(Array.from(decoded).map(c => 
-      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    ).join(''));
-    
-    const decodedKeyRaw = atob(key);
-    const decodedKey = decodeURIComponent(Array.from(decodedKeyRaw).map(c => 
-      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    ).join(''));
+    const decodedString = safeBase64ToUtf8(encrypted);
+    const decodedKey = safeBase64ToUtf8(key);
     
     // Try to parse as JSON payload (new format with expiration)
     try {
@@ -76,8 +72,16 @@ export const decryptWithKey = (encrypted: string, key: string): string => {
         if (payload.expiresAt && Date.now() > payload.expiresAt) {
           throw new Error("Decryption key has expired");
         }
-        // Decrypt the actual data
-        return xorCipher(payload.data, decodedKey);
+        // New format: payload.data is base64 of encrypted bytes
+        try {
+          const dataBytes = base64ToBytes(payload.data);
+          const keyBytes = textEncoder.encode(decodedKey);
+          const plainBytes = xorBytes(dataBytes, keyBytes);
+          return textDecoder.decode(plainBytes);
+        } catch {
+          // Backward compatibility: old format where payload.data is XOR string
+          return xorCipher(payload.data, decodedKey);
+        }
       }
     } catch (jsonError) {
       // If JSON parsing fails, treat as old format (backward compatibility)
@@ -93,6 +97,62 @@ export const decryptWithKey = (encrypted: string, key: string): string => {
   }
 };
 
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+/**
+ * XOR two byte arrays using repeating key
+ */
+const xorBytes = (data: Uint8Array, key: Uint8Array): Uint8Array => {
+  const out = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) {
+    out[i] = data[i] ^ key[i % key.length];
+  }
+  return out;
+};
+
+const bytesToBase64 = (bytes: Uint8Array): string => {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
+
+const base64ToBytes = (b64: string): Uint8Array => {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+};
+
+const utf8ToBase64 = (str: string): string => {
+  return bytesToBase64(textEncoder.encode(str));
+};
+
+const base64ToUtf8 = (b64: string): string => {
+  return textDecoder.decode(base64ToBytes(b64));
+};
+
+// Backward-compatible decoder that supports old percent-encoding approach
+const safeBase64ToUtf8 = (b64: string): string => {
+  try {
+    const s = base64ToUtf8(b64);
+    // Round-trip check: if re-encoding matches original, it's safe UTF-8
+    if (utf8ToBase64(s) === b64) return s;
+  } catch {}
+  // Legacy fallback to percent-decoding
+  const decoded = atob(b64);
+  return decodeURIComponent(
+    Array.from(decoded)
+      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+      .join("")
+  );
+};
+
+// Legacy string-based XOR (kept for backward compatibility)
 const xorCipher = (text: string, key: string): string => {
   let result = "";
   for (let i = 0; i < text.length; i++) {
