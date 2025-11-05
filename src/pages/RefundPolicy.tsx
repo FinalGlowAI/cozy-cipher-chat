@@ -61,10 +61,10 @@ const RefundPolicy = () => {
               <p>
                 To request a refund, please contact us at{" "}
                 <a
-                  href="mailto:ocodexapp@gmail.com"
+                  href="mailto:support@ocodx.store"
                   className="text-primary hover:underline"
                 >
-                  ocodexapp@gmail.com
+                  support@ocodx.store
                 </a>
                 {" "}with your purchase details and reason for the refund request. We will review
                 your request and respond within 5-7 business days.
@@ -92,10 +92,10 @@ const RefundPolicy = () => {
               <p>
                 If you have any questions about our refund policy, please contact us at{" "}
                 <a
-                  href="mailto:ocodexapp@gmail.com"
+                  href="mailto:support@ocodx.store"
                   className="text-primary hover:underline"
                 >
-                  ocodexapp@gmail.com
+                  support@ocodx.store
                 </a>
               </p>
             </section>

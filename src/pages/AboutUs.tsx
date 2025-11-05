@@ -79,10 +79,10 @@ const AboutUs = () => {
               <p>
                 Have questions or need support? We're here to help. Reach out to us at{" "}
                 <a
-                  href="mailto:ocodexapp@gmail.com"
+                  href="mailto:support@ocodx.store"
                   className="text-primary hover:underline font-semibold"
                 >
-                  ocodexapp@gmail.com
+                  support@ocodx.store
                 </a>
               </p>
             </section>
