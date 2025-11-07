@@ -11,6 +11,7 @@ import { Crown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
+import { isIOSPWA } from "@/lib/platformDetection";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -31,6 +32,18 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
   const handleUpgrade = async () => {
     try {
       setLoading(true);
+      
+      // iOS PWA users must subscribe via website (App Store compliance)
+      if (isIOSPWA()) {
+        window.open('https://ocodx.website/subscription', '_blank');
+        toast.info('Please complete your subscription on our website', {
+          description: 'Apple requires external payment processing'
+        });
+        onOpenChange(false);
+        return;
+      }
+      
+      // All other platforms: use direct Stripe checkout
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { couponCode: couponCode.trim() || undefined }
       });
@@ -81,22 +94,30 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
           <div className="text-sm text-muted-foreground">per month</div>
         </div>
 
-        <div className="mb-4">
-          <Input
-            type="text"
-            placeholder="Enter coupon code (optional)"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            className="w-full"
-          />
-        </div>
+        {isIOSPWA() && (
+          <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground text-center mb-4">
+            ℹ️ Subscriptions are managed on our website per Apple's requirements
+          </div>
+        )}
+
+        {!isIOSPWA() && (
+          <div className="mb-4">
+            <Input
+              type="text"
+              placeholder="Enter coupon code (optional)"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              className="w-full"
+            />
+          </div>
+        )}
 
         <Button
           className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
           onClick={handleUpgrade}
           disabled={loading}
         >
-          {loading ? "Loading..." : "Upgrade Now"}
+          {loading ? "Loading..." : isIOSPWA() ? "Subscribe on ocodx.website" : "Upgrade Now"}
         </Button>
         <Button variant="ghost" className="w-full" onClick={() => onOpenChange(false)}>
           Maybe Later

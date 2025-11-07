@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { isIOSPWA } from "@/lib/platformDetection";
 import { ArrowLeft, Check, Crown } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
 
@@ -42,6 +43,16 @@ const Subscription = () => {
 
     setLoading(true);
     try {
+      // iOS PWA users must subscribe via website (App Store compliance)
+      if (isIOSPWA()) {
+        window.open('https://ocodx.website/subscription', '_blank');
+        toast.info('Complete your subscription on our website', {
+          description: 'Required by Apple App Store policies'
+        });
+        return;
+      }
+      
+      // All other platforms: direct Stripe checkout
       const { data, error } = await supabase.functions.invoke('create-checkout');
       
       if (error) throw error;
@@ -210,7 +221,7 @@ const Subscription = () => {
                       onClick={handleUpgrade}
                       disabled={loading || subscriptionLoading}
                     >
-                      {loading ? "Processing..." : "Upgrade to Premium"}
+                      {loading ? "Processing..." : isIOSPWA() ? "Subscribe on ocodx.website" : "Upgrade to Premium"}
                     </Button>
                   )}
                 </CardFooter>

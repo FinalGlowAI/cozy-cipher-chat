@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
+import { isIOSPWA } from "@/lib/platformDetection";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import ocxLogo from "@/assets/ocx-logo.png";
 
@@ -293,6 +294,13 @@ const Index = () => {
                     variant="link"
                     onClick={async () => {
                       try {
+                        // iOS PWA users go to website
+                        if (isIOSPWA()) {
+                          window.open('https://ocodx.website/subscription', '_blank');
+                          return;
+                        }
+                        
+                        // All other platforms: Stripe Customer Portal
                         const { data, error } = await supabase.functions.invoke('customer-portal');
                         if (error) throw error;
                         if (data?.url) {
