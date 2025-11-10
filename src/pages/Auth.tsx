@@ -115,12 +115,33 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Account created successfully!");
-        // Wait briefly for session to be fully established before navigating
-        setTimeout(() => {
+        
+        // Wait for session to be properly established
+        let sessionEstablished = false;
+        let retries = 0;
+        const maxRetries = 5;
+        
+        while (!sessionEstablished && retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session) {
+            sessionEstablished = true;
+            toast.success("Account created successfully!");
+            setTimeout(() => {
+              setIsSigningUp(false);
+              navigate("/");
+            }, 100);
+          }
+          
+          retries++;
+        }
+        
+        if (!sessionEstablished) {
+          toast.success("Account created! Please sign in.");
           setIsSigningUp(false);
-          navigate("/");
-        }, 150);
+          setIsLogin(true);
+        }
       }
     } catch (error: any) {
       toast.error(error.message);
