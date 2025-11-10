@@ -31,6 +31,9 @@ const Auth = () => {
   const [newTestimonial, setNewTestimonial] = useState({ name: "", title: "", comment: "", rating: 5 });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -172,6 +175,33 @@ const Auth = () => {
       toast.success("Thank you! Your testimonial will be reviewed.");
       setNewTestimonial({ name: "", title: "", comment: "", rating: 5 });
       setIsDialogOpen(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setIsResettingPassword(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (error) throw error;
+
+      toast.success("Password reset link sent! Check your email.");
+      setResetEmail("");
+      setIsForgotPasswordOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset email");
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -347,11 +377,20 @@ const Auth = () => {
               {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
-          <div className="mt-5 sm:mt-6 text-center">
+          <div className="mt-5 sm:mt-6 text-center space-y-3">
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => setIsForgotPasswordOpen(true)}
+                className="text-primary hover:underline text-sm sm:text-base min-h-[44px] inline-flex items-center justify-center w-full"
+              >
+                Forgot your password?
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline text-sm sm:text-base min-h-[44px] inline-flex items-center"
+              className="text-primary hover:underline text-sm sm:text-base min-h-[44px] inline-flex items-center justify-center w-full"
             >
               {isLogin
                 ? "Don't have an account? Sign up"
@@ -360,6 +399,38 @@ const Auth = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Your Password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="you@example.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+                className="min-h-[44px]"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full min-h-[44px]"
+              disabled={isResettingPassword}
+            >
+              {isResettingPassword ? "Sending..." : "Send Reset Link"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );
