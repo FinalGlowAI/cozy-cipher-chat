@@ -51,6 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
     const resetLink = data.properties.action_link;
 
     // Send custom branded email via Resend API
+    console.log("Sending email to:", email);
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -155,12 +156,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!emailResponse.ok) {
       const errorData = await emailResponse.text();
-      console.error("Error sending email:", errorData);
+      console.error("Resend API error response:", errorData);
+      console.error("Status code:", emailResponse.status);
       throw new Error(`Failed to send email: ${errorData}`);
     }
 
     const emailData = await emailResponse.json();
-    console.log("Password reset email sent successfully:", emailData);
+    console.log("Password reset email sent successfully!");
+    console.log("Email ID:", emailData.id);
+    console.log("Recipient:", email);
 
     return new Response(
       JSON.stringify({ 
