@@ -59,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "OcodX <onboarding@resend.dev>",
+        from: "OcodX <no-reply@ocodx.website>",
         to: [email],
         subject: "Reset Your OcodX Password",
         html: `
