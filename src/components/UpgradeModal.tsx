@@ -88,12 +88,15 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
         </div>
 
         <div className="text-center mb-6">
-          <div className="flex items-baseline justify-center gap-2">
+          <div className="flex items-baseline justify-center gap-2 flex-wrap">
             <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               $8.40
             </div>
-            <div className="text-sm text-muted-foreground">
-              or $4.20 with coupon code
+            <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              or $4.20
+            </div>
+            <div className="text-sm text-muted-foreground self-end pb-1">
+              with coupon code
             </div>
           </div>
           <div className="text-sm text-muted-foreground">per month</div>
