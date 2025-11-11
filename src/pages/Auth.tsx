@@ -227,7 +227,7 @@ const Auth = () => {
         <div className="hidden md:block space-y-6 lg:space-y-8">
           <div className="text-center mb-6 lg:mb-8">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">Join 100,000+ Users</h2>
-            <p className="text-sm lg:text-base text-muted-foreground">Who trust us with their secure communications</p>
+            <p className="text-sm lg:text-base text-muted-foreground">Who trust us with their secure encryption</p>
           </div>
           
           <div className="space-y-4 min-h-[400px] flex flex-col">
