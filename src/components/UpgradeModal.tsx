@@ -102,6 +102,9 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
 
         {!isIOSPWA() && (
           <div className="mb-4">
+            <p className="text-sm text-muted-foreground mb-2 text-center">
+              Use a coupon code for up to 50% off
+            </p>
             <Input
               type="text"
               placeholder="Enter coupon code (optional)"
