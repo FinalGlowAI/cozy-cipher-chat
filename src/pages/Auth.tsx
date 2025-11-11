@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Users } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 interface Testimonial {
@@ -226,7 +226,13 @@ const Auth = () => {
       <div className="w-full max-w-6xl relative z-10 grid md:grid-cols-2 gap-6 sm:gap-8 items-center">
         <div className="hidden md:block space-y-6 lg:space-y-8">
           <div className="text-center mb-6 lg:mb-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">Join 100,000+ Users</h2>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h2 className="text-3xl lg:text-4xl font-bold text-foreground">Join 100,000+ Users</h2>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 rounded-full animate-pulse">
+                <Users className="h-4 w-4 text-primary" />
+                <span className="text-xs font-bold text-primary">TRUSTED</span>
+              </div>
+            </div>
             <p className="text-sm lg:text-base text-muted-foreground">Who trust us with their secure encryption</p>
           </div>
           
