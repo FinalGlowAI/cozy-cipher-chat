@@ -289,33 +289,13 @@ const Index = () => {
                 >
                   Refund Policy
                 </Button>
-                {isPremium && (
-                  <Button
-                    variant="link"
-                    onClick={async () => {
-                      try {
-                        // iOS PWA users go to website
-                        if (isIOSPWA()) {
-                          window.open('https://ocodx.website/subscription', '_blank');
-                          return;
-                        }
-                        
-                        // All other platforms: Stripe Customer Portal
-                        const { data, error } = await supabase.functions.invoke('customer-portal');
-                        if (error) throw error;
-                        if (data?.url) {
-                          window.open(data.url, '_blank');
-                        }
-                      } catch (error) {
-                        toast.error("Failed to open subscription portal");
-                        console.error(error);
-                      }
-                    }}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Manage Subscription
-                  </Button>
-                )}
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/settings")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Settings
+                </Button>
               </div>
               <div className="text-sm text-muted-foreground">
                 <p>© 2024 OCX. Your privacy is our priority.</p>
