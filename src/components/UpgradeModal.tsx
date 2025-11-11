@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Crown, Check } from "lucide-react";
+import { Crown, Check, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -92,8 +92,14 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
             <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent line-through">
               $8.40
             </div>
-            <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              or $4.20
+            <div className="flex items-center gap-2">
+              <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                or $4.20
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 bg-primary/20 rounded-full">
+                <Tag className="h-3 w-3 text-primary" />
+                <span className="text-xs font-bold text-primary">50% OFF</span>
+              </div>
             </div>
           </div>
           <div className="text-sm text-muted-foreground">per month</div>
