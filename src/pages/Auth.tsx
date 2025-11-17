@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Eye, EyeOff, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Eye, EyeOff, Users, Shield, Key, Clock, Image, MessageSquare, ShieldCheck, Zap, FileKey } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 interface Testimonial {
@@ -223,7 +224,170 @@ const Auth = () => {
       <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      <div className="w-full max-w-6xl relative z-10 grid md:grid-cols-2 gap-6 sm:gap-8 items-center">
+      <div className="w-full max-w-6xl relative z-10">
+        {/* Security Features Section */}
+        <div className="mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Military-Grade Security
+              <span className="block text-primary mt-2">You Can Trust</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Built with AES-256-GCM encryption and zero-knowledge architecture. 
+              Your data remains encrypted end-to-end - we never have access.
+            </p>
+            
+            {/* Security Badges */}
+            <div className="flex flex-wrap justify-center gap-3 mt-6">
+              <Badge variant="secondary" className="px-4 py-2 text-sm gap-2">
+                <ShieldCheck className="h-4 w-4" />
+                AES-256-GCM
+              </Badge>
+              <Badge variant="secondary" className="px-4 py-2 text-sm gap-2">
+                <Key className="h-4 w-4" />
+                PBKDF2 Key Derivation
+              </Badge>
+              <Badge variant="secondary" className="px-4 py-2 text-sm gap-2">
+                <Shield className="h-4 w-4" />
+                Zero-Knowledge
+              </Badge>
+              <Badge variant="secondary" className="px-4 py-2 text-sm gap-2">
+                <Zap className="h-4 w-4" />
+                Client-Side Only
+              </Badge>
+            </div>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {/* Text Encryption Card */}
+            <Card className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <MessageSquare className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Text Encryption</CardTitle>
+                </div>
+                <CardDescription>Military-grade message protection</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">AES-256-GCM:</strong> Your text is encrypted using Advanced Encryption Standard with Galois/Counter Mode - the same encryption used by governments and military.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Key className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">PBKDF2:</strong> Keys are derived using 100,000 iterations of secure hashing, making brute-force attacks virtually impossible.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Zap className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">Client-Side:</strong> All encryption happens in your browser. Your original text never touches our servers.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <FileKey className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">Secure Mode:</strong> Generate a unique decryption key with optional expiration. Share the key separately for maximum security.</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Image Encryption Card */}
+            <Card className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Image className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Image Encryption</CardTitle>
+                </div>
+                <CardDescription className="flex items-center gap-1">
+                  Secure image sharing
+                  <Badge variant="outline" className="ml-2">Premium</Badge>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">Encrypted Storage:</strong> Images are encrypted before upload using AES-256-GCM and stored in secure isolated storage buckets.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Key className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">Short Codes:</strong> Each image gets a unique 6-character code. Only someone with this code can retrieve the encrypted image.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Clock className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">Auto-Expiration:</strong> Set images to self-destruct after 1 hour, 24 hours, or 7 days. They're automatically deleted from our servers.</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ephemeral Space Card */}
+            <Card className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <MessageSquare className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Ephemeral Rooms</CardTitle>
+                </div>
+                <CardDescription className="flex items-center gap-1">
+                  Temporary encrypted chat
+                  <Badge variant="outline" className="ml-2">Premium</Badge>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <MessageSquare className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">Real-Time Chat:</strong> Create temporary chat rooms with unique codes. Perfect for sensitive discussions that shouldn't leave a trace.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Clock className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">Auto-Destroy:</strong> Rooms automatically expire 24 hours after creation. All messages are permanently deleted.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">End-to-End:</strong> Messages are encrypted in transit and only visible to room participants.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Technical Transparency */}
+          <Card className="border-primary/20 bg-card/30 backdrop-blur-sm mb-12">
+            <CardHeader className="text-center">
+              <CardTitle className="text-xl flex items-center justify-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                Built on Proven Security Standards
+              </CardTitle>
+              <CardDescription>Don't just trust us - verify our security claims</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-6 text-sm">
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">Encryption Algorithm</h4>
+                  <p className="text-muted-foreground">AES-256-GCM (Advanced Encryption Standard in Galois/Counter Mode) - approved by NSA for TOP SECRET information.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">Key Derivation</h4>
+                  <p className="text-muted-foreground">PBKDF2 with SHA-256 using 100,000 iterations and random salt generation for each encryption.</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">Browser Security</h4>
+                  <p className="text-muted-foreground">Web Crypto API - native browser encryption that never exposes keys to JavaScript. All encryption happens client-side.</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-1">Backward Compatible</h4>
+                  <p className="text-muted-foreground">Legacy encrypted messages are automatically supported while all new encryptions use the latest AES-256-GCM standard.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Login/Signup Section */}
+        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 items-start">
         <div className="hidden md:block space-y-6 lg:space-y-8">
           <div className="text-center mb-6 lg:mb-8">
             <div className="flex items-center justify-center gap-3 mb-2">
@@ -507,6 +671,7 @@ const Auth = () => {
           </form>
         </DialogContent>
       </Dialog>
+        </div>
       </div>
     </div>
   );
