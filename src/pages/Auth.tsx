@@ -247,7 +247,7 @@ const Auth = () => {
               <span className="block text-primary mt-2">You Can Trust</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Built with AES-256-GCM encryption and zero-knowledge architecture. 
+              Built with AES-256-GCM Military-Grade encryption and zero-knowledge architecture. 
               Your data remains encrypted end-to-end - we never have access.
             </p>
             
