@@ -229,7 +229,7 @@ const Auth = () => {
         <div className="mb-12">
           <div className="text-center mb-8">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Military-Grade Security
+              OCX Military-Grade encryption
               <span className="block text-primary mt-2">You Can Trust</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -261,7 +261,10 @@ const Auth = () => {
           {/* Feature Cards */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             {/* Text Encryption Card */}
-            <Card className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all">
+            <Card 
+              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all cursor-pointer"
+              onClick={() => navigate("/")}
+            >
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 rounded-lg bg-primary/10">
@@ -292,7 +295,10 @@ const Auth = () => {
             </Card>
 
             {/* Image Encryption Card */}
-            <Card className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all">
+            <Card 
+              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all cursor-pointer"
+              onClick={() => navigate("/image-encryption")}
+            >
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 rounded-lg bg-primary/10">
@@ -315,14 +321,21 @@ const Auth = () => {
                   <p><strong className="text-foreground">Short Codes:</strong> Each image gets a unique 6-character code. Only someone with this code can retrieve the encrypted image.</p>
                 </div>
                 <div className="flex items-start gap-2">
+                  <Zap className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p><strong className="text-foreground">Zero Access:</strong> We can't see your images - they're encrypted client-side before upload.</p>
+                </div>
+                <div className="flex items-start gap-2">
                   <Clock className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Auto-Expiration:</strong> Set images to self-destruct after 1 hour, 24 hours, or 7 days. They're automatically deleted from our servers.</p>
+                  <p><strong className="text-foreground">Self-Destruct:</strong> Set automatic deletion after a specific time. Perfect for temporary sharing.</p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Ephemeral Space Card */}
-            <Card className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all">
+            <Card 
+              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all cursor-pointer"
+              onClick={() => navigate("/ephemeral-space")}
+            >
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 rounded-lg bg-primary/10">
