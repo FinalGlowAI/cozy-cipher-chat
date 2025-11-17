@@ -23,7 +23,7 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [keyValidity, setKeyValidity] = useState<string>("never");
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
     if (!inputText.trim()) {
       toast.error("Please enter some text first");
       return;
@@ -42,11 +42,11 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
       if (mode === "encrypt") {
         if (secureMode) {
           const expirationMinutes = keyValidity === "never" ? undefined : parseInt(keyValidity);
-          const { encrypted, key } = encryptWithKey(inputText, expirationMinutes);
+          const { encrypted, key } = await encryptWithKey(inputText, expirationMinutes);
           setOutputText(encrypted);
           setDecryptionKey(key);
         } else {
-          const encrypted = encryptText(inputText);
+          const encrypted = await encryptText(inputText);
           setOutputText(encrypted);
           setDecryptionKey("");
         }
@@ -58,10 +58,10 @@ export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgrade
         }
         
         if (secureMode && decryptionKey) {
-          const decrypted = decryptWithKey(inputText, decryptionKey);
+          const decrypted = await decryptWithKey(inputText, decryptionKey);
           setOutputText(decrypted);
         } else {
-          const decrypted = decryptText(inputText);
+          const decrypted = await decryptText(inputText);
           setOutputText(decrypted);
         }
       }
