@@ -41,6 +41,7 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -275,10 +276,12 @@ const Auth = () => {
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             {/* Text Encryption Card */}
             <Card 
-              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all cursor-pointer"
-              onClick={() => navigate("/")}
+              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all"
             >
-              <CardHeader>
+              <CardHeader 
+                className="cursor-pointer"
+                onClick={() => setExpandedCard(expandedCard === "text" ? null : "text")}
+              >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <MessageSquare className="h-6 w-6 text-primary" />
@@ -287,32 +290,42 @@ const Auth = () => {
                 </div>
                 <CardDescription>Military-grade message protection</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">AES-256-GCM:</strong> Your text is encrypted using Advanced Encryption Standard with Galois/Counter Mode - the same encryption used by governments and military.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Key className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">PBKDF2:</strong> Keys are derived using 100,000 iterations of secure hashing, making brute-force attacks virtually impossible.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Zap className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Client-Side:</strong> All encryption happens in your browser. Your original text never touches our servers.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <FileKey className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Secure Mode:</strong> Generate a unique decryption key with optional expiration. Share the key separately for maximum security.</p>
-                </div>
-              </CardContent>
+              {expandedCard === "text" && (
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">AES-256-GCM:</strong> Your text is encrypted using Advanced Encryption Standard with Galois/Counter Mode - the same encryption used by governments and military.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Key className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">PBKDF2:</strong> Keys are derived using 100,000 iterations of secure hashing, making brute-force attacks virtually impossible.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Zap className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">Client-Side:</strong> All encryption happens in your browser. Your original text never touches our servers.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <FileKey className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">Secure Mode:</strong> Generate a unique decryption key with optional expiration. Share the key separately for maximum security.</p>
+                  </div>
+                  <Button 
+                    onClick={() => navigate("/")} 
+                    className="w-full mt-4"
+                  >
+                    Go to Text Encryption
+                  </Button>
+                </CardContent>
+              )}
             </Card>
 
             {/* Image Encryption Card */}
             <Card 
-              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all cursor-pointer"
-              onClick={() => navigate("/image-encryption")}
+              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all"
             >
-              <CardHeader>
+              <CardHeader 
+                className="cursor-pointer"
+                onClick={() => setExpandedCard(expandedCard === "image" ? null : "image")}
+              >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <Image className="h-6 w-6 text-primary" />
@@ -324,32 +337,42 @@ const Auth = () => {
                   <Badge variant="outline" className="ml-2">Premium</Badge>
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Encrypted Storage:</strong> Images are encrypted before upload using AES-256-GCM and stored in secure isolated storage buckets.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Key className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Short Codes:</strong> Each image gets a unique 6-character code. Only someone with this code can retrieve the encrypted image.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Zap className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Zero Access:</strong> We can't see your images - they're encrypted client-side before upload.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Clock className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Self-Destruct:</strong> Set automatic deletion after a specific time. Perfect for temporary sharing.</p>
-                </div>
-              </CardContent>
+              {expandedCard === "image" && (
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">Encrypted Storage:</strong> Images are encrypted before upload using AES-256-GCM and stored in secure isolated storage buckets.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Key className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">Short Codes:</strong> Each image gets a unique 6-character code. Only someone with this code can retrieve the encrypted image.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Zap className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">Zero Access:</strong> We can't see your images - they're encrypted client-side before upload.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Clock className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">Self-Destruct:</strong> Set automatic deletion after a specific time. Perfect for temporary sharing.</p>
+                  </div>
+                  <Button 
+                    onClick={() => navigate("/image-encryption")} 
+                    className="w-full mt-4"
+                  >
+                    Go to Image Encryption
+                  </Button>
+                </CardContent>
+              )}
             </Card>
 
             {/* Ephemeral Space Card */}
             <Card 
-              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all cursor-pointer"
-              onClick={() => navigate("/ephemeral-space")}
+              className="border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all"
             >
-              <CardHeader>
+              <CardHeader 
+                className="cursor-pointer"
+                onClick={() => setExpandedCard(expandedCard === "ephemeral" ? null : "ephemeral")}
+              >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <MessageSquare className="h-6 w-6 text-primary" />
@@ -361,20 +384,28 @@ const Auth = () => {
                   <Badge variant="outline" className="ml-2">Premium</Badge>
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <MessageSquare className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Real-Time Chat:</strong> Create temporary chat rooms with unique codes. Perfect for sensitive discussions that shouldn't leave a trace.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Clock className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">Auto-Destroy:</strong> Rooms automatically expire 24 hours after creation. All messages are permanently deleted.</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                  <p><strong className="text-foreground">End-to-End:</strong> Messages are encrypted in transit and only visible to room participants.</p>
-                </div>
-              </CardContent>
+              {expandedCard === "ephemeral" && (
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <MessageSquare className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">Real-Time Chat:</strong> Create temporary chat rooms with unique codes. Perfect for sensitive discussions that shouldn't leave a trace.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Clock className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">Auto-Destroy:</strong> Rooms automatically expire 24 hours after creation. All messages are permanently deleted.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Shield className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                    <p><strong className="text-foreground">End-to-End:</strong> Messages are encrypted in transit and only visible to room participants.</p>
+                  </div>
+                  <Button 
+                    onClick={() => navigate("/ephemeral-space")} 
+                    className="w-full mt-4"
+                  >
+                    Go to Ephemeral Rooms
+                  </Button>
+                </CardContent>
+              )}
             </Card>
           </div>
 
