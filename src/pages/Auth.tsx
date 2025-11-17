@@ -447,7 +447,7 @@ const Auth = () => {
         {/* Login/Signup Section */}
         {showLoginForm && (
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8 items-start">
-        <div className="hidden md:block space-y-6 lg:space-y-8">
+        <div className="space-y-6 lg:space-y-8">
           <div className="text-center mb-6 lg:mb-8">
             <div className="flex items-center justify-center gap-3 mb-2">
               <h2 className="text-3xl lg:text-4xl font-bold text-foreground">Join 100,000+ Users</h2>
