@@ -40,6 +40,7 @@ const Auth = () => {
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -224,8 +225,20 @@ const Auth = () => {
       <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
+      {/* Sign In Button - Top Right */}
+      <div className="fixed top-6 right-6 z-20">
+        <Button 
+          onClick={() => setShowLoginForm(!showLoginForm)}
+          size="lg"
+          className="shadow-lg"
+        >
+          {showLoginForm ? "Back to Features" : "Sign In"}
+        </Button>
+      </div>
+
       <div className="w-full max-w-6xl relative z-10">
         {/* Security Features Section */}
+        {!showLoginForm && (
         <div className="mb-12">
           <div className="text-center mb-8">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
@@ -398,8 +411,10 @@ const Auth = () => {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* Login/Signup Section */}
+        {showLoginForm && (
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8 items-start">
         <div className="hidden md:block space-y-6 lg:space-y-8">
           <div className="text-center mb-6 lg:mb-8">
@@ -685,6 +700,7 @@ const Auth = () => {
         </DialogContent>
       </Dialog>
         </div>
+        )}
       </div>
     </div>
   );
