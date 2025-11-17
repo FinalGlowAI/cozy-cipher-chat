@@ -226,11 +226,11 @@ const Auth = () => {
       <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
       {/* Sign In Button - Top Right */}
-      <div className="fixed top-6 right-6 z-20">
+      <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-20">
         <Button 
           onClick={() => setShowLoginForm(!showLoginForm)}
-          size="lg"
-          className="shadow-lg"
+          size="sm"
+          className="shadow-lg text-xs sm:text-sm"
         >
           {showLoginForm ? "Back to Features" : "Sign In"}
         </Button>
