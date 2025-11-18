@@ -399,7 +399,7 @@ const Auth = () => {
                     <p><strong className="text-foreground">End-to-End:</strong> Messages are encrypted in transit and only visible to room participants.</p>
                   </div>
                   <Button 
-                    onClick={() => navigate("/ephemeral-space")} 
+                    onClick={() => navigate("/ephemeral")} 
                     className="w-full mt-4"
                   >
                     Go to Ephemeral Rooms
