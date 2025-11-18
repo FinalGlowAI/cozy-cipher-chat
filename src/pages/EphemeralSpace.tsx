@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Info } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAdmin } from "@/hooks/useAdmin";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import {
   Dialog,
@@ -22,13 +23,29 @@ const EphemeralSpace = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { isPremium, isFreeUser, loading: subscriptionLoading } = useSubscription();
+  const { isAdmin, loading: adminLoading } = useAdmin();
 
   useEffect(() => {
-    if (!subscriptionLoading && !isPremium && !isFreeUser) {
-      toast.error("This feature is only available for premium users");
-      navigate("/");
-    }
-  }, [isPremium, isFreeUser, subscriptionLoading, navigate]);
+    const checkAccess = async () => {
+      if (subscriptionLoading || adminLoading) return;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Please log in to access Ephemeral Rooms");
+        navigate("/auth");
+        return;
+      }
+      
+      if (!isPremium && !isFreeUser && !isAdmin) {
+        toast.error("This feature is only available for premium users");
+        navigate("/subscription");
+        return;
+      }
+    };
+    
+    checkAccess();
+  }, [isPremium, isFreeUser, isAdmin, subscriptionLoading, adminLoading, navigate]);
 
   const createNewRoom = async () => {
     setLoading(true);

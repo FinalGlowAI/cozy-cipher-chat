@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAdmin } from "@/hooks/useAdmin";
+import { supabase } from "@/integrations/supabase/client";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import {
@@ -23,7 +25,8 @@ import {
 const ImageEncryption = () => {
   const navigate = useNavigate();
   const { isPremium, isFreeUser, loading: subscriptionLoading } = useSubscription();
-  const hasUnlimitedAccess = isPremium || isFreeUser;
+  const { isAdmin, loading: adminLoading } = useAdmin();
+  const hasUnlimitedAccess = isPremium || isFreeUser || isAdmin;
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageCode, setImageCode] = useState("");
@@ -33,6 +36,28 @@ const ImageEncryption = () => {
   const [validity, setValidity] = useState<string>("60"); // minutes
   const [actionsRemaining, setActionsRemaining] = useState(5);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (subscriptionLoading || adminLoading) return;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Please log in to access Image Encryption");
+        navigate("/auth");
+        return;
+      }
+      
+      if (!isPremium && !isFreeUser && !isAdmin) {
+        toast.error("This feature is only available for premium users");
+        navigate("/subscription");
+        return;
+      }
+    };
+    
+    checkAccess();
+  }, [isPremium, isFreeUser, isAdmin, subscriptionLoading, adminLoading, navigate]);
 
   useEffect(() => {
     // Load actions from localStorage for image encryption
