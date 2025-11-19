@@ -782,7 +782,7 @@ const Auth = () => {
                 </Button>
               </div>
               <div className="text-sm text-muted-foreground">
-                <p>© 2024 OCX. Your privacy is our priority.</p>
+                <p>© 2025 OCX. Your privacy is our priority.</p>
                 <p className="mt-2">Client-side encryption · Zero-knowledge architecture · Military-grade security</p>
               </div>
             </div>
