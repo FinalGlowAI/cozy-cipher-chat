@@ -309,7 +309,7 @@ const Auth = () => {
                     <p><strong className="text-foreground">Secure Mode:</strong> Generate a unique decryption key with optional expiration. Share the key separately for maximum security.</p>
                   </div>
                   <Button 
-                    onClick={() => navigate("/")} 
+                    onClick={() => setShowLoginForm(true)} 
                     className="w-full mt-4"
                   >
                     Go to Text Encryption
@@ -356,7 +356,7 @@ const Auth = () => {
                     <p><strong className="text-foreground">Self-Destruct:</strong> Set automatic deletion after a specific time. Perfect for temporary sharing.</p>
                   </div>
                   <Button 
-                    onClick={() => navigate("/image-encryption")} 
+                    onClick={() => setShowLoginForm(true)} 
                     className="w-full mt-4"
                   >
                     Go to Image Encryption
@@ -399,7 +399,7 @@ const Auth = () => {
                     <p><strong className="text-foreground">End-to-End:</strong> Messages are encrypted in transit and only visible to room participants.</p>
                   </div>
                   <Button 
-                    onClick={() => navigate("/ephemeral")} 
+                    onClick={() => setShowLoginForm(true)} 
                     className="w-full mt-4"
                   >
                     Go to Ephemeral Rooms
