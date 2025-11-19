@@ -732,6 +732,62 @@ const Auth = () => {
       </Dialog>
         </div>
         )}
+
+        {/* Footer */}
+        <footer className="border-t border-primary/20 backdrop-blur-xl bg-card/30 mt-20">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center">
+              <div className="flex flex-wrap justify-center gap-4 mb-4">
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/about")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  About Us
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/disclaimer")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Disclaimer
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/terms")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Terms of Use
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/privacy")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Privacy Policy
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/refund-policy")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Refund Policy
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/settings")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Settings
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <p>© 2024 OCX. Your privacy is our priority.</p>
+                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · Military-grade security</p>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );
