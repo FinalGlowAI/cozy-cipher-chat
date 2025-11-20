@@ -157,42 +157,10 @@ const Settings = () => {
                   <p className="text-xs text-muted-foreground">Manage Your Account</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" disabled={deleteLoading}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Account
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers, including:
-                        <ul className="list-disc list-inside mt-2 space-y-1">
-                          <li>Your account information</li>
-                          <li>Your subscription (if active)</li>
-                          <li>All encrypted messages and rooms you created</li>
-                        </ul>
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDeleteAccount}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete Account
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button variant="ghost" onClick={() => navigate("/")}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Home
-                </Button>
-              </div>
+              <Button variant="ghost" onClick={() => navigate("/")}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
             </div>
           </div>
         </header>
@@ -203,11 +171,45 @@ const Settings = () => {
             {/* Account Info Card */}
             <Card className="border-primary/20 bg-card/50 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Account Information
-                </CardTitle>
-                <CardDescription>Your account details</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Account Information
+                    </CardTitle>
+                    <CardDescription>Your account details</CardDescription>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" disabled={deleteLoading}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your account and remove all your data from our servers, including:
+                          <ul className="list-disc list-inside mt-2 space-y-1">
+                            <li>Your account information</li>
+                            <li>Your subscription (if active)</li>
+                            <li>All encrypted messages and rooms you created</li>
+                          </ul>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete Account
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div>
