@@ -10,7 +10,18 @@ import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { isIOSPWA } from "@/lib/platformDetection";
-import { ArrowLeft, CreditCard, User, Lock } from "lucide-react";
+import { ArrowLeft, CreditCard, User, Lock, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import ocxLogo from "@/assets/ocx-logo.png";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +43,7 @@ const Settings = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading } = useSubscription();
 
@@ -103,6 +115,25 @@ const Settings = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account');
+      
+      if (error) throw error;
+
+      toast.success("Account deleted successfully");
+      
+      // Sign out and redirect
+      await supabase.auth.signOut();
+      navigate("/auth");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete account");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   if (!session) {
     return null;
   }
@@ -126,10 +157,42 @@ const Settings = () => {
                   <p className="text-xs text-muted-foreground">Manage Your Account</p>
                 </div>
               </div>
-              <Button variant="ghost" onClick={() => navigate("/")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
+              <div className="flex items-center gap-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={deleteLoading}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers, including:
+                        <ul className="list-disc list-inside mt-2 space-y-1">
+                          <li>Your account information</li>
+                          <li>Your subscription (if active)</li>
+                          <li>All encrypted messages and rooms you created</li>
+                        </ul>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete Account
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <Button variant="ghost" onClick={() => navigate("/")}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Home
+                </Button>
+              </div>
             </div>
           </div>
         </header>
