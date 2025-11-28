@@ -17,7 +17,6 @@ import EphemeralRoom from "./pages/EphemeralRoom";
 import ImageEncryption from "./pages/ImageEncryption";
 import AdminDashboard from "./pages/AdminDashboard";
 import Install from "./pages/Install";
-import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
@@ -41,7 +40,6 @@ const App = () => (
           <Route path="/ephemeral" element={<EphemeralSpace />} />
           <Route path="/room/:roomCode" element={<EphemeralRoom />} />
           <Route path="/image-encryption" element={<ImageEncryption />} />
-          <Route path="/subscription" element={<Subscription />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
