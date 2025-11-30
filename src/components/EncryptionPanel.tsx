@@ -9,7 +9,13 @@ import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/crypto";
 
-export const EncryptionPanel = () => {
+interface EncryptionPanelProps {
+  onActionPerformed: () => void;
+  actionsRemaining: number;
+  onUpgradeNeeded?: () => void;
+}
+
+export const EncryptionPanel = ({ onActionPerformed, actionsRemaining, onUpgradeNeeded }: EncryptionPanelProps) => {
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
   const [secureMode, setSecureMode] = useState(false);
@@ -17,9 +23,18 @@ export const EncryptionPanel = () => {
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [keyValidity, setKeyValidity] = useState<string>("never");
 
-  const handleProcess = async () => {
+  const handleProcess = () => {
     if (!inputText.trim()) {
       toast.error("Please enter some text first");
+      return;
+    }
+
+    if (actionsRemaining <= 0) {
+      if (onUpgradeNeeded) {
+        onUpgradeNeeded();
+      } else {
+        toast.error("No actions remaining. Please upgrade or wait until tomorrow.");
+      }
       return;
     }
 
@@ -27,11 +42,11 @@ export const EncryptionPanel = () => {
       if (mode === "encrypt") {
         if (secureMode) {
           const expirationMinutes = keyValidity === "never" ? undefined : parseInt(keyValidity);
-          const { encrypted, key } = await encryptWithKey(inputText, expirationMinutes);
+          const { encrypted, key } = encryptWithKey(inputText, expirationMinutes);
           setOutputText(encrypted);
           setDecryptionKey(key);
         } else {
-          const encrypted = await encryptText(inputText);
+          const encrypted = encryptText(inputText);
           setOutputText(encrypted);
           setDecryptionKey("");
         }
@@ -43,13 +58,14 @@ export const EncryptionPanel = () => {
         }
         
         if (secureMode && decryptionKey) {
-          const decrypted = await decryptWithKey(inputText, decryptionKey);
+          const decrypted = decryptWithKey(inputText, decryptionKey);
           setOutputText(decrypted);
         } else {
-          const decrypted = await decryptText(inputText);
+          const decrypted = decryptText(inputText);
           setOutputText(decrypted);
         }
       }
+      onActionPerformed();
       toast.success(`${mode === "encrypt" ? "Encrypted" : "Decrypted"} successfully!`);
     } catch (error) {
       if (error instanceof Error && error.message === "Decryption key has expired") {
@@ -252,6 +268,13 @@ export const EncryptionPanel = () => {
           </div>
         )}
       </Card>
+
+      {/* Actions Remaining */}
+      <div className="text-center">
+        <p className="text-sm text-muted-foreground">
+          Free actions remaining today: <span className="font-bold text-primary">{actionsRemaining}</span>
+        </p>
+      </div>
     </div>
   );
 };
