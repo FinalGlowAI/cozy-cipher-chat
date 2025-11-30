@@ -3,23 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
-import { UpgradeModal } from "@/components/UpgradeModal";
 import { Lock, LogOut, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
-import { isIOSPWA } from "@/lib/platformDetection";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
-  const [actionsRemaining, setActionsRemaining] = useState(5);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
   const navigate = useNavigate();
-  const { isPremium, isFreeUser, isBasicUser, loading: subscriptionLoading, refreshSubscription } = useSubscription();
   const { isAdmin } = useAdmin();
 
   useEffect(() => {
@@ -47,34 +40,14 @@ const Index = () => {
       if (!mounted) return;
       clearTimeout(safetyTimeout);
       setSession(sess ?? null);
-      if (!sess) {
-        // Clear localStorage when user logs out or is deleted
-        localStorage.removeItem("ocx_actions");
-        localStorage.removeItem("ocx_last_reset");
-      } else {
-        refreshSubscription();
-      }
     });
-
-    // Load actions from localStorage
-    const saved = localStorage.getItem("ocx_actions");
-    const lastReset = localStorage.getItem("ocx_last_reset");
-    const today = new Date().toDateString();
-
-    if (lastReset !== today) {
-      setActionsRemaining(5);
-      localStorage.setItem("ocx_actions", "5");
-      localStorage.setItem("ocx_last_reset", today);
-    } else if (saved) {
-      setActionsRemaining(parseInt(saved));
-    }
 
     return () => {
       mounted = false;
       clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
-  }, [refreshSubscription]);
+  }, []);
 
   // Redirect to auth when session is confirmed missing
   useEffect(() => {
@@ -82,45 +55,6 @@ const Index = () => {
       navigate("/auth", { replace: true });
     }
   }, [session, navigate]);
-
-  // Reset action count when subscription expires (premium -> free)
-  useEffect(() => {
-    if (!subscriptionLoading && previousPremiumStatus !== null) {
-      // User went from premium to free (subscription expired/cancelled)
-      if (previousPremiumStatus && !isPremium) {
-        setActionsRemaining(5);
-        localStorage.setItem("ocx_actions", "5");
-        localStorage.setItem("ocx_last_reset", new Date().toDateString());
-        toast.info("Your subscription has ended. You now have 5 daily actions.");
-      }
-    }
-    if (!subscriptionLoading) {
-      setPreviousPremiumStatus(isPremium);
-    }
-  }, [isPremium, subscriptionLoading, previousPremiumStatus]);
-
-  const handleActionPerformed = () => {
-    if (isPremium || isAdmin || isFreeUser) {
-      // Premium users, admins, and free users (admin-granted) have unlimited actions
-      return;
-    }
-    
-    const newCount = actionsRemaining - 1;
-    setActionsRemaining(newCount);
-    localStorage.setItem("ocx_actions", newCount.toString());
-    
-    if (newCount === 0) {
-      setShowUpgradeModal(true);
-    }
-  };
-
-  const handlePremiumFeatureClick = (path: string) => {
-    if (isPremium || isAdmin || isFreeUser) {
-      navigate(path);
-    } else {
-      setShowUpgradeModal(true);
-    }
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -180,24 +114,22 @@ const Index = () => {
                   <Lock className="h-4 w-4" />
                   <span>100% Private</span>
                 </div>
-                <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handlePremiumFeatureClick("/ephemeral")}
-                    className={isPremium || isAdmin || isFreeUser ? "" : "opacity-75"}
+                    onClick={() => navigate("/ephemeral")}
                   >
-                    <span className="hidden md:inline">Ephemeral Space {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
-                    <span className="md:hidden">💬 {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
+                    <span className="hidden md:inline">Ephemeral Space</span>
+                    <span className="md:hidden">💬</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handlePremiumFeatureClick("/image-encryption")}
-                    className={isPremium || isAdmin || isFreeUser ? "" : "opacity-75"}
+                    onClick={() => navigate("/image-encryption")}
                   >
-                    <span className="hidden md:inline">Image Encryption {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
-                    <span className="md:hidden">🖼️ {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
+                    <span className="hidden md:inline">Image Encryption</span>
+                    <span className="md:hidden">🖼️</span>
                   </Button>
                 </div>
                 {isAdmin && (
@@ -236,17 +168,11 @@ const Index = () => {
               </span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              Transform your sensitive messages into secure, unreadable formats with just a few
-              clicks. Whether you're sharing confidential business information or personal messages,
-              OCX ensures your communications stay private.
+              Military-grade encryption for your sensitive communications. Start encrypting instantly.
             </p>
           </div>
 
-          <EncryptionPanel
-            onActionPerformed={handleActionPerformed}
-            actionsRemaining={isPremium || isAdmin || isFreeUser ? Infinity : actionsRemaining}
-            onUpgradeNeeded={() => setShowUpgradeModal(true)}
-          />
+          <EncryptionPanel />
         </main>
 
         {/* Footer */}
@@ -289,45 +215,22 @@ const Index = () => {
                 >
                   Refund Policy
                 </Button>
-                {isPremium && (
-                  <Button
-                    variant="link"
-                    onClick={async () => {
-                      try {
-                        // iOS PWA users go to website
-                        if (isIOSPWA()) {
-                          window.open('https://ocodx.website/subscription', '_blank');
-                          return;
-                        }
-                        
-                        // All other platforms: Stripe Customer Portal
-                        const { data, error } = await supabase.functions.invoke('customer-portal');
-                        if (error) throw error;
-                        if (data?.url) {
-                          window.open(data.url, '_blank');
-                        }
-                      } catch (error) {
-                        toast.error("Failed to open subscription portal");
-                        console.error(error);
-                      }
-                    }}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Manage Subscription
-                  </Button>
-                )}
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/settings")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Settings
+                </Button>
               </div>
               <div className="text-sm text-muted-foreground">
-                <p>© 2024 OCX. Your privacy is our priority.</p>
-                <p className="mt-2">No data stored · Offline capable · Open source</p>
+                <p>© 2025 OCX. Your privacy is our priority.</p>
+                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · Military-grade security</p>
               </div>
             </div>
           </div>
         </footer>
       </div>
-
-      {/* Upgrade Modal */}
-      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 };

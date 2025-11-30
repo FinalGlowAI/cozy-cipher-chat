@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Info } from "lucide-react";
-import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import {
   Dialog,
@@ -21,14 +20,20 @@ const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { isPremium, isFreeUser, loading: subscriptionLoading } = useSubscription();
 
   useEffect(() => {
-    if (!subscriptionLoading && !isPremium && !isFreeUser) {
-      toast.error("This feature is only available for premium users");
-      navigate("/");
-    }
-  }, [isPremium, isFreeUser, subscriptionLoading, navigate]);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Please log in to access Ephemeral Rooms");
+        navigate("/auth");
+        return;
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   const createNewRoom = async () => {
     setLoading(true);

@@ -7,10 +7,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { storeImage, retrieveImage, cleanupExpiredImages, getStorageStats } from "@/lib/imageStorage";
-import { useSubscription } from "@/hooks/useSubscription";
+import { storeImage, retrieveImage, cleanupExpiredImages } from "@/lib/imageStorage";
+import { supabase } from "@/integrations/supabase/client";
 import { NeuralBackground } from "@/components/NeuralBackground";
-import { UpgradeModal } from "@/components/UpgradeModal";
 import {
   Dialog,
   DialogContent,
@@ -22,8 +21,6 @@ import {
 
 const ImageEncryption = () => {
   const navigate = useNavigate();
-  const { isPremium, isFreeUser, loading: subscriptionLoading } = useSubscription();
-  const hasUnlimitedAccess = isPremium || isFreeUser;
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageCode, setImageCode] = useState("");
@@ -31,23 +28,20 @@ const ImageEncryption = () => {
   const [decryptedImage, setDecryptedImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
-  const [actionsRemaining, setActionsRemaining] = useState(5);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
-    // Load actions from localStorage for image encryption
-    const saved = localStorage.getItem("ocx_image_actions");
-    const lastReset = localStorage.getItem("ocx_image_last_reset");
-    const today = new Date().toDateString();
-
-    if (lastReset !== today) {
-      setActionsRemaining(5);
-      localStorage.setItem("ocx_image_actions", "5");
-      localStorage.setItem("ocx_image_last_reset", today);
-    } else if (saved) {
-      setActionsRemaining(parseInt(saved));
-    }
-  }, []);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Please log in to access Image Encryption");
+        navigate("/auth");
+        return;
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   useEffect(() => {
     // Cleanup expired images on mount
@@ -69,28 +63,9 @@ const ImageEncryption = () => {
     }
   };
 
-  const handleActionPerformed = () => {
-    if (hasUnlimitedAccess) {
-      return;
-    }
-    
-    const newCount = actionsRemaining - 1;
-    setActionsRemaining(newCount);
-    localStorage.setItem("ocx_image_actions", newCount.toString());
-    
-    if (newCount === 0) {
-      setShowUpgradeModal(true);
-    }
-  };
-
   const handleEncrypt = async () => {
     if (!selectedImage) {
       toast.error("Please select an image first");
-      return;
-    }
-
-    if (!hasUnlimitedAccess && actionsRemaining <= 0) {
-      setShowUpgradeModal(true);
       return;
     }
 
@@ -98,7 +73,6 @@ const ImageEncryption = () => {
       const expirationMinutes = validity === "never" ? null : parseInt(validity);
       const code = await storeImage(selectedImage, expirationMinutes);
       setOutputCode(code);
-      handleActionPerformed();
       
       const validityNum = expirationMinutes || 0;
       const expiryText = validity === "never" 
@@ -116,15 +90,9 @@ const ImageEncryption = () => {
       return;
     }
 
-    if (!hasUnlimitedAccess && actionsRemaining <= 0) {
-      setShowUpgradeModal(true);
-      return;
-    }
-
     try {
       const imageData = await retrieveImage(imageCode);
       setDecryptedImage(imageData);
-      handleActionPerformed();
       toast.success("Image decrypted successfully!");
     } catch (error) {
       if (error instanceof Error) {
@@ -388,19 +356,7 @@ const ImageEncryption = () => {
             </div>
           )}
         </div>
-
-        {/* Actions Remaining */}
-        {!hasUnlimitedAccess && (
-          <div className="text-center mt-6">
-            <p className="text-sm text-muted-foreground">
-              Free actions remaining today: <span className="font-bold text-primary">{actionsRemaining}</span>
-            </p>
-          </div>
-        )}
       </div>
-
-      {/* Upgrade Modal */}
-      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 };

@@ -59,9 +59,9 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "OCX Whisper <onboarding@resend.dev>",
+        from: "OcodX <no-reply@ocodx.website>",
         to: [email],
-        subject: "Reset Your OCX Whisper Password",
+        subject: "Reset Your OcodX Password",
         html: `
         <!DOCTYPE html>
         <html>
@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
                           Hello,
                         </p>
                         <p style="margin: 0 0 30px; color: #e0e0e0; font-size: 16px; line-height: 1.6;">
-                          We received a request to reset your password for your <strong style="color: #9b87f5;">OCX Whisper</strong> account. Click the button below to create a new password:
+                          We received a request to reset your password for your <strong style="color: #9b87f5;">OcodX</strong> account. Click the button below to create a new password:
                         </p>
                         
                         <!-- CTA Button -->
@@ -131,11 +131,11 @@ const handler = async (req: Request): Promise<Response> => {
                       <td style="background-color: #0a0a0a; padding: 30px 40px; border-top: 1px solid #2a2a3e;">
                         <p style="margin: 0 0 10px; color: #606060; font-size: 13px; text-align: center;">
                           Best regards,<br>
-                          <strong style="color: #9b87f5;">The OCX Whisper Team</strong>
+                          <strong style="color: #9b87f5;">The OcodX Team</strong>
                         </p>
                         <p style="margin: 15px 0 0; color: #505050; font-size: 12px; text-align: center; line-height: 1.5;">
                           Secure messaging with neural encryption<br>
-                          © ${new Date().getFullYear()} OCX Whisper. All rights reserved.
+                          © ${new Date().getFullYear()} OcodX. All rights reserved.
                         </p>
                       </td>
                     </tr>
