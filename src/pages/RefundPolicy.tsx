@@ -1,17 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Shield, ArrowLeft } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 const RefundPolicy = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-surface opacity-50" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      <div className="relative z-10">
+      <div className="relative z-10 flex-1 flex flex-col">
         <header className="border-b border-primary/20 backdrop-blur-xl bg-card/30">
           <div className="container mx-auto px-4 py-6">
             <Button
@@ -102,6 +103,8 @@ const RefundPolicy = () => {
           </div>
         </main>
       </div>
+      
+      <Footer />
     </div>
   );
 };

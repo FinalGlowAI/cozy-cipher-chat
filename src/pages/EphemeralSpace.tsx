@@ -9,6 +9,7 @@ import { ArrowLeft, Info } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { Footer } from "@/components/Footer";
 import {
   Dialog,
   DialogContent,
@@ -138,8 +139,9 @@ const EphemeralSpace = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
+    <div className="min-h-screen flex flex-col relative">
       <NeuralBackground key="neural-bg" />
+      <div className="flex-1 flex items-center justify-center p-4">
       <div className="absolute top-8 left-8 z-10">
         <Button
           variant="ghost"
@@ -215,6 +217,8 @@ const EphemeralSpace = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
+      <Footer />
     </div>
   );
 };
