@@ -2,26 +2,20 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
-import { EncryptionPanel } from "@/components/EncryptionPanel";
-import { UpgradeModal } from "@/components/UpgradeModal";
-import { Lock, LogOut, Settings, Loader2, Shield, Key, Clock, Image, MessageSquare, ShieldCheck, Zap, Eye, FileKey } from "lucide-react";
+import { LogOut, Settings, Loader2, Shield, Key, Clock, Image, MessageSquare, ShieldCheck, Zap, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
-import { isIOSPWA } from "@/lib/platformDetection";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
-  const [actionsRemaining, setActionsRemaining] = useState(5);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  const [previousPremiumStatus, setPreviousPremiumStatus] = useState<boolean | null>(null);
   const navigate = useNavigate();
-  const { isPremium, isFreeUser, isBasicUser, loading: subscriptionLoading, refreshSubscription } = useSubscription();
+  const { isPremium, isFreeUser, loading: subscriptionLoading, refreshSubscription } = useSubscription();
   const { isAdmin } = useAdmin();
 
   useEffect(() => {
@@ -49,27 +43,10 @@ const Index = () => {
       if (!mounted) return;
       clearTimeout(safetyTimeout);
       setSession(sess ?? null);
-      if (!sess) {
-        // Clear localStorage when user logs out or is deleted
-        localStorage.removeItem("ocx_actions");
-        localStorage.removeItem("ocx_last_reset");
-      } else {
+      if (sess) {
         refreshSubscription();
       }
     });
-
-    // Load actions from localStorage
-    const saved = localStorage.getItem("ocx_actions");
-    const lastReset = localStorage.getItem("ocx_last_reset");
-    const today = new Date().toDateString();
-
-    if (lastReset !== today) {
-      setActionsRemaining(5);
-      localStorage.setItem("ocx_actions", "5");
-      localStorage.setItem("ocx_last_reset", today);
-    } else if (saved) {
-      setActionsRemaining(parseInt(saved));
-    }
 
     return () => {
       mounted = false;
@@ -84,45 +61,6 @@ const Index = () => {
       navigate("/auth", { replace: true });
     }
   }, [session, navigate]);
-
-  // Reset action count when subscription expires (premium -> free)
-  useEffect(() => {
-    if (!subscriptionLoading && previousPremiumStatus !== null) {
-      // User went from premium to free (subscription expired/cancelled)
-      if (previousPremiumStatus && !isPremium) {
-        setActionsRemaining(5);
-        localStorage.setItem("ocx_actions", "5");
-        localStorage.setItem("ocx_last_reset", new Date().toDateString());
-        toast.info("Your subscription has ended. You now have 5 daily actions.");
-      }
-    }
-    if (!subscriptionLoading) {
-      setPreviousPremiumStatus(isPremium);
-    }
-  }, [isPremium, subscriptionLoading, previousPremiumStatus]);
-
-  const handleActionPerformed = () => {
-    if (isPremium || isAdmin || isFreeUser) {
-      // Premium users, admins, and free users (admin-granted) have unlimited actions
-      return;
-    }
-    
-    const newCount = actionsRemaining - 1;
-    setActionsRemaining(newCount);
-    localStorage.setItem("ocx_actions", newCount.toString());
-    
-    if (newCount === 0) {
-      setShowUpgradeModal(true);
-    }
-  };
-
-  const handlePremiumFeatureClick = (path: string) => {
-    if (isPremium || isAdmin || isFreeUser) {
-      navigate(path);
-    } else {
-      setShowUpgradeModal(true);
-    }
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -155,53 +93,22 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden flex flex-col">
       <NeuralBackground key="neural-bg" />
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-surface opacity-30" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
-
+      
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col flex-1">
         {/* Header */}
         <header className="border-b border-primary/20 backdrop-blur-xl bg-card/30">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img src={ocxLogo} alt="OCX Logo" className="h-12 w-12 object-contain" />
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    OCX
-                  </h1>
-                  <p className="text-xs text-muted-foreground">Secure Messaging</p>
-                </div>
+                <h1 className="text-2xl font-bold">
+                  OCX encryption
+                </h1>
               </div>
               <div className="flex items-center gap-2 md:gap-4">
-                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                  <Lock className="h-4 w-4" />
-                  <span>100% Private</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePremiumFeatureClick("/ephemeral")}
-                    className={isPremium || isAdmin || isFreeUser ? "" : "opacity-75"}
-                  >
-                    <span className="hidden md:inline">Ephemeral Space {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
-                    <span className="md:hidden">💬 {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePremiumFeatureClick("/image-encryption")}
-                    className={isPremium || isAdmin || isFreeUser ? "" : "opacity-75"}
-                  >
-                    <span className="hidden md:inline">Image Encryption {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
-                    <span className="md:hidden">🖼️ {!isPremium && !isAdmin && !isFreeUser && "🔒"}</span>
-                  </Button>
-                </div>
                 {isAdmin && (
                   <Button
                     variant="secondary"
@@ -213,6 +120,15 @@ const Index = () => {
                     <span className="hidden md:inline">Admin</span>
                   </Button>
                 )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/settings")}
+                  className="gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden md:inline">Settings</span>
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -228,86 +144,197 @@ const Index = () => {
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-12">
+        <main className="container mx-auto px-4 py-12 flex-1">
+          {/* Hero Section */}
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">
-              Encrypt Your Messages,
-              <br />
+            <h2 className="text-5xl md:text-6xl font-bold mb-6">
               <span className="bg-gradient-primary bg-clip-text text-transparent">
-                Protect Your Privacy
+                You Can Trust
               </span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              Military-grade encryption for your sensitive communications. Start encrypting instantly.
+            <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
+              Built with AES-256-GCM Military-Grade encryption and zero-knowledge architecture. Your data remains encrypted end-to-end - we never have access.
             </p>
           </div>
 
-          <EncryptionPanel
-            onActionPerformed={handleActionPerformed}
-            actionsRemaining={isPremium || isAdmin || isFreeUser ? Infinity : actionsRemaining}
-            onUpgradeNeeded={() => setShowUpgradeModal(true)}
-          />
+          {/* Security Badges */}
+          <div className="flex flex-wrap justify-center gap-4 mb-16">
+            <Badge variant="outline" className="flex items-center gap-2 px-4 py-3 text-sm">
+              <ShieldCheck className="h-4 w-4" />
+              AES-256-GCM
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-2 px-4 py-3 text-sm">
+              <Key className="h-4 w-4" />
+              PBKDF2 Key Derivation
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-2 px-4 py-3 text-sm">
+              <Eye className="h-4 w-4" />
+              Zero-Knowledge
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-2 px-4 py-3 text-sm">
+              <Zap className="h-4 w-4" />
+              Client-Side Only
+            </Badge>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid md:grid-cols-3 gap-6 mb-16">
+            <Card 
+              className="cursor-pointer hover:border-primary/50 transition-all"
+              onClick={() => navigate("/ephemeral")}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <MessageSquare className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="flex items-center gap-2">
+                  Text Encryption
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>Military-grade message protection</CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="cursor-pointer hover:border-primary/50 transition-all"
+              onClick={() => navigate("/image-encryption")}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <Image className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="flex items-center gap-2">
+                  Image Encryption
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>Secure image sharing</CardDescription>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="cursor-pointer hover:border-primary/50 transition-all"
+              onClick={() => navigate("/ephemeral")}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <Clock className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="flex items-center gap-2">
+                  Ephemeral Rooms
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>Temporary encrypted chat</CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Security Standards Section */}
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Shield className="h-6 w-6 text-primary" />
+                <h3 className="text-2xl font-bold">Built on Proven Security Standards</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Don't just trust us - verify our security claims
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h4 className="font-semibold mb-2">Encryption Algorithm</h4>
+                <p className="text-sm text-muted-foreground">
+                  AES-256-GCM (Advanced Encryption Standard in Galois/Counter Mode) - approved by NSA for TOP SECRET information.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Browser Security</h4>
+                <p className="text-sm text-muted-foreground">
+                  Web Crypto API - native browser encryption that never exposes keys to JavaScript. All encryption happens client-side.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Key Derivation</h4>
+                <p className="text-sm text-muted-foreground">
+                  PBKDF2 with SHA-256 using 100,000 iterations and random salt generation for each encryption.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Backward Compatible</h4>
+                <p className="text-sm text-muted-foreground">
+                  Legacy encrypted messages are automatically supported while all new encryptions use the latest AES-256-GCM standard.
+                </p>
+              </div>
+            </div>
+          </div>
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-primary/20 backdrop-blur-xl bg-card/30 mt-20">
+        <footer className="border-t border-primary/20 backdrop-blur-xl bg-card/30 mt-auto">
           <div className="container mx-auto px-4 py-8">
-            <div className="text-center">
-              <div className="flex flex-wrap justify-center gap-4 mb-4">
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/about")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  About Us
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/disclaimer")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Disclaimer
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/terms")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Terms of Use
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/privacy")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Privacy Policy
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/refund-policy")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Refund Policy
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/settings")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Settings
-                </Button>
+            <div className="flex flex-wrap justify-center items-center gap-6 mb-4">
+              <div className="flex items-center gap-2 text-accent">
+                <Zap className="h-4 w-4" />
+                <span className="text-sm font-medium">Text Encryption Works Offline</span>
               </div>
-              <div className="text-sm text-muted-foreground">
-                <p>© 2025 OCX. Your privacy is our priority.</p>
-                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · Military-grade security</p>
-              </div>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-6 mb-4">
+              <button 
+                onClick={() => navigate("/about")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                About Us
+              </button>
+              <button 
+                onClick={() => navigate("/disclaimer")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Disclaimer
+              </button>
+              <button 
+                onClick={() => navigate("/terms")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Terms of Use
+              </button>
+              <button 
+                onClick={() => navigate("/privacy")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Privacy Policy
+              </button>
+              <button 
+                onClick={() => navigate("/refund-policy")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Refund Policy
+              </button>
+              <button 
+                onClick={() => navigate("/settings")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Settings
+              </button>
+            </div>
+
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                © 2025 OCX. Your privacy is our priority.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Client-side encryption · Zero-knowledge architecture · Military-grade security
+              </p>
             </div>
           </div>
         </footer>
       </div>
-
-      {/* Upgrade Modal */}
-      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 };
