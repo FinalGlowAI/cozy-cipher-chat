@@ -11,7 +11,7 @@ import { Crown, Check, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
-import { isIOSPWA, isWebView } from "@/lib/platformDetection";
+import { isIOSPWA } from "@/lib/platformDetection";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -51,12 +51,7 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
       if (error) throw error;
       
       if (data?.url) {
-        // In webview environments (native apps), redirect in same window
-        if (isWebView()) {
-          window.location.href = data.url;
-        } else {
-          window.open(data.url, '_blank');
-        }
+        window.open(data.url, '_blank');
       }
     } catch (error) {
       console.error('Error creating checkout:', error);

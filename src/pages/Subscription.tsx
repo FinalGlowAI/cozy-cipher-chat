@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
-import { isIOSPWA, isWebView } from "@/lib/platformDetection";
+import { isIOSPWA } from "@/lib/platformDetection";
 import { ArrowLeft, Check, Crown } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
 
@@ -58,13 +58,7 @@ const Subscription = () => {
       if (error) throw error;
       
       if (data?.url) {
-        // In webview environments (native apps), redirect in same window
-        // to avoid popup blockers. Otherwise open in new tab.
-        if (isWebView()) {
-          window.location.href = data.url;
-        } else {
-          window.open(data.url, '_blank');
-        }
+        window.open(data.url, '_blank');
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
