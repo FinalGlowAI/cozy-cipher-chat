@@ -242,7 +242,7 @@ const Auth = () => {
         {!showLoginForm && (
         <div className="mb-12">
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 pr-20 sm:pr-0">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
               OCX encryption
               <span className="block text-primary mt-2">You Can Trust</span>
             </h2>
