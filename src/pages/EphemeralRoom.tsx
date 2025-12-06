@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Send, Copy } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
-import { Footer } from "@/components/Footer";
 
 interface Message {
   id: string;
@@ -291,8 +290,6 @@ const EphemeralRoom = () => {
           </Button>
         </div>
       </div>
-      
-      <Footer />
     </div>
   );
 };

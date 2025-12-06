@@ -12,7 +12,6 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { NeuralBackground } from "@/components/NeuralBackground";
-import { Footer } from "@/components/Footer";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import {
   Dialog,
@@ -185,9 +184,9 @@ const ImageEncryption = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
+    <div className="min-h-screen relative">
       <NeuralBackground key="neural-bg" />
-      <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10 flex-1">
+      <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
@@ -427,8 +426,6 @@ const ImageEncryption = () => {
 
       {/* Upgrade Modal */}
       <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
-      
-      <Footer />
     </div>
   );
 };

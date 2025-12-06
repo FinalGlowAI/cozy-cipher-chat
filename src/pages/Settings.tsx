@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
-import { Footer } from "@/components/Footer";
 import { isIOSPWA } from "@/lib/platformDetection";
 import { ArrowLeft, CreditCard, User, Lock, Trash2 } from "lucide-react";
 import {
@@ -140,11 +139,11 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       <NeuralBackground key="neural-bg" />
       <div className="absolute inset-0 bg-gradient-surface opacity-30" />
       
-      <div className="relative z-10 flex-1 flex flex-col">
+      <div className="relative z-10">
         {/* Header */}
         <header className="border-b border-primary/20 backdrop-blur-xl bg-card/30">
           <div className="container mx-auto px-4 py-6">
@@ -312,8 +311,6 @@ const Settings = () => {
           </div>
         </main>
       </div>
-      
-      <Footer />
     </div>
   );
 };
