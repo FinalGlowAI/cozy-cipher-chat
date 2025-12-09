@@ -1,14 +1,28 @@
 // Supabase utility for storing encrypted images
 import { supabase } from "@/integrations/supabase/client";
 
-// Generate random 6-character code
+// Generate image code with IMG- prefix (e.g., IMG-AJFJZ8)
 export const generateShortCode = (): string => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
+  let randomPart = "";
   for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return code;
+  return `IMG-${randomPart}`;
+};
+
+// Extract the base code without prefix for storage
+const extractBaseCode = (code: string): string => {
+  return code.toUpperCase().replace(/^IMG-/, '');
+};
+
+// Normalize code input (handles both with and without prefix)
+const normalizeCode = (code: string): string => {
+  const upper = code.toUpperCase().trim();
+  if (upper.startsWith('IMG-')) {
+    return upper;
+  }
+  return `IMG-${upper}`;
 };
 
 // Check if code already exists
@@ -76,13 +90,16 @@ export const storeImage = async (
   return code;
 };
 
-// Retrieve image by code
+// Retrieve image by code (accepts with or without IMG- prefix)
 export const retrieveImage = async (code: string): Promise<string> => {
   await cleanupExpiredImages(); // Clean up before retrieval
 
+  // Normalize and extract base code for database lookup
+  const normalizedCode = normalizeCode(code);
+
   // Use security definer function to get metadata (prevents enumeration attacks)
   const { data, error } = await supabase.rpc('retrieve_encrypted_image', {
-    _code: code.toUpperCase()
+    _code: normalizedCode
   });
 
   if (error || !data || data.length === 0) {
@@ -109,11 +126,13 @@ export const retrieveImage = async (code: string): Promise<string> => {
   });
 };
 
-// Delete image by code
+// Delete image by code (accepts with or without IMG- prefix)
 export const deleteImage = async (code: string): Promise<void> => {
+  const normalizedCode = normalizeCode(code);
+  
   // Use security definer function to delete (verifies code ownership)
   const { error } = await supabase.rpc('delete_encrypted_image', {
-    _code: code.toUpperCase()
+    _code: normalizedCode
   });
 
   if (error) {
