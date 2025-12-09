@@ -95,11 +95,20 @@ const EphemeralSpace = () => {
 
   const generateRoomCode = async (): Promise<string> => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let result = "";
+    let randomPart = "";
     for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return result;
+    return `ER-${randomPart}`;
+  };
+
+  // Normalize room code input (handles both with and without ER- prefix)
+  const normalizeRoomCode = (code: string): string => {
+    const upper = code.toUpperCase().trim();
+    if (upper.startsWith('ER-')) {
+      return upper;
+    }
+    return `ER-${upper}`;
   };
 
   const joinRoom = async () => {
@@ -117,10 +126,12 @@ const EphemeralSpace = () => {
         return;
       }
 
+      const normalizedCode = normalizeRoomCode(roomCode);
+
       const { data: room, error } = await supabase
         .from("ephemeral_rooms")
         .select("*")
-        .eq("room_code", roomCode.toUpperCase())
+        .eq("room_code", normalizedCode)
         .single();
 
       if (error || !room) {
@@ -128,7 +139,7 @@ const EphemeralSpace = () => {
         return;
       }
 
-      navigate(`/room/${roomCode.toUpperCase()}`);
+      navigate(`/room/${normalizedCode}`);
     } catch (error: any) {
       console.error("Error joining room:", error);
       toast.error("Failed to join room");
