@@ -1,8 +1,8 @@
-import { LocalNotifications, PermissionStatus } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
 
-// Check if notifications are available (Capacitor native context)
+// Check if notifications are available (Capacitor native context only)
 export const isNotificationsAvailable = (): boolean => {
-  return typeof LocalNotifications !== 'undefined' && LocalNotifications.checkPermissions !== undefined;
+  return Capacitor.isNativePlatform();
 };
 
 // Request notification permissions
@@ -13,6 +13,7 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
   }
 
   try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
     const permission = await LocalNotifications.checkPermissions();
     
     if (permission.display === 'granted') {
@@ -33,13 +34,15 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 };
 
 // Check current permission status
-export const checkNotificationPermission = async (): Promise<PermissionStatus | null> => {
+export const checkNotificationPermission = async (): Promise<string | null> => {
   if (!isNotificationsAvailable()) {
     return null;
   }
 
   try {
-    return await LocalNotifications.checkPermissions();
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
+    const result = await LocalNotifications.checkPermissions();
+    return result.display;
   } catch (error) {
     console.error('Error checking notification permission:', error);
     return null;
@@ -57,6 +60,7 @@ export const scheduleNotification = async (
   }
 
   try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
     const permission = await LocalNotifications.checkPermissions();
     if (permission.display !== 'granted') {
       return false;
@@ -94,16 +98,22 @@ export const notifyNewMessage = async (roomCode: string): Promise<void> => {
 };
 
 // Register notification listeners
-export const registerNotificationListeners = (): void => {
+export const registerNotificationListeners = async (): Promise<void> => {
   if (!isNotificationsAvailable()) {
     return;
   }
 
-  LocalNotifications.addListener('localNotificationReceived', (notification) => {
-    console.log('Notification received:', notification);
-  });
+  try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
+    
+    LocalNotifications.addListener('localNotificationReceived', (notification) => {
+      console.log('Notification received:', notification);
+    });
 
-  LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
-    console.log('Notification action performed:', action);
-  });
+    LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+      console.log('Notification action performed:', action);
+    });
+  } catch (error) {
+    console.error('Error registering notification listeners:', error);
+  }
 };

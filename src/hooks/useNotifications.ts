@@ -16,9 +16,9 @@ export const useNotifications = () => {
       setIsAvailable(available);
       
       if (available) {
-        registerNotificationListeners();
+        await registerNotificationListeners();
         const permission = await checkNotificationPermission();
-        setPermissionGranted(permission?.display === 'granted');
+        setPermissionGranted(permission === 'granted');
       }
     };
 
