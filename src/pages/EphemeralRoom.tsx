@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Send, Copy } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { notifyNewMessage } from "@/lib/notifications";
 
 interface Message {
   id: string;
@@ -54,8 +55,15 @@ const EphemeralRoom = () => {
           table: "ephemeral_messages",
           filter: `room_id=eq.${roomId}`,
         },
-        (payload) => {
-          setMessages((current) => [...current, payload.new as Message]);
+        async (payload) => {
+          const newMsg = payload.new as Message;
+          setMessages((current) => [...current, newMsg]);
+          
+          // Send local notification for new messages from others
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && newMsg.user_id !== user.id && document.hidden) {
+            notifyNewMessage(roomCode || 'unknown');
+          }
         }
       )
       .on("presence", { event: "sync" }, async () => {
