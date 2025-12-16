@@ -1,28 +1,19 @@
 // Supabase utility for storing encrypted images
 import { supabase } from "@/integrations/supabase/client";
 
-// Generate image code with IMG- prefix (e.g., IMG-AJFJZ8)
+// Generate 6-character image code (e.g., AJFJZ8)
 export const generateShortCode = (): string => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let randomPart = "";
+  let code = "";
   for (let i = 0; i < 6; i++) {
-    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `IMG-${randomPart}`;
+  return code;
 };
 
-// Extract the base code without prefix for storage
-const extractBaseCode = (code: string): string => {
-  return code.toUpperCase().replace(/^IMG-/, '');
-};
-
-// Normalize code input (handles both with and without prefix)
+// Normalize code input (uppercase and trim)
 const normalizeCode = (code: string): string => {
-  const upper = code.toUpperCase().trim();
-  if (upper.startsWith('IMG-')) {
-    return upper;
-  }
-  return `IMG-${upper}`;
+  return code.toUpperCase().trim();
 };
 
 // Check if code already exists
