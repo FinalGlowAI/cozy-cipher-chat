@@ -108,14 +108,22 @@ export const retrieveImage = async (code: string): Promise<string> => {
 
   const imageData = data[0];
 
-  // Download image from storage
-  const { data: imageBlob, error: downloadError } = await supabase.storage
+  // Create signed URL for secure access (1 hour expiry)
+  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from('encrypted_images')
-    .download(imageData.storage_path);
+    .createSignedUrl(imageData.storage_path, 3600);
 
-  if (downloadError || !imageBlob) {
-    throw new Error(`Failed to download image: ${downloadError?.message}`);
+  if (signedUrlError || !signedUrlData?.signedUrl) {
+    throw new Error(`Failed to create signed URL: ${signedUrlError?.message}`);
   }
+
+  // Fetch the image using the signed URL
+  const response = await fetch(signedUrlData.signedUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to download image: ${response.statusText}`);
+  }
+
+  const imageBlob = await response.blob();
 
   // Convert blob to base64
   return new Promise((resolve, reject) => {
