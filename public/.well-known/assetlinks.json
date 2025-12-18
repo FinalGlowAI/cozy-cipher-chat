@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "website.ocodx.twa",
+      "sha256_cert_fingerprints": [
+        "8F:5F:DB:04:0B:4C:67:55:9A:48:A8:13:D4:6D:82:BA:82:9F:81:D7:7F:31:CE:24:60:FF:86:E0:9E:C8:30:BE"
+      ]
+    }
+  }
+]
