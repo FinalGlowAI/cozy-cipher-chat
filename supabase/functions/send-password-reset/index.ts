@@ -106,12 +106,6 @@ const handler = async (req: Request): Promise<Response> => {
                           </tr>
                         </table>
                         
-                        <p style="margin: 30px 0 20px; color: #a0a0a0; font-size: 14px; line-height: 1.6;">
-                          Or copy and paste this link into your browser:
-                        </p>
-                        <p style="margin: 0 0 30px; color: #7E69AB; font-size: 13px; word-break: break-all; background-color: #1a1a2e; padding: 15px; border-radius: 8px; border: 1px solid #2a2a3e;">
-                          ${resetLink}
-                        </p>
                         
                         <!-- Security Notice -->
                         <div style="background-color: rgba(155, 135, 245, 0.1); border-left: 4px solid #9b87f5; padding: 15px; border-radius: 4px; margin: 30px 0;">
