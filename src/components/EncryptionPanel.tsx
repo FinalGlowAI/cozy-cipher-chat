@@ -42,26 +42,36 @@ export const EncryptionPanel = () => {
           setOutputText(encrypted);
           setDecryptionKey("");
         }
-      } else {
-        // Decrypt mode
-        if (secureMode) {
-          if (!decryptionKey.trim()) {
-            toast.error("This message requires a decryption key. Please enter the key to decrypt.");
-            return;
-          }
-          const decrypted = await decryptWithKey(inputText, decryptionKey);
-          setOutputText(decrypted);
-        } else {
-          // Standard mode with user password
-          if (!password) {
-            toast.error("Please enter your password to decrypt the message");
-            return;
-          }
-          const decrypted = await decryptText(inputText, password);
-          setOutputText(decrypted);
-        }
+
+        toast.success("Encrypted successfully!");
+        return;
       }
-      toast.success(`${mode === "encrypt" ? "Encrypted" : "Decrypted"} successfully!`);
+
+      // Decrypt mode
+      let decrypted = "";
+
+      if (secureMode) {
+        if (!decryptionKey.trim()) {
+          toast.error("This message requires a decryption key. Please enter the key to decrypt.");
+          return;
+        }
+        decrypted = await decryptWithKey(inputText, decryptionKey);
+      } else {
+        // Standard mode with user password
+        if (!password) {
+          toast.error("Please enter your password to decrypt the message");
+          return;
+        }
+        decrypted = await decryptText(inputText, password);
+      }
+
+      // If we don't get a real plaintext back, don't claim success.
+      if (!decrypted || !decrypted.trim()) {
+        throw new Error("Wrong password or corrupted data");
+      }
+
+      setOutputText(decrypted);
+      toast.success("Decrypted successfully!");
     } catch (error) {
       if (error instanceof Error && error.message === "Decryption key has expired") {
         toast.error("Decryption key has expired and can no longer decrypt this message.");
