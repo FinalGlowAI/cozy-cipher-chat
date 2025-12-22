@@ -53,6 +53,10 @@ export const EncryptionPanel = () => {
           setOutputText(decrypted);
         } else {
           // Standard mode with user password
+          if (!password) {
+            toast.error("Please enter your password to decrypt the message");
+            return;
+          }
           const decrypted = await decryptText(inputText, password);
           setOutputText(decrypted);
         }
@@ -64,11 +68,11 @@ export const EncryptionPanel = () => {
       } else if (error instanceof Error && error.message === "Password must be at least 4 characters") {
         toast.error("Password must be at least 4 characters");
       } else if (error instanceof Error && error.message === "Wrong password or corrupted data") {
-        toast.error("Wrong password or corrupted data. Please check your password.");
+        toast.error("Wrong password! Please enter the correct password to decrypt this message.");
       } else if (error instanceof Error && error.message === "Invalid encrypted text or key") {
         toast.error("This message requires a decryption key. Please enable Secure Mode and enter the key.");
       } else {
-        toast.error("Operation failed. Please check your input and password.");
+        toast.error("Wrong password or invalid data. Please check your password and try again.");
       }
     }
   };
