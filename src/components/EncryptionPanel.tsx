@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/crypto";
 
@@ -14,6 +15,7 @@ export const EncryptionPanel = () => {
   const [outputText, setOutputText] = useState("");
   const [secureMode, setSecureMode] = useState(false);
   const [decryptionKey, setDecryptionKey] = useState("");
+  const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [keyValidity, setKeyValidity] = useState<string>("never");
 
@@ -31,22 +33,27 @@ export const EncryptionPanel = () => {
           setOutputText(encrypted);
           setDecryptionKey(key);
         } else {
-          const encrypted = await encryptText(inputText);
+          // Standard mode with user password
+          if (!password || password.length < 4) {
+            toast.error("Please enter a password (at least 4 characters)");
+            return;
+          }
+          const encrypted = await encryptText(inputText, password);
           setOutputText(encrypted);
           setDecryptionKey("");
         }
       } else {
-        // Check if secure mode is enabled but no key provided
-        if (secureMode && !decryptionKey.trim()) {
-          toast.error("This message requires a decryption key. Please enter the key to decrypt.");
-          return;
-        }
-        
-        if (secureMode && decryptionKey) {
+        // Decrypt mode
+        if (secureMode) {
+          if (!decryptionKey.trim()) {
+            toast.error("This message requires a decryption key. Please enter the key to decrypt.");
+            return;
+          }
           const decrypted = await decryptWithKey(inputText, decryptionKey);
           setOutputText(decrypted);
         } else {
-          const decrypted = await decryptText(inputText);
+          // Standard mode with user password
+          const decrypted = await decryptText(inputText, password);
           setOutputText(decrypted);
         }
       }
@@ -54,10 +61,14 @@ export const EncryptionPanel = () => {
     } catch (error) {
       if (error instanceof Error && error.message === "Decryption key has expired") {
         toast.error("Decryption key has expired and can no longer decrypt this message.");
+      } else if (error instanceof Error && error.message === "Password must be at least 4 characters") {
+        toast.error("Password must be at least 4 characters");
+      } else if (error instanceof Error && error.message === "Wrong password or corrupted data") {
+        toast.error("Wrong password or corrupted data. Please check your password.");
       } else if (error instanceof Error && error.message === "Invalid encrypted text or key") {
         toast.error("This message requires a decryption key. Please enable Secure Mode and enter the key.");
       } else {
-        toast.error("Decryption failed. Please check your input and key.");
+        toast.error("Operation failed. Please check your input and password.");
       }
     }
   };
@@ -126,6 +137,26 @@ export const EncryptionPanel = () => {
             onCheckedChange={setSecureMode}
           />
         </div>
+        
+        {/* Password input for standard mode */}
+        {!secureMode && (
+          <div className="mt-4 pt-4 border-t border-primary/20">
+            <div className="flex items-center gap-2 mb-3">
+              <KeyRound className="h-4 w-4 text-primary" />
+              <Label className="text-sm font-medium">Your Password</Label>
+            </div>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your secret password (min 4 characters)"
+              className="bg-background/50 border-primary/30 focus:border-primary"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              You must use the same password to decrypt the message later.
+            </p>
+          </div>
+        )}
         
         {/* Key Validity Selector - Only show in encrypt mode with secure mode enabled */}
         {mode === "encrypt" && secureMode && (
