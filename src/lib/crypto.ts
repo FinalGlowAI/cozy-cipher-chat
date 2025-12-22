@@ -76,22 +76,35 @@ export const encryptText = async (text: string, password: string): Promise<strin
  * Decrypt text - supports AES-256-GCM with user password, legacy AES, and XOR cipher
  */
 export const decryptText = async (encrypted: string, password: string): Promise<string> => {
+  // Decode base64 first; if it isn't base64, treat it as legacy.
+  let data: Uint8Array;
   try {
-    const data = base64ToBytes(encrypted);
-    
-    // Check version byte
-    const version = data[0];
-    
-    if (version === 3) {
-      // New format: AES-256-GCM with user password
-      if (!password) {
-        throw new Error("Password required for decryption");
-      }
-      
-      const salt = data.slice(1, 1 + SALT_LENGTH);
-      const iv = data.slice(1 + SALT_LENGTH, 1 + SALT_LENGTH + IV_LENGTH);
-      const ciphertext = data.slice(1 + SALT_LENGTH + IV_LENGTH);
-      
+    data = base64ToBytes(encrypted);
+  } catch {
+    try {
+      return decryptTextLegacy(encrypted);
+    } catch {
+      throw new Error("Wrong password or corrupted data");
+    }
+  }
+
+  // Minimal length checks to avoid mis-detecting random/legacy payloads as v3/v2.
+  const minV3Length = 1 + SALT_LENGTH + IV_LENGTH + 1;
+  const minV2Length = 1 + SALT_LENGTH + IV_LENGTH + 1;
+
+  const version = data[0];
+
+  if (version === 3 && data.length >= minV3Length) {
+    // AES-256-GCM with user password
+    if (!password) {
+      throw new Error("Password required for decryption");
+    }
+
+    const salt = data.slice(1, 1 + SALT_LENGTH);
+    const iv = data.slice(1 + SALT_LENGTH, 1 + SALT_LENGTH + IV_LENGTH);
+    const ciphertext = data.slice(1 + SALT_LENGTH + IV_LENGTH);
+
+    try {
       const keyMaterial = await crypto.subtle.importKey(
         "raw",
         new TextEncoder().encode(password),
@@ -99,36 +112,40 @@ export const decryptText = async (encrypted: string, password: string): Promise<
         false,
         ["deriveBits", "deriveKey"]
       );
-      
+
       const key = await crypto.subtle.deriveKey(
         {
           name: "PBKDF2",
-          salt: salt,
+          salt,
           iterations: PBKDF2_ITERATIONS,
-          hash: "SHA-256"
+          hash: "SHA-256",
         },
         keyMaterial,
         { name: "AES-GCM", length: 256 },
         false,
         ["decrypt"]
       );
-      
+
       const decrypted = await crypto.subtle.decrypt(
-        {
-          name: "AES-GCM",
-          iv: iv
-        },
+        { name: "AES-GCM", iv },
         key,
         ciphertext
       );
-      
+
       return new TextDecoder().decode(decrypted);
-    } else if (version === 2) {
-      // Legacy AES-256-GCM with hardcoded key (for backward compatibility)
-      const salt = data.slice(1, 1 + SALT_LENGTH);
-      const iv = data.slice(1 + SALT_LENGTH, 1 + SALT_LENGTH + IV_LENGTH);
-      const ciphertext = data.slice(1 + SALT_LENGTH + IV_LENGTH);
-      
+    } catch {
+      // IMPORTANT: Do NOT fall back to legacy here; wrong password must surface as wrong password.
+      throw new Error("Wrong password or corrupted data");
+    }
+  }
+
+  if (version === 2 && data.length >= minV2Length) {
+    // Legacy AES-256-GCM with hardcoded key (for backward compatibility)
+    const salt = data.slice(1, 1 + SALT_LENGTH);
+    const iv = data.slice(1 + SALT_LENGTH, 1 + SALT_LENGTH + IV_LENGTH);
+    const ciphertext = data.slice(1 + SALT_LENGTH + IV_LENGTH);
+
+    try {
       const keyMaterial = await crypto.subtle.importKey(
         "raw",
         new TextEncoder().encode(LEGACY_XOR_KEY),
@@ -136,41 +153,42 @@ export const decryptText = async (encrypted: string, password: string): Promise<
         false,
         ["deriveBits", "deriveKey"]
       );
-      
+
       const key = await crypto.subtle.deriveKey(
         {
           name: "PBKDF2",
-          salt: salt,
+          salt,
           iterations: PBKDF2_ITERATIONS,
-          hash: "SHA-256"
+          hash: "SHA-256",
         },
         keyMaterial,
         { name: "AES-GCM", length: 256 },
         false,
         ["decrypt"]
       );
-      
+
       const decrypted = await crypto.subtle.decrypt(
-        {
-          name: "AES-GCM",
-          iv: iv
-        },
+        { name: "AES-GCM", iv },
         key,
         ciphertext
       );
-      
+
       return new TextDecoder().decode(decrypted);
-    } else {
-      // Legacy XOR cipher decryption (backward compatibility)
-      return decryptTextLegacy(encrypted);
-    }
-  } catch (error) {
-    // Try legacy format as fallback
-    try {
-      return decryptTextLegacy(encrypted);
     } catch {
-      throw new Error("Wrong password or corrupted data");
+      // If we mis-detected the format, legacy XOR might still succeed.
+      try {
+        return decryptTextLegacy(encrypted);
+      } catch {
+        throw new Error("Wrong password or corrupted data");
+      }
     }
+  }
+
+  // Legacy XOR cipher decryption (backward compatibility)
+  try {
+    return decryptTextLegacy(encrypted);
+  } catch {
+    throw new Error("Wrong password or corrupted data");
   }
 };
 
