@@ -1,28 +1,33 @@
 // AES-256-GCM encryption using Web Crypto API with backward compatibility for legacy XOR cipher
-// All new encryptions use AES-256-GCM, but old XOR-encrypted data can still be decrypted
+// All new encryptions use AES-256-GCM with user-provided passwords
 
 const ENCRYPTION_VERSION = "v2"; // AES-256-GCM
 const LEGACY_VERSION = "v1"; // XOR cipher (for backward compatibility)
-const LEGACY_XOR_KEY = "OCX_SECURE_KEY_2024";
+const LEGACY_XOR_KEY = "OCX_SECURE_KEY_2024"; // Only used for decrypting old data
 
 // Key derivation settings for AES-256-GCM
 const PBKDF2_ITERATIONS = 100000;
 const SALT_LENGTH = 16;
 const IV_LENGTH = 12; // GCM standard IV length
+const VERSION_MARKER = 3; // New version with user password
 
 /**
- * Encrypt text using AES-256-GCM with PBKDF2 key derivation
+ * Encrypt text using AES-256-GCM with user-provided password
  */
-export const encryptText = async (text: string): Promise<string> => {
+export const encryptText = async (text: string, password: string): Promise<string> => {
+  if (!password || password.length < 4) {
+    throw new Error("Password must be at least 4 characters");
+  }
+  
   try {
     // Generate random salt and IV
     const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
     const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
     
-    // Derive encryption key from a passphrase using PBKDF2
+    // Derive encryption key from user password using PBKDF2
     const keyMaterial = await crypto.subtle.importKey(
       "raw",
-      new TextEncoder().encode(LEGACY_XOR_KEY),
+      new TextEncoder().encode(password),
       "PBKDF2",
       false,
       ["deriveBits", "deriveKey"]
@@ -55,7 +60,7 @@ export const encryptText = async (text: string): Promise<string> => {
     const result = new Uint8Array(
       1 + salt.length + iv.length + encrypted.byteLength
     );
-    result[0] = 2; // version byte (2 = AES-256-GCM)
+    result[0] = VERSION_MARKER; // version byte (3 = AES-256-GCM with user password)
     result.set(salt, 1);
     result.set(iv, 1 + salt.length);
     result.set(new Uint8Array(encrypted), 1 + salt.length + iv.length);
@@ -68,22 +73,62 @@ export const encryptText = async (text: string): Promise<string> => {
 };
 
 /**
- * Decrypt text - supports both AES-256-GCM (new) and XOR cipher (legacy)
+ * Decrypt text - supports AES-256-GCM with user password, legacy AES, and XOR cipher
  */
-export const decryptText = async (encrypted: string): Promise<string> => {
+export const decryptText = async (encrypted: string, password: string): Promise<string> => {
   try {
     const data = base64ToBytes(encrypted);
     
     // Check version byte
     const version = data[0];
     
-    if (version === 2) {
-      // AES-256-GCM decryption (new format)
+    if (version === 3) {
+      // New format: AES-256-GCM with user password
+      if (!password) {
+        throw new Error("Password required for decryption");
+      }
+      
       const salt = data.slice(1, 1 + SALT_LENGTH);
       const iv = data.slice(1 + SALT_LENGTH, 1 + SALT_LENGTH + IV_LENGTH);
       const ciphertext = data.slice(1 + SALT_LENGTH + IV_LENGTH);
       
-      // Derive the same key using PBKDF2
+      const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveBits", "deriveKey"]
+      );
+      
+      const key = await crypto.subtle.deriveKey(
+        {
+          name: "PBKDF2",
+          salt: salt,
+          iterations: PBKDF2_ITERATIONS,
+          hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["decrypt"]
+      );
+      
+      const decrypted = await crypto.subtle.decrypt(
+        {
+          name: "AES-GCM",
+          iv: iv
+        },
+        key,
+        ciphertext
+      );
+      
+      return new TextDecoder().decode(decrypted);
+    } else if (version === 2) {
+      // Legacy AES-256-GCM with hardcoded key (for backward compatibility)
+      const salt = data.slice(1, 1 + SALT_LENGTH);
+      const iv = data.slice(1 + SALT_LENGTH, 1 + SALT_LENGTH + IV_LENGTH);
+      const ciphertext = data.slice(1 + SALT_LENGTH + IV_LENGTH);
+      
       const keyMaterial = await crypto.subtle.importKey(
         "raw",
         new TextEncoder().encode(LEGACY_XOR_KEY),
@@ -105,7 +150,6 @@ export const decryptText = async (encrypted: string): Promise<string> => {
         ["decrypt"]
       );
       
-      // Decrypt
       const decrypted = await crypto.subtle.decrypt(
         {
           name: "AES-GCM",
@@ -125,7 +169,7 @@ export const decryptText = async (encrypted: string): Promise<string> => {
     try {
       return decryptTextLegacy(encrypted);
     } catch {
-      throw new Error("Failed to decrypt text");
+      throw new Error("Wrong password or corrupted data");
     }
   }
 };
