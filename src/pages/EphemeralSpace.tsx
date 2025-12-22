@@ -70,6 +70,18 @@ const EphemeralSpace = () => {
 
       if (error) throw error;
 
+      // Add creator as first participant
+      const { error: participantError } = await supabase
+        .from("room_participants")
+        .insert({
+          room_id: data.id,
+          user_id: user.id,
+        });
+
+      if (participantError) {
+        console.error("Error adding participant:", participantError);
+      }
+
       toast.success("Room created successfully!");
       navigate(`/room/${code}`);
     } catch (error: any) {

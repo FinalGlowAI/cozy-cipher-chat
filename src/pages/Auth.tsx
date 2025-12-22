@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { Eye, EyeOff, Users, Shield, Key, Clock, Image, MessageSquare, ShieldCheck, Zap, FileKey } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
 interface Testimonial {
   id: string;
@@ -111,6 +112,22 @@ const Auth = () => {
       toast.error("Passwords do not match");
       return;
     }
+
+    // Validate password strength for signup
+    if (!isLogin) {
+      if (password.length < 8) {
+        toast.error("Password must be at least 8 characters");
+        return;
+      }
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      
+      if (!hasUppercase || !hasLowercase || !hasNumber) {
+        toast.error("Password must contain uppercase, lowercase, and a number");
+        return;
+      }
+    }
     
     setLoading(true);
 
@@ -172,15 +189,40 @@ const Auth = () => {
   const handleSubmitTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newTestimonial.name.trim() || !newTestimonial.comment.trim()) {
+    const name = newTestimonial.name.trim();
+    const title = newTestimonial.title.trim();
+    const comment = newTestimonial.comment.trim();
+    
+    if (!name || !comment) {
       toast.error("Please fill in all required fields");
       return;
     }
 
+    // Input validation
+    if (name.length > 100) {
+      toast.error("Name must be less than 100 characters");
+      return;
+    }
+    
+    if (title.length > 100) {
+      toast.error("Title must be less than 100 characters");
+      return;
+    }
+    
+    if (comment.length > 500) {
+      toast.error("Comment must be less than 500 characters");
+      return;
+    }
+
+    // Sanitize - remove potential HTML/script tags
+    const sanitizedName = name.replace(/<[^>]*>/g, '');
+    const sanitizedTitle = title.replace(/<[^>]*>/g, '');
+    const sanitizedComment = comment.replace(/<[^>]*>/g, '');
+
     const { error } = await supabase.from("testimonials").insert({
-      user_name: newTestimonial.name.trim(),
-      user_title: newTestimonial.title.trim() || null,
-      comment: newTestimonial.comment.trim(),
+      user_name: sanitizedName,
+      user_title: sanitizedTitle || null,
+      comment: sanitizedComment,
       rating: newTestimonial.rating,
     });
 
@@ -584,7 +626,7 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                   className="min-h-[44px] text-base pr-12"
                 />
                 <button
@@ -600,6 +642,7 @@ const Auth = () => {
                   )}
                 </button>
               </div>
+              {!isLogin && <PasswordStrengthIndicator password={password} />}
             </div>
             {!isLogin && (
               <div className="space-y-2">
@@ -612,7 +655,7 @@ const Auth = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                     className="min-h-[44px] text-base pr-12"
                   />
                   <button

@@ -15,8 +15,17 @@ const VERSION_MARKER = 3; // New version with user password
  * Encrypt text using AES-256-GCM with user-provided password
  */
 export const encryptText = async (text: string, password: string): Promise<string> => {
-  if (!password || password.length < 4) {
-    throw new Error("Password must be at least 4 characters");
+  if (!password || password.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+  
+  // Check for password strength (at least one uppercase, one lowercase, one number)
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  
+  if (!hasUppercase || !hasLowercase || !hasNumber) {
+    throw new Error("Password must contain at least one uppercase letter, one lowercase letter, and one number");
   }
   
   try {

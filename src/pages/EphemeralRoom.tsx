@@ -142,6 +142,21 @@ const EphemeralRoom = () => {
 
       setRoomId(room.id);
 
+      // Add user to room_participants (upsert to handle rejoin)
+      const { error: participantError } = await supabase
+        .from("room_participants")
+        .upsert({
+          room_id: room.id,
+          user_id: user.id,
+        }, { onConflict: 'room_id,user_id' });
+
+      if (participantError) {
+        console.error("Error joining room:", participantError);
+        toast.error("Failed to join room");
+        navigate("/ephemeral");
+        return;
+      }
+
       // Load existing messages
       const { data: existingMessages, error: messagesError } = await supabase
         .from("ephemeral_messages")

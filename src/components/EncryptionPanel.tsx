@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/crypto";
+import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
 export const EncryptionPanel = () => {
   const [inputText, setInputText] = useState("");
@@ -34,8 +35,17 @@ export const EncryptionPanel = () => {
           setDecryptionKey(key);
         } else {
           // Standard mode with user password
-          if (!password || password.length < 4) {
-            toast.error("Please enter a password (at least 4 characters)");
+          if (!password || password.length < 8) {
+            toast.error("Please enter a password (at least 8 characters)");
+            return;
+          }
+          // Check for password strength
+          const hasUppercase = /[A-Z]/.test(password);
+          const hasLowercase = /[a-z]/.test(password);
+          const hasNumber = /[0-9]/.test(password);
+          
+          if (!hasUppercase || !hasLowercase || !hasNumber) {
+            toast.error("Password must contain uppercase, lowercase, and a number");
             return;
           }
           const encrypted = await encryptText(inputText, password);
@@ -75,8 +85,10 @@ export const EncryptionPanel = () => {
     } catch (error) {
       if (error instanceof Error && error.message === "Decryption key has expired") {
         toast.error("Decryption key has expired and can no longer decrypt this message.");
-      } else if (error instanceof Error && error.message === "Password must be at least 4 characters") {
-        toast.error("Password must be at least 4 characters");
+      } else if (error instanceof Error && error.message.includes("Password must be at least")) {
+        toast.error("Password must be at least 8 characters with uppercase, lowercase, and a number");
+      } else if (error instanceof Error && error.message.includes("Password must contain")) {
+        toast.error(error.message);
       } else if (error instanceof Error && error.message === "Wrong password or corrupted data") {
         toast.error("Wrong password! Please enter the correct password to decrypt this message.");
       } else if (error instanceof Error && error.message === "Invalid encrypted text or key") {
@@ -163,9 +175,10 @@ export const EncryptionPanel = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your secret password (min 4 characters)"
+              placeholder="Enter your secret password (min 8 characters)"
               className="bg-background/50 border-primary/30 focus:border-primary"
             />
+            {mode === "encrypt" && <PasswordStrengthIndicator password={password} />}
             <p className="text-xs text-muted-foreground mt-2">
               You must use the same password to decrypt the message later.
             </p>
