@@ -7,6 +7,38 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory rate limiter
+const rateLimitStore = new Map<string, { tokens: number; lastRefill: number }>();
+
+function checkRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
+  const maxTokens = 5;
+  const refillRate = 0.5; // 1 token per 2 seconds
+  const now = Date.now();
+  
+  let entry = rateLimitStore.get(userId);
+  if (!entry) {
+    entry = { tokens: maxTokens, lastRefill: now };
+    rateLimitStore.set(userId, entry);
+  }
+  
+  const timePassed = (now - entry.lastRefill) / 1000;
+  const tokensToAdd = Math.floor(timePassed * refillRate);
+  
+  if (tokensToAdd > 0) {
+    entry.tokens = Math.min(maxTokens, entry.tokens + tokensToAdd);
+    entry.lastRefill = now;
+  }
+  
+  if (entry.tokens >= 1) {
+    entry.tokens -= 1;
+    rateLimitStore.set(userId, entry);
+    return { allowed: true };
+  }
+  
+  const retryAfter = Math.ceil((1 - entry.tokens) / refillRate);
+  return { allowed: false, retryAfter };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,6 +59,23 @@ serve(async (req) => {
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+
+    // Rate limiting check
+    const rateLimit = checkRateLimit(user.id);
+    if (!rateLimit.allowed) {
+      console.log(`[CREATE-CHECKOUT] Rate limited user: ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json",
+            "Retry-After": String(rateLimit.retryAfter || 5)
+          } 
+        }
+      );
+    }
 
     const body = await req.json();
     const couponCode = body?.couponCode;
