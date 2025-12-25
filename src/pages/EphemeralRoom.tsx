@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2 } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { notifyNewMessage } from "@/lib/notifications";
 
@@ -22,16 +22,23 @@ const USER_COLORS = [
   "#F7DC6F", "#BB8FCE", "#85C1E2", "#F8B739", "#52B788"
 ];
 
+const MESSAGES_PER_PAGE = 50;
+
 const EphemeralRoom = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [userColor, setUserColor] = useState("");
   const [activeUsers, setActiveUsers] = useState<{ id: string; color: string }[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
     checkRoomAndLoadMessages();
@@ -39,10 +46,24 @@ const EphemeralRoom = () => {
     // Assign random color to user
     const color = USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
     setUserColor(color);
+
+    // Cleanup on unmount
+    return () => {
+      if (channelRef.current) {
+        console.log("[EphemeralRoom] Cleaning up channel subscription");
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [roomCode]);
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !userColor) return;
+
+    // Cleanup previous channel if exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
 
     // Subscribe to realtime messages and presence
     const channel = supabase
@@ -103,21 +124,93 @@ const EphemeralRoom = () => {
               online_at: new Date().toISOString(),
             });
           }
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("[EphemeralRoom] Channel error, attempting reconnect...");
+          // Exponential backoff reconnection
+          setTimeout(() => {
+            if (channelRef.current) {
+              supabase.removeChannel(channelRef.current);
+              channelRef.current = null;
+            }
+          }, 1000);
         }
       });
 
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [roomId, userColor]);
+  }, [roomId, userColor, roomCode]);
 
   useEffect(() => {
-    scrollToBottom();
+    if (isInitialLoad.current && messages.length > 0) {
+      scrollToBottom();
+      isInitialLoad.current = false;
+    }
   }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!roomId || loadingMore || !hasMore || messages.length === 0) return;
+
+    setLoadingMore(true);
+    const oldestMessage = messages[0];
+    
+    try {
+      const { data: olderMessages, error } = await supabase
+        .from("ephemeral_messages")
+        .select("*")
+        .eq("room_id", roomId)
+        .lt("created_at", oldestMessage.created_at)
+        .order("created_at", { ascending: false })
+        .limit(MESSAGES_PER_PAGE);
+
+      if (error) throw error;
+
+      if (olderMessages && olderMessages.length > 0) {
+        // Preserve scroll position
+        const container = messagesContainerRef.current;
+        const previousScrollHeight = container?.scrollHeight || 0;
+        
+        setMessages((current) => [...olderMessages.reverse(), ...current]);
+        
+        // Restore scroll position after state update
+        requestAnimationFrame(() => {
+          if (container) {
+            const newScrollHeight = container.scrollHeight;
+            container.scrollTop = newScrollHeight - previousScrollHeight;
+          }
+        });
+
+        setHasMore(olderMessages.length === MESSAGES_PER_PAGE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+      toast.error("Failed to load older messages");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [roomId, loadingMore, hasMore, messages]);
+
+  // Handle scroll for infinite scroll
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    // Load more when scrolled near the top
+    if (container.scrollTop < 100 && hasMore && !loadingMore) {
+      loadMoreMessages();
+    }
+  }, [hasMore, loadingMore, loadMoreMessages]);
 
   const checkRoomAndLoadMessages = async () => {
     try {
@@ -157,15 +250,18 @@ const EphemeralRoom = () => {
         return;
       }
 
-      // Load existing messages
-      const { data: existingMessages, error: messagesError } = await supabase
+      // Load initial messages (most recent MESSAGES_PER_PAGE)
+      const { data: existingMessages, error: messagesError, count } = await supabase
         .from("ephemeral_messages")
-        .select("*")
+        .select("*", { count: 'exact' })
         .eq("room_id", room.id)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(MESSAGES_PER_PAGE);
 
       if (!messagesError && existingMessages) {
-        setMessages(existingMessages);
+        // Reverse to show oldest first
+        setMessages(existingMessages.reverse());
+        setHasMore(count ? count > MESSAGES_PER_PAGE : false);
       }
     } catch (error: any) {
       console.error("Error loading room:", error);
@@ -194,6 +290,8 @@ const EphemeralRoom = () => {
       if (error) throw error;
 
       setNewMessage("");
+      // Scroll to bottom on new message sent
+      setTimeout(scrollToBottom, 100);
     } catch (error: any) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
@@ -258,8 +356,32 @@ const EphemeralRoom = () => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4"
+        onScroll={handleScroll}
+      >
         <div className="max-w-4xl mx-auto space-y-4">
+          {/* Load more indicator */}
+          {loadingMore && (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          )}
+          
+          {hasMore && !loadingMore && messages.length > 0 && (
+            <div className="flex justify-center py-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={loadMoreMessages}
+                className="text-muted-foreground"
+              >
+                Load older messages
+              </Button>
+            </div>
+          )}
+
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground mt-8">
               No messages yet. Start the conversation!

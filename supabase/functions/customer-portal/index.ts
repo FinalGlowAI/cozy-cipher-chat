@@ -7,6 +7,38 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory rate limiter
+const rateLimitStore = new Map<string, { tokens: number; lastRefill: number }>();
+
+function checkRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
+  const maxTokens = 5;
+  const refillRate = 0.5; // 1 token per 2 seconds
+  const now = Date.now();
+  
+  let entry = rateLimitStore.get(userId);
+  if (!entry) {
+    entry = { tokens: maxTokens, lastRefill: now };
+    rateLimitStore.set(userId, entry);
+  }
+  
+  const timePassed = (now - entry.lastRefill) / 1000;
+  const tokensToAdd = Math.floor(timePassed * refillRate);
+  
+  if (tokensToAdd > 0) {
+    entry.tokens = Math.min(maxTokens, entry.tokens + tokensToAdd);
+    entry.lastRefill = now;
+  }
+  
+  if (entry.tokens >= 1) {
+    entry.tokens -= 1;
+    rateLimitStore.set(userId, entry);
+    return { allowed: true };
+  }
+  
+  const retryAfter = Math.ceil((1 - entry.tokens) / refillRate);
+  return { allowed: false, retryAfter };
+}
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CUSTOMER-PORTAL] ${step}${detailsStr}`);
@@ -39,6 +71,23 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // Rate limiting check
+    const rateLimit = checkRateLimit(user.id);
+    if (!rateLimit.allowed) {
+      logStep("Rate limited", { userId: user.id });
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json",
+            "Retry-After": String(rateLimit.retryAfter || 5)
+          } 
+        }
+      );
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
