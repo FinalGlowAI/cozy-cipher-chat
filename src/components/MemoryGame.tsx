@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Gamepad2, Trophy, X, Star, ChevronRight } from "lucide-react";
+import { Gamepad2, Trophy, X, Star, ChevronRight, Lock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 const SYMBOLS = ["△", "7", "⬡", "A", "●", "9", "◇", "B", "★", "3", "⬢", "Z", "◯", "5", "♦", "K", "⬟", "8", "◆", "M"];
@@ -18,6 +18,7 @@ const LEVELS = [
 ];
 
 const ROUNDS_PER_LEVEL = 5;
+const STORAGE_KEY = "memory-game-unlocked-level";
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -47,6 +48,23 @@ const generateChoices = (correctSequence: string[]): string[][] => {
   return shuffleArray(choices);
 };
 
+const getUnlockedLevel = (): number => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? Math.min(parseInt(stored, 10), 7) : 1;
+  } catch {
+    return 1;
+  }
+};
+
+const saveUnlockedLevel = (level: number) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, String(level));
+  } catch {
+    // Ignore storage errors
+  }
+};
+
 interface MemoryGameProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -59,12 +77,18 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
   const [gameState, setGameState] = useState<GameState>("menu");
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
+  const [unlockedLevel, setUnlockedLevel] = useState(1);
   const [sequence, setSequence] = useState<string[]>([]);
   const [choices, setChoices] = useState<string[][]>([]);
   const [countdown, setCountdown] = useState(5);
   const [roundWon, setRoundWon] = useState(false);
 
   const levelConfig = LEVELS[currentLevel - 1];
+
+  // Load unlocked level on mount
+  useEffect(() => {
+    setUnlockedLevel(getUnlockedLevel());
+  }, []);
 
   const startRound = useCallback(() => {
     const config = LEVELS[currentLevel - 1];
@@ -103,6 +127,14 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
     
     if (isCorrect) {
       if (currentRound >= ROUNDS_PER_LEVEL) {
+        // Level completed - unlock next level
+        if (currentLevel < 7 && currentLevel >= unlockedLevel) {
+          const newUnlockedLevel = currentLevel + 1;
+          setUnlockedLevel(newUnlockedLevel);
+          saveUnlockedLevel(newUnlockedLevel);
+          toast.success(`Level ${currentLevel + 1} unlocked!`);
+        }
+        
         if (currentLevel >= 7) {
           setGameState("game-complete");
           onWin?.();
@@ -163,28 +195,56 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
                 Select a difficulty level to start
               </p>
               <div className="grid gap-2">
-                {LEVELS.map((level) => (
-                  <Button
-                    key={level.level}
-                    variant="outline"
-                    className="w-full justify-between py-4 hover:border-primary hover:bg-primary/10"
-                    onClick={() => startLevel(level.level)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold">
-                        {level.level}
-                      </span>
-                      <span>{level.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                      <span>{level.symbolCount} symbols</span>
-                      <span>•</span>
-                      <span>{level.memorizeTime}s</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </div>
-                  </Button>
-                ))}
+                {LEVELS.map((level) => {
+                  const isLocked = level.level > unlockedLevel;
+                  const isCompleted = level.level < unlockedLevel;
+                  
+                  return (
+                    <Button
+                      key={level.level}
+                      variant="outline"
+                      className={`w-full justify-between py-4 transition-all ${
+                        isLocked 
+                          ? "opacity-50 cursor-not-allowed" 
+                          : "hover:border-primary hover:bg-primary/10"
+                      } ${isCompleted ? "border-green-500/30 bg-green-500/5" : ""}`}
+                      onClick={() => !isLocked && startLevel(level.level)}
+                      disabled={isLocked}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`flex items-center justify-center w-8 h-8 rounded-full font-bold ${
+                          isLocked 
+                            ? "bg-muted text-muted-foreground" 
+                            : isCompleted 
+                              ? "bg-green-500/20 text-green-500" 
+                              : "bg-primary/20 text-primary"
+                        }`}>
+                          {isLocked ? <Lock className="h-4 w-4" /> : level.level}
+                        </span>
+                        <span className={isLocked ? "text-muted-foreground" : ""}>
+                          {level.name}
+                        </span>
+                        {isCompleted && (
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <span>{level.symbolCount} symbols</span>
+                        <span>•</span>
+                        <span>{level.memorizeTime}s</span>
+                        {isLocked ? (
+                          <Lock className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </div>
+                    </Button>
+                  );
+                })}
               </div>
+              <p className="text-center text-xs text-muted-foreground mt-4">
+                Complete 5 rounds to unlock the next level
+              </p>
             </div>
           )}
 
