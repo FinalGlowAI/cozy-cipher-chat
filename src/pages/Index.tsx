@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAdmin } from "@/hooks/useAdmin";
 import { NeuralBackground } from "@/components/NeuralBackground";
-import { MemoryGame } from "@/components/MemoryGame";
+import { GameSelector } from "@/components/GameSelector";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
@@ -243,8 +243,8 @@ const Index = () => {
         </footer>
       </div>
 
-      {/* Memory Game Modal */}
-      <MemoryGame 
+      {/* Game Selector Modal */}
+      <GameSelector 
         open={gameOpen} 
         onOpenChange={setGameOpen}
         onWin={() => {
