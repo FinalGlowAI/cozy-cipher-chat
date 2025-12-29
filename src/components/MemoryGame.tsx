@@ -2,9 +2,22 @@ import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Gamepad2, Trophy, X } from "lucide-react";
+import { Gamepad2, Trophy, X, Star, ChevronRight } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
-const SYMBOLS = ["△", "7", "⬡", "A", "●", "9", "◇", "B", "★", "3", "⬢", "Z", "◯", "5", "♦", "K"];
+const SYMBOLS = ["△", "7", "⬡", "A", "●", "9", "◇", "B", "★", "3", "⬢", "Z", "◯", "5", "♦", "K", "⬟", "8", "◆", "M"];
+
+const LEVELS = [
+  { level: 1, symbolCount: 3, memorizeTime: 6, name: "Beginner" },
+  { level: 2, symbolCount: 4, memorizeTime: 6, name: "Easy" },
+  { level: 3, symbolCount: 5, memorizeTime: 5, name: "Medium" },
+  { level: 4, symbolCount: 6, memorizeTime: 5, name: "Challenging" },
+  { level: 5, symbolCount: 7, memorizeTime: 4, name: "Hard" },
+  { level: 6, symbolCount: 8, memorizeTime: 4, name: "Expert" },
+  { level: 7, symbolCount: 9, memorizeTime: 3, name: "Master" },
+];
+
+const ROUNDS_PER_LEVEL = 5;
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -23,10 +36,8 @@ const generateSequence = (length: number): string[] => {
 const generateChoices = (correctSequence: string[]): string[][] => {
   const choices: string[][] = [correctSequence];
   
-  // Generate 2 wrong choices by swapping 2 adjacent elements
   for (let i = 0; i < 2; i++) {
     const wrongSequence = [...correctSequence];
-    // Pick a random position to swap (not the last one)
     const swapIndex = Math.floor(Math.random() * (wrongSequence.length - 1));
     [wrongSequence[swapIndex], wrongSequence[swapIndex + 1]] = 
       [wrongSequence[swapIndex + 1], wrongSequence[swapIndex]];
@@ -42,22 +53,39 @@ interface MemoryGameProps {
   onWin?: () => void;
 }
 
-type GameState = "idle" | "memorize" | "choose" | "result";
+type GameState = "menu" | "memorize" | "choose" | "round-result" | "level-complete" | "game-complete";
 
 export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
-  const [gameState, setGameState] = useState<GameState>("idle");
+  const [gameState, setGameState] = useState<GameState>("menu");
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [currentRound, setCurrentRound] = useState(1);
   const [sequence, setSequence] = useState<string[]>([]);
   const [choices, setChoices] = useState<string[][]>([]);
   const [countdown, setCountdown] = useState(5);
-  const [won, setWon] = useState(false);
+  const [roundWon, setRoundWon] = useState(false);
 
-  const startGame = useCallback(() => {
-    const newSequence = generateSequence(6);
+  const levelConfig = LEVELS[currentLevel - 1];
+
+  const startRound = useCallback(() => {
+    const config = LEVELS[currentLevel - 1];
+    const newSequence = generateSequence(config.symbolCount);
     setSequence(newSequence);
     setChoices(generateChoices(newSequence));
     setGameState("memorize");
-    setCountdown(5);
-    setWon(false);
+    setCountdown(config.memorizeTime);
+    setRoundWon(false);
+  }, [currentLevel]);
+
+  const startLevel = useCallback((level: number) => {
+    setCurrentLevel(level);
+    setCurrentRound(1);
+    const config = LEVELS[level - 1];
+    const newSequence = generateSequence(config.symbolCount);
+    setSequence(newSequence);
+    setChoices(generateChoices(newSequence));
+    setGameState("memorize");
+    setCountdown(config.memorizeTime);
+    setRoundWon(false);
   }, []);
 
   useEffect(() => {
@@ -71,27 +99,51 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
 
   const handleChoice = (chosenSequence: string[]) => {
     const isCorrect = chosenSequence.every((symbol, index) => symbol === sequence[index]);
-    setWon(isCorrect);
-    setGameState("result");
+    setRoundWon(isCorrect);
     
     if (isCorrect) {
-      toast.success("Correct! You have a great memory!");
-      onWin?.();
+      if (currentRound >= ROUNDS_PER_LEVEL) {
+        if (currentLevel >= 7) {
+          setGameState("game-complete");
+          onWin?.();
+        } else {
+          setGameState("level-complete");
+        }
+      } else {
+        setGameState("round-result");
+      }
     } else {
-      toast.error("Wrong sequence. Try again!");
+      setGameState("round-result");
     }
   };
 
+  const handleNextRound = () => {
+    if (roundWon) {
+      setCurrentRound(currentRound + 1);
+      startRound();
+    } else {
+      startRound();
+    }
+  };
+
+  const handleNextLevel = () => {
+    setCurrentLevel(currentLevel + 1);
+    setCurrentRound(1);
+    startRound();
+  };
+
   const handleClose = () => {
-    setGameState("idle");
+    setGameState("menu");
+    setCurrentLevel(1);
+    setCurrentRound(1);
     onOpenChange(false);
   };
 
   useEffect(() => {
-    if (open && gameState === "idle") {
-      startGame();
+    if (open && gameState === "menu") {
+      // Reset to menu when opening
     }
-  }, [open, gameState, startGame]);
+  }, [open, gameState]);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -104,16 +156,64 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
         </DialogHeader>
 
         <div className="py-4">
+          {/* Level Selection Menu */}
+          {gameState === "menu" && (
+            <div className="space-y-4">
+              <p className="text-center text-muted-foreground mb-4">
+                Select a difficulty level to start
+              </p>
+              <div className="grid gap-2">
+                {LEVELS.map((level) => (
+                  <Button
+                    key={level.level}
+                    variant="outline"
+                    className="w-full justify-between py-4 hover:border-primary hover:bg-primary/10"
+                    onClick={() => startLevel(level.level)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold">
+                        {level.level}
+                      </span>
+                      <span>{level.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                      <span>{level.symbolCount} symbols</span>
+                      <span>•</span>
+                      <span>{level.memorizeTime}s</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Level & Round Progress */}
+          {(gameState === "memorize" || gameState === "choose") && (
+            <div className="mb-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Level {currentLevel}: {levelConfig.name}
+                </span>
+                <span className="text-primary font-medium">
+                  Round {currentRound}/{ROUNDS_PER_LEVEL}
+                </span>
+              </div>
+              <Progress value={(currentRound - 1) / ROUNDS_PER_LEVEL * 100} className="h-2" />
+            </div>
+          )}
+
+          {/* Memorize Phase */}
           {gameState === "memorize" && (
             <div className="text-center space-y-6">
               <p className="text-muted-foreground">
                 Memorize this sequence! Time left: <span className="text-primary font-bold">{countdown}s</span>
               </p>
-              <div className="flex justify-center gap-3 py-8 px-4 bg-background/50 rounded-lg border border-primary/20">
+              <div className="flex flex-wrap justify-center gap-3 py-8 px-4 bg-background/50 rounded-lg border border-primary/20">
                 {sequence.map((symbol, index) => (
                   <span
                     key={index}
-                    className="text-3xl font-bold text-primary animate-pulse"
+                    className="text-2xl md:text-3xl font-bold text-primary animate-pulse"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {symbol}
@@ -123,12 +223,13 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
               <div className="w-full bg-muted rounded-full h-2">
                 <div
                   className="bg-primary h-2 rounded-full transition-all duration-1000"
-                  style={{ width: `${(countdown / 5) * 100}%` }}
+                  style={{ width: `${(countdown / levelConfig.memorizeTime) * 100}%` }}
                 />
               </div>
             </div>
           )}
 
+          {/* Choose Phase */}
           {gameState === "choose" && (
             <div className="space-y-4">
               <p className="text-center text-muted-foreground mb-6">
@@ -142,9 +243,9 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
                     className="w-full py-6 text-lg hover:border-primary hover:bg-primary/10 transition-all"
                     onClick={() => handleChoice(choice)}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap justify-center gap-2 md:gap-3">
                       {choice.map((symbol, symbolIndex) => (
-                        <span key={symbolIndex} className="font-mono">
+                        <span key={symbolIndex} className="font-mono text-base md:text-lg">
                           {symbol}
                         </span>
                       ))}
@@ -155,16 +256,21 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
             </div>
           )}
 
-          {gameState === "result" && (
+          {/* Round Result */}
+          {gameState === "round-result" && (
             <div className="text-center space-y-6">
-              {won ? (
+              {roundWon ? (
                 <>
                   <div className="flex justify-center">
-                    <Trophy className="h-16 w-16 text-yellow-500 animate-bounce" />
+                    <div className="flex gap-1">
+                      {Array.from({ length: currentRound }).map((_, i) => (
+                        <Star key={i} className="h-8 w-8 text-yellow-500 fill-yellow-500" />
+                      ))}
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-primary">Congratulations!</h3>
+                  <h3 className="text-2xl font-bold text-primary">Correct!</h3>
                   <p className="text-muted-foreground">
-                    You remembered the sequence correctly!
+                    Round {currentRound} of {ROUNDS_PER_LEVEL} complete
                   </p>
                 </>
               ) : (
@@ -172,11 +278,9 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
                   <div className="flex justify-center">
                     <X className="h-16 w-16 text-destructive" />
                   </div>
-                  <h3 className="text-2xl font-bold text-destructive">Oops!</h3>
-                  <p className="text-muted-foreground">
-                    The correct sequence was:
-                  </p>
-                  <div className="flex justify-center gap-3 py-4">
+                  <h3 className="text-2xl font-bold text-destructive">Wrong!</h3>
+                  <p className="text-muted-foreground">The correct sequence was:</p>
+                  <div className="flex flex-wrap justify-center gap-3 py-4">
                     {sequence.map((symbol, index) => (
                       <span key={index} className="text-2xl font-bold text-primary">
                         {symbol}
@@ -187,9 +291,66 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
               )}
               <div className="flex gap-3 justify-center pt-4">
                 <Button variant="outline" onClick={handleClose}>
+                  Exit
+                </Button>
+                <Button onClick={handleNextRound} className="bg-primary hover:bg-primary/90">
+                  {roundWon ? "Next Round" : "Try Again"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Level Complete */}
+          {gameState === "level-complete" && (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <Trophy className="h-16 w-16 text-yellow-500 animate-bounce" />
+              </div>
+              <h3 className="text-2xl font-bold text-primary">Level {currentLevel} Complete!</h3>
+              <div className="flex justify-center gap-1">
+                {Array.from({ length: ROUNDS_PER_LEVEL }).map((_, i) => (
+                  <Star key={i} className="h-6 w-6 text-yellow-500 fill-yellow-500" />
+                ))}
+              </div>
+              <p className="text-muted-foreground">
+                Ready for Level {currentLevel + 1}: {LEVELS[currentLevel].name}?
+              </p>
+              <div className="flex gap-3 justify-center pt-4">
+                <Button variant="outline" onClick={handleClose}>
+                  Exit
+                </Button>
+                <Button onClick={handleNextLevel} className="bg-primary hover:bg-primary/90">
+                  Next Level
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Game Complete */}
+          {gameState === "game-complete" && (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <Trophy className="h-20 w-20 text-yellow-500 animate-bounce" />
+              </div>
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-yellow-500 to-primary bg-clip-text text-transparent">
+                Master Complete!
+              </h3>
+              <p className="text-muted-foreground">
+                You have completed all 7 levels with 35 rounds!
+              </p>
+              <div className="flex justify-center gap-1 flex-wrap">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <span className="text-xs text-muted-foreground mb-1">L{i + 1}</span>
+                    <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3 justify-center pt-4">
+                <Button variant="outline" onClick={handleClose}>
                   Close
                 </Button>
-                <Button onClick={startGame} className="bg-primary hover:bg-primary/90">
+                <Button onClick={() => startLevel(1)} className="bg-primary hover:bg-primary/90">
                   Play Again
                 </Button>
               </div>
