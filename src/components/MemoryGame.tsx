@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Gamepad2, Trophy, X, Star, ChevronRight, Lock } from "lucide-react";
+import { Gamepad2, Trophy, X, Star, ChevronRight, Lock, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 const SYMBOLS = ["△", "7", "⬡", "A", "●", "9", "◇", "B", "★", "3", "⬢", "Z", "◯", "5", "♦", "K", "⬟", "8", "◆", "M"];
@@ -18,7 +18,13 @@ const LEVELS = [
 ];
 
 const ROUNDS_PER_LEVEL = 5;
-const STORAGE_KEY = "memory-game-unlocked-level";
+const STORAGE_KEY = "memory-game-progress";
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
+interface GameProgress {
+  unlockedLevel: number;
+  savedAt: number;
+}
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -48,21 +54,52 @@ const generateChoices = (correctSequence: string[]): string[][] => {
   return shuffleArray(choices);
 };
 
-const getUnlockedLevel = (): number => {
+const getGameProgress = (): { unlockedLevel: number; timeRemaining: number } => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? Math.min(parseInt(stored, 10), 7) : 1;
+    if (!stored) return { unlockedLevel: 1, timeRemaining: 0 };
+    
+    const progress: GameProgress = JSON.parse(stored);
+    const elapsed = Date.now() - progress.savedAt;
+    
+    // Reset if 24 hours have passed
+    if (elapsed >= TWENTY_FOUR_HOURS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return { unlockedLevel: 1, timeRemaining: 0 };
+    }
+    
+    const timeRemaining = TWENTY_FOUR_HOURS - elapsed;
+    return { 
+      unlockedLevel: Math.min(progress.unlockedLevel, 7), 
+      timeRemaining 
+    };
   } catch {
-    return 1;
+    return { unlockedLevel: 1, timeRemaining: 0 };
   }
 };
 
-const saveUnlockedLevel = (level: number) => {
+const saveGameProgress = (level: number) => {
   try {
-    localStorage.setItem(STORAGE_KEY, String(level));
+    const existing = localStorage.getItem(STORAGE_KEY);
+    let savedAt = Date.now();
+    
+    // Keep the original timestamp if updating within the same day
+    if (existing) {
+      const progress: GameProgress = JSON.parse(existing);
+      savedAt = progress.savedAt;
+    }
+    
+    const progress: GameProgress = { unlockedLevel: level, savedAt };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
   } catch {
     // Ignore storage errors
   }
+};
+
+const formatTimeRemaining = (ms: number): string => {
+  const hours = Math.floor(ms / (60 * 60 * 1000));
+  const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+  return `${hours}h ${minutes}m`;
 };
 
 interface MemoryGameProps {
@@ -78,6 +115,7 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [unlockedLevel, setUnlockedLevel] = useState(1);
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const [sequence, setSequence] = useState<string[]>([]);
   const [choices, setChoices] = useState<string[][]>([]);
   const [countdown, setCountdown] = useState(5);
@@ -85,10 +123,27 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
 
   const levelConfig = LEVELS[currentLevel - 1];
 
-  // Load unlocked level on mount
+  // Load progress and check 24h reset on mount
   useEffect(() => {
-    setUnlockedLevel(getUnlockedLevel());
+    const progress = getGameProgress();
+    setUnlockedLevel(progress.unlockedLevel);
+    setTimeRemaining(progress.timeRemaining);
   }, []);
+
+  // Update time remaining every minute
+  useEffect(() => {
+    if (timeRemaining <= 0) return;
+    
+    const interval = setInterval(() => {
+      const progress = getGameProgress();
+      setTimeRemaining(progress.timeRemaining);
+      if (progress.unlockedLevel !== unlockedLevel) {
+        setUnlockedLevel(progress.unlockedLevel);
+      }
+    }, 60000);
+    
+    return () => clearInterval(interval);
+  }, [timeRemaining, unlockedLevel]);
 
   const startRound = useCallback(() => {
     const config = LEVELS[currentLevel - 1];
@@ -131,7 +186,7 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
         if (currentLevel < 7 && currentLevel >= unlockedLevel) {
           const newUnlockedLevel = currentLevel + 1;
           setUnlockedLevel(newUnlockedLevel);
-          saveUnlockedLevel(newUnlockedLevel);
+          saveGameProgress(newUnlockedLevel);
           toast.success(`Level ${currentLevel + 1} unlocked!`);
         }
         
@@ -245,6 +300,12 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
               <p className="text-center text-xs text-muted-foreground mt-4">
                 Complete 5 rounds to unlock the next level
               </p>
+              {timeRemaining > 0 && (
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-2 py-2 px-3 bg-muted/30 rounded-lg">
+                  <Clock className="h-3 w-3" />
+                  <span>Progress resets in {formatTimeRemaining(timeRemaining)}</span>
+                </div>
+              )}
             </div>
           )}
 
