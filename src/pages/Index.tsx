@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
-import { Lock, LogOut, Settings, Loader2 } from "lucide-react";
+import { Lock, LogOut, Settings, Loader2, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAdmin } from "@/hooks/useAdmin";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { MemoryGame } from "@/components/MemoryGame";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [gameOpen, setGameOpen] = useState(false);
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
 
@@ -107,6 +109,17 @@ const Index = () => {
                   <p className="text-xs text-muted-foreground">Secure Messaging</p>
                 </div>
               </div>
+
+              {/* Center Game Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setGameOpen(true)}
+                className="absolute left-1/2 -translate-x-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 shadow-lg hover:shadow-pink-500/30 transition-all"
+                title="Play Memory Game"
+              >
+                <Gamepad2 className="h-6 w-6 text-white" />
+              </Button>
               <div className="flex items-center gap-2 md:gap-4">
                 <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
                   <Lock className="h-4 w-4" />
@@ -230,6 +243,15 @@ const Index = () => {
         </footer>
       </div>
 
+      {/* Memory Game Modal */}
+      <MemoryGame 
+        open={gameOpen} 
+        onOpenChange={setGameOpen}
+        onWin={() => {
+          // TODO: Add credit reward logic for freemium users
+          console.log("User won the game!");
+        }}
+      />
     </div>
   );
 };
