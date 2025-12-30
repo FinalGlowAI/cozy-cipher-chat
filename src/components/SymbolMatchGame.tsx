@@ -44,6 +44,17 @@ interface FallingSymbol {
   isTarget: boolean;
 }
 
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  color: string;
+  size: number;
+}
+
 interface SymbolMatchGameProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -111,10 +122,35 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
   const [unlockedLevel, setUnlockedLevel] = useState(1);
   const [timeRemaining, setTimeRemaining] = useState("");
   
+  const [particles, setParticles] = useState<Particle[]>([]);
+  
   const symbolIdRef = useRef(0);
+  const particleIdRef = useRef(0);
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const spawnIntervalRef = useRef<NodeJS.Timeout>();
+  
+  const spawnParticles = useCallback((x: number, y: number) => {
+    const colors = ["hsl(var(--primary))", "#FFD700", "#FF6B6B", "#4ECDC4", "#A855F7"];
+    const newParticles: Particle[] = [];
+    
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI * 2 * i) / 12;
+      const speed = 2 + Math.random() * 3;
+      newParticles.push({
+        id: particleIdRef.current++,
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: 4 + Math.random() * 4,
+      });
+    }
+    
+    setParticles(prev => [...prev, ...newParticles]);
+  }, []);
 
   useEffect(() => {
     const progress = getGameProgress();
@@ -199,12 +235,20 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
     setFallingSymbols(prev => [...prev, newSymbol]);
   }, [targetSymbols, selectedLevel]);
 
-  const handleSymbolClick = useCallback((clickedSymbol: FallingSymbol) => {
+  const handleSymbolClick = useCallback((clickedSymbol: FallingSymbol, event: React.MouseEvent) => {
     if (gameState !== "playing") return;
     
     setFallingSymbols(prev => prev.filter(s => s.id !== clickedSymbol.id));
     
     if (clickedSymbol.isTarget) {
+      // Spawn particles at click position
+      const rect = gameAreaRef.current?.getBoundingClientRect();
+      if (rect) {
+        const relativeX = event.clientX - rect.left;
+        const relativeY = event.clientY - rect.top;
+        spawnParticles(relativeX, relativeY);
+      }
+      
       const comboBonus = Math.floor(combo / 3);
       const points = POINTS_PER_CORRECT + comboBonus;
       setScore(prev => prev + points);
@@ -217,9 +261,9 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
       setCombo(0);
       setLives(prev => prev - 1);
     }
-  }, [gameState, combo]);
+  }, [gameState, combo, spawnParticles]);
 
-  // Game loop
+  // Game loop - symbols and particles
   useEffect(() => {
     if (gameState !== "playing" || !selectedLevel) return;
 
@@ -243,6 +287,19 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
             return true;
           });
       });
+      
+      // Animate particles
+      setParticles(prev => 
+        prev
+          .map(p => ({
+            ...p,
+            x: p.x + p.vx,
+            y: p.y + p.vy,
+            vy: p.vy + 0.1, // gravity
+            life: p.life - 0.02,
+          }))
+          .filter(p => p.life > 0)
+      );
       
       animationRef.current = requestAnimationFrame(gameLoop);
     };
@@ -458,7 +515,7 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
                 {fallingSymbols.map(symbol => (
                   <button
                     key={symbol.id}
-                    onClick={() => handleSymbolClick(symbol)}
+                    onClick={(e) => handleSymbolClick(symbol, e)}
                     className={`absolute w-10 h-10 flex items-center justify-center text-xl font-bold rounded-full transition-transform hover:scale-110 active:scale-95 ${
                       symbol.isTarget
                         ? "bg-primary/20 text-primary border-2 border-primary"
@@ -472,6 +529,24 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
                   >
                     {symbol.symbol}
                   </button>
+                ))}
+                
+                {/* Particles */}
+                {particles.map(particle => (
+                  <div
+                    key={particle.id}
+                    className="absolute rounded-full pointer-events-none"
+                    style={{
+                      left: particle.x,
+                      top: particle.y,
+                      width: particle.size,
+                      height: particle.size,
+                      backgroundColor: particle.color,
+                      opacity: particle.life,
+                      transform: "translate(-50%, -50%)",
+                      boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`,
+                    }}
+                  />
                 ))}
               </div>
 
