@@ -172,8 +172,21 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
     
     const areaWidth = gameAreaRef.current.offsetWidth - 40;
     const x = Math.random() * areaWidth + 20;
-    const symbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-    const isTarget = targetSymbols.includes(symbol);
+    
+    // 50% chance to spawn a target symbol to ensure enough matching opportunities
+    const spawnTarget = Math.random() < 0.5;
+    let symbol: string;
+    let isTarget: boolean;
+    
+    if (spawnTarget && targetSymbols.length > 0) {
+      symbol = targetSymbols[Math.floor(Math.random() * targetSymbols.length)];
+      isTarget = true;
+    } else {
+      // Spawn a non-target symbol
+      const nonTargetSymbols = SYMBOLS.filter(s => !targetSymbols.includes(s));
+      symbol = nonTargetSymbols[Math.floor(Math.random() * nonTargetSymbols.length)];
+      isTarget = false;
+    }
     
     const newSymbol: FallingSymbol = {
       id: symbolIdRef.current++,
