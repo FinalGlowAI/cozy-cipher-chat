@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Gamepad2, Trophy, X, Star, ChevronRight, Lock, Clock } from "lucide-react";
+import { Gamepad2, Trophy, X, Star, ChevronRight, Lock, Clock, Coins } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-
+import { useCredits, LEVEL_CREDITS } from "@/hooks/useCredits";
 const SYMBOLS = ["△", "7", "⬡", "A", "●", "9", "◇", "B", "★", "3", "⬢", "Z", "◯", "5", "♦", "K", "⬟", "8", "◆", "M"];
 
 const LEVELS = [
@@ -111,6 +111,7 @@ interface MemoryGameProps {
 type GameState = "menu" | "memorize" | "choose" | "round-result" | "level-complete" | "game-complete";
 
 export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
+  const { earnCredits } = useCredits();
   const [gameState, setGameState] = useState<GameState>("menu");
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
@@ -176,18 +177,27 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
     }
   }, [gameState, countdown]);
 
-  const handleChoice = (chosenSequence: string[]) => {
+  const handleChoice = async (chosenSequence: string[]) => {
     const isCorrect = chosenSequence.every((symbol, index) => symbol === sequence[index]);
     setRoundWon(isCorrect);
     
     if (isCorrect) {
       if (currentRound >= ROUNDS_PER_LEVEL) {
-        // Level completed - unlock next level
+        // Level completed - unlock next level and award credits
         if (currentLevel < 7 && currentLevel >= unlockedLevel) {
           const newUnlockedLevel = currentLevel + 1;
           setUnlockedLevel(newUnlockedLevel);
           saveGameProgress(newUnlockedLevel);
           toast.success(`Level ${currentLevel + 1} unlocked!`);
+        }
+        
+        // Award credits for completing the level
+        const creditsAwarded = LEVEL_CREDITS[currentLevel] || 5;
+        const success = await earnCredits(currentLevel, `memory_game_level_${currentLevel}`);
+        if (success) {
+          toast.success(`+${creditsAwarded} Credits Earned!`, {
+            icon: "🪙",
+          });
         }
         
         if (currentLevel >= 7) {
@@ -432,6 +442,11 @@ export const MemoryGame = ({ open, onOpenChange, onWin }: MemoryGameProps) => {
                 {Array.from({ length: ROUNDS_PER_LEVEL }).map((_, i) => (
                   <Star key={i} className="h-6 w-6 text-yellow-500 fill-yellow-500" />
                 ))}
+              </div>
+              {/* Credits Earned */}
+              <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-yellow-500/20 border border-yellow-500/30 w-fit mx-auto">
+                <Coins className="h-5 w-5 text-yellow-500" />
+                <span className="font-bold text-yellow-500">+{LEVEL_CREDITS[currentLevel] || 5} Credits</span>
               </div>
               <p className="text-muted-foreground">
                 Ready for Level {currentLevel + 1}: {LEVELS[currentLevel].name}?

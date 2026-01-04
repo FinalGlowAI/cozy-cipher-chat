@@ -6,12 +6,21 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound } from "lucide-react";
+import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins } from "lucide-react";
 import { toast } from "sonner";
 import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/crypto";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
+import { useDailyUsage } from "@/hooks/useDailyUsage";
+import { useCredits } from "@/hooks/useCredits";
+import { FeatureGateModal } from "./FeatureGateModal";
 
-export const EncryptionPanel = () => {
+const TEXT_CREDIT_COST = 2;
+
+interface EncryptionPanelProps {
+  onOpenGames?: () => void;
+}
+
+export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
   const [secureMode, setSecureMode] = useState(false);
@@ -19,11 +28,40 @@ export const EncryptionPanel = () => {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [keyValidity, setKeyValidity] = useState<string>("never");
+  const [showGateModal, setShowGateModal] = useState(false);
+
+  const { getRemainingFreeUses, isWithinFreeLimit, incrementUsage, FREE_LIMIT } = useDailyUsage();
+  const { credits, spendCredits } = useCredits();
+
+  const remainingEncrypts = getRemainingFreeUses("text_encryption");
+  const remainingDecrypts = getRemainingFreeUses("text_decryption");
 
   const handleProcess = async () => {
     if (!inputText.trim()) {
       toast.error("Please enter some text first");
       return;
+    }
+
+    const feature = mode === "encrypt" ? "text_encryption" : "text_decryption";
+    const withinFreeLimit = isWithinFreeLimit(feature);
+
+    // Check if user needs credits
+    if (!withinFreeLimit) {
+      if (credits < TEXT_CREDIT_COST) {
+        setShowGateModal(true);
+        return;
+      }
+      
+      // Spend credits
+      const success = await spendCredits(TEXT_CREDIT_COST, feature);
+      if (!success) {
+        toast.error("Failed to process credits");
+        return;
+      }
+      toast.info(`${TEXT_CREDIT_COST} credits used`);
+    } else {
+      // Increment free usage
+      await incrementUsage(feature);
     }
 
     try {
@@ -141,6 +179,22 @@ export const EncryptionPanel = () => {
           <Unlock className="h-4 w-4" />
           Decrypt
         </Button>
+      </div>
+
+      {/* Usage Counter */}
+      <div className="flex justify-center">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 text-sm">
+          <Coins className="h-4 w-4 text-yellow-500" />
+          <span className="text-muted-foreground">
+            {mode === "encrypt" 
+              ? `${remainingEncrypts}/${FREE_LIMIT} free encryptions today`
+              : `${remainingDecrypts}/${FREE_LIMIT} free decryptions today`
+            }
+          </span>
+          {(mode === "encrypt" ? remainingEncrypts : remainingDecrypts) === 0 && (
+            <span className="text-primary font-medium">• {TEXT_CREDIT_COST} credits/use</span>
+          )}
+        </div>
       </div>
 
       {/* Secure Mode Toggle */}
@@ -310,6 +364,16 @@ export const EncryptionPanel = () => {
           </div>
         )}
       </Card>
+
+      {/* Feature Gate Modal */}
+      <FeatureGateModal
+        open={showGateModal}
+        onOpenChange={setShowGateModal}
+        featureName={mode === "encrypt" ? "Text Encryption" : "Text Decryption"}
+        creditCost={TEXT_CREDIT_COST}
+        currentCredits={credits}
+        onPlayGames={() => onOpenGames?.()}
+      />
     </div>
   );
 };

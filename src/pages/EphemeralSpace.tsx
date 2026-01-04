@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, Coins } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { useCredits } from "@/hooks/useCredits";
+import { FeatureGateModal } from "@/components/FeatureGateModal";
+import { GameSelector } from "@/components/GameSelector";
 import {
   Dialog,
   DialogContent,
@@ -16,10 +19,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+const ROOM_CREATION_COST = 10;
+
 const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showGateModal, setShowGateModal] = useState(false);
+  const [gameOpen, setGameOpen] = useState(false);
   const navigate = useNavigate();
+  const { credits, spendCredits, checkCanAfford } = useCredits();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,12 +43,26 @@ const EphemeralSpace = () => {
   }, [navigate]);
 
   const createNewRoom = async () => {
+    // Check if user can afford room creation
+    if (!checkCanAfford(ROOM_CREATION_COST)) {
+      setShowGateModal(true);
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("You must be logged in to create a room");
         navigate("/auth");
+        return;
+      }
+
+      // Spend credits first
+      const success = await spendCredits(ROOM_CREATION_COST, "ephemeral_room_creation");
+      if (!success) {
+        toast.error("Failed to process credits");
+        setLoading(false);
         return;
       }
 
@@ -82,7 +104,7 @@ const EphemeralSpace = () => {
         console.error("Error adding participant:", participantError);
       }
 
-      toast.success("Room created successfully!");
+      toast.success(`Room created! ${ROOM_CREATION_COST} credits used.`);
       navigate(`/room/${code}`);
     } catch (error: any) {
       console.error("Error creating room:", error);
@@ -194,17 +216,25 @@ const EphemeralSpace = () => {
           </Dialog>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Credit Cost Notice */}
+          <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+            <Coins className="h-4 w-4 text-yellow-500" />
+            <span className="text-sm text-yellow-500 font-medium">
+              Creating a room costs {ROOM_CREATION_COST} credits
+            </span>
+          </div>
+
           <Button
             onClick={createNewRoom}
             disabled={loading}
             className="w-full shadow-glow-primary"
             size="lg"
           >
-            {loading ? "Creating..." : "Create New Room"}
+            {loading ? "Creating..." : `Create New Room (${ROOM_CREATION_COST} credits)`}
           </Button>
 
           <div className="text-center text-muted-foreground text-sm">
-            OR JOIN AN EPHEMERAL ROOM
+            OR JOIN AN EPHEMERAL ROOM (FREE)
           </div>
 
           <div className="flex gap-2">
@@ -225,6 +255,23 @@ const EphemeralSpace = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Feature Gate Modal */}
+      <FeatureGateModal
+        open={showGateModal}
+        onOpenChange={setShowGateModal}
+        featureName="Ephemeral Room Creation"
+        creditCost={ROOM_CREATION_COST}
+        currentCredits={credits}
+        onPlayGames={() => setGameOpen(true)}
+      />
+
+      {/* Game Selector */}
+      <GameSelector 
+        open={gameOpen} 
+        onOpenChange={setGameOpen}
+        onWin={() => {}}
+      />
     </div>
   );
 };

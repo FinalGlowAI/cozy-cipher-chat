@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAdmin } from "@/hooks/useAdmin";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { GameSelector } from "@/components/GameSelector";
+import { CreditDisplay } from "@/components/CreditDisplay";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
@@ -110,16 +111,20 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Center Game Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setGameOpen(true)}
-                className="absolute left-1/2 -translate-x-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 shadow-lg hover:shadow-pink-500/30 transition-all"
-                title="Play Memory Game"
-              >
-                <Gamepad2 className="h-6 w-6 text-white" />
-              </Button>
+              {/* Center: Credits + Game Button */}
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
+                <CreditDisplay />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setGameOpen(true)}
+                  className="h-12 w-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 shadow-lg hover:shadow-pink-500/30 transition-all"
+                  title="Play Games to Earn Credits"
+                >
+                  <Gamepad2 className="h-6 w-6 text-white" />
+                </Button>
+              </div>
+
               <div className="flex items-center gap-2 md:gap-4">
                 <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
                   <Lock className="h-4 w-4" />
@@ -183,7 +188,7 @@ const Index = () => {
             </p>
           </div>
 
-          <EncryptionPanel />
+          <EncryptionPanel onOpenGames={() => setGameOpen(true)} />
         </main>
 
         {/* Footer */}
@@ -247,10 +252,7 @@ const Index = () => {
       <GameSelector 
         open={gameOpen} 
         onOpenChange={setGameOpen}
-        onWin={() => {
-          // TODO: Add credit reward logic for freemium users
-          console.log("User won the game!");
-        }}
+        onWin={() => {}}
       />
     </div>
   );
