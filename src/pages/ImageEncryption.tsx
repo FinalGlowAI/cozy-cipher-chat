@@ -4,12 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info } from "lucide-react";
+import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info, Coins } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages } from "@/lib/imageStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { useCredits } from "@/hooks/useCredits";
+import { FeatureGateModal } from "@/components/FeatureGateModal";
+import { GameSelector } from "@/components/GameSelector";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +21,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
+const IMAGE_ENCRYPT_COST = 5;
+const IMAGE_DECRYPT_COST = 3;
 
 const ImageEncryption = () => {
   const navigate = useNavigate();
@@ -28,6 +34,10 @@ const ImageEncryption = () => {
   const [decryptedImage, setDecryptedImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
+  const [showGateModal, setShowGateModal] = useState(false);
+  const [gameOpen, setGameOpen] = useState(false);
+
+  const { credits, spendCredits, checkCanAfford } = useCredits();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -68,6 +78,19 @@ const ImageEncryption = () => {
       return;
     }
 
+    // Check if user can afford
+    if (!checkCanAfford(IMAGE_ENCRYPT_COST)) {
+      setShowGateModal(true);
+      return;
+    }
+
+    // Spend credits
+    const success = await spendCredits(IMAGE_ENCRYPT_COST, "image_encryption");
+    if (!success) {
+      toast.error("Failed to process credits");
+      return;
+    }
+
     try {
       const expirationMinutes = validity === "never" ? null : parseInt(validity);
       const code = await storeImage(selectedImage, expirationMinutes);
@@ -77,7 +100,7 @@ const ImageEncryption = () => {
       const expiryText = validity === "never" 
         ? "never expires" 
         : `expires in ${validityNum >= 60 ? validityNum / 60 + "h" : validityNum + "min"}`;
-      toast.success(`Image encrypted! Code ${expiryText}`);
+      toast.success(`Image encrypted! Code ${expiryText}. ${IMAGE_ENCRYPT_COST} credits used.`);
     } catch (error) {
       toast.error("Encryption failed. Please try again.");
     }
@@ -89,10 +112,23 @@ const ImageEncryption = () => {
       return;
     }
 
+    // Check if user can afford
+    if (!checkCanAfford(IMAGE_DECRYPT_COST)) {
+      setShowGateModal(true);
+      return;
+    }
+
+    // Spend credits
+    const success = await spendCredits(IMAGE_DECRYPT_COST, "image_decryption");
+    if (!success) {
+      toast.error("Failed to process credits");
+      return;
+    }
+
     try {
       const imageData = await retrieveImage(imageCode);
       setDecryptedImage(imageData);
-      toast.success("Image decrypted successfully!");
+      toast.success(`Image decrypted successfully! ${IMAGE_DECRYPT_COST} credits used.`);
     } catch (error) {
       if (error instanceof Error) {
         if (error.message === "Code not found") {
@@ -124,6 +160,8 @@ const ImageEncryption = () => {
     setOutputCode("");
     setDecryptedImage(null);
   };
+
+  const currentCost = mode === "encrypt" ? IMAGE_ENCRYPT_COST : IMAGE_DECRYPT_COST;
 
   return (
     <div className="min-h-screen relative">
@@ -173,6 +211,17 @@ const ImageEncryption = () => {
                 </DialogHeader>
               </DialogContent>
             </Dialog>
+          </div>
+
+          {/* Credit Cost Notice */}
+          <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mb-6">
+            <Coins className="h-4 w-4 text-yellow-500" />
+            <span className="text-sm text-yellow-500 font-medium">
+              {mode === "encrypt" 
+                ? `Encrypting costs ${IMAGE_ENCRYPT_COST} credits`
+                : `Decrypting costs ${IMAGE_DECRYPT_COST} credits`
+              }
+            </span>
           </div>
 
           <div className="flex items-center justify-center gap-4 mb-8">
@@ -294,7 +343,7 @@ const ImageEncryption = () => {
                 className="w-full"
                 disabled={!selectedImage}
               >
-                Generate Code
+                Generate Code ({IMAGE_ENCRYPT_COST} credits)
               </Button>
 
               {outputCode && (
@@ -339,7 +388,7 @@ const ImageEncryption = () => {
               </div>
 
               <Button onClick={handleDecrypt} className="w-full">
-                Decrypt Image
+                Decrypt Image ({IMAGE_DECRYPT_COST} credits)
               </Button>
 
               {decryptedImage && (
@@ -355,8 +404,24 @@ const ImageEncryption = () => {
             </div>
           )}
         </div>
-
       </div>
+
+      {/* Feature Gate Modal */}
+      <FeatureGateModal
+        open={showGateModal}
+        onOpenChange={setShowGateModal}
+        featureName={mode === "encrypt" ? "Image Encryption" : "Image Decryption"}
+        creditCost={currentCost}
+        currentCredits={credits}
+        onPlayGames={() => setGameOpen(true)}
+      />
+
+      {/* Game Selector */}
+      <GameSelector 
+        open={gameOpen} 
+        onOpenChange={setGameOpen}
+        onWin={() => {}}
+      />
     </div>
   );
 };

@@ -38,6 +38,60 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          source: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          source: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          source?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_usage: {
+        Row: {
+          created_at: string
+          id: string
+          text_decryptions: number
+          text_encryptions: number
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          text_decryptions?: number
+          text_encryptions?: number
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          text_decryptions?: number
+          text_encryptions?: number
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       encrypted_images: {
         Row: {
           code: string
@@ -231,6 +285,33 @@ export type Database = {
           rating?: number
           user_name?: string
           user_title?: string | null
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          created_at: string
+          id: string
+          lifetime_earned: number
+          total_credits: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lifetime_earned?: number
+          total_credits?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lifetime_earned?: number
+          total_credits?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

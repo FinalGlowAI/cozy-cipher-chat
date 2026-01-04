@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Zap, Trophy, X, Star, Heart, Clock, Lock, ChevronLeft } from "lucide-react";
+import { Zap, Trophy, X, Star, Heart, Clock, Lock, ChevronLeft, Coins } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useCredits, LEVEL_CREDITS } from "@/hooks/useCredits";
 
 const SYMBOLS = ["△", "7", "⬡", "A", "●", "9", "◇", "B", "★", "3", "⬢", "Z", "◯", "5", "♦", "K", "⬟", "8", "◆", "M"];
 
@@ -109,6 +110,7 @@ const formatTimeRemaining = (ms: number): string => {
 };
 
 export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGameProps) => {
+  const { earnCredits } = useCredits();
   const [gameState, setGameState] = useState<"menu" | "playing" | "result">("menu");
   const [selectedLevel, setSelectedLevel] = useState<DifficultyLevel | null>(null);
   const [currentRound, setCurrentRound] = useState(1);
@@ -347,10 +349,7 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
   useEffect(() => {
     if (gameState !== "playing" || !selectedLevel) return;
 
-    if (lives <= 0) {
-      setWon(false);
-      setGameState("result");
-    } else if (score >= selectedLevel.winScore) {
+    const handleWin = async () => {
       setWon(true);
       setGameState("result");
       
@@ -361,10 +360,27 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
           saveGameProgress(newUnlockedLevel);
           toast.success(`Level ${selectedLevel.level + 1} unlocked!`);
         }
+        
+        // Award credits for completing the level
+        const creditsAwarded = LEVEL_CREDITS[selectedLevel.level] || 5;
+        const success = await earnCredits(selectedLevel.level, `symbol_match_level_${selectedLevel.level}`);
+        if (success) {
+          toast.success(`+${creditsAwarded} Credits Earned!`, {
+            icon: "🪙",
+          });
+        }
+        
         onWin?.();
       }
+    };
+
+    if (lives <= 0) {
+      setWon(false);
+      setGameState("result");
+    } else if (score >= selectedLevel.winScore) {
+      handleWin();
     }
-  }, [lives, score, gameState, selectedLevel, currentRound, unlockedLevel, onWin]);
+  }, [lives, score, gameState, selectedLevel, currentRound, unlockedLevel, onWin, earnCredits]);
 
   const handleNextRound = () => {
     if (!selectedLevel) return;
