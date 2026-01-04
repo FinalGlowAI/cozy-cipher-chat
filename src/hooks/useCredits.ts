@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { emitCreditsChanged, onCreditsChanged } from "@/lib/creditsBus";
 
 interface CreditState {
   totalCredits: number;
@@ -79,6 +80,11 @@ export const useCredits = () => {
   useEffect(() => {
     fetchCredits();
 
+    // In-app sync between multiple useCredits() instances
+    const unsubscribe = onCreditsChanged(() => {
+      fetchCredits();
+    });
+
     // Set up realtime subscription
     const channel = supabase
       .channel("user_credits_changes")
@@ -96,6 +102,7 @@ export const useCredits = () => {
       .subscribe();
 
     return () => {
+      unsubscribe();
       supabase.removeChannel(channel);
     };
   }, [fetchCredits]);
@@ -168,6 +175,7 @@ export const useCredits = () => {
         lifetimeEarned: prev.lifetimeEarned + amount,
       }));
 
+      emitCreditsChanged();
       return true;
     } catch (error) {
       console.error("Error earning credits:", error);
@@ -212,6 +220,7 @@ export const useCredits = () => {
         totalCredits: prev.totalCredits - amount,
       }));
 
+      emitCreditsChanged();
       return true;
     } catch (error) {
       console.error("Error spending credits:", error);
