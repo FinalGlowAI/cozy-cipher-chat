@@ -27,7 +27,7 @@ const EphemeralSpace = () => {
   const [showGateModal, setShowGateModal] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
   const navigate = useNavigate();
-  const { credits, spendCredits, checkCanAfford } = useCredits();
+  const { credits, spendCredits, checkCanAfford, refetch } = useCredits();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -269,8 +269,16 @@ const EphemeralSpace = () => {
       {/* Game Selector */}
       <GameSelector 
         open={gameOpen} 
-        onOpenChange={setGameOpen}
-        onWin={() => {}}
+        onOpenChange={(open) => {
+          setGameOpen(open);
+          // Refetch credits when game modal closes
+          if (!open) {
+            refetch();
+          }
+        }}
+        onWin={() => {
+          refetch();
+        }}
       />
     </div>
   );
