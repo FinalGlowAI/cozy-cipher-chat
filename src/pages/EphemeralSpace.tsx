@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Info, Coins } from "lucide-react";
+import { ArrowLeft, Info, Coins, Lock } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { useCredits } from "@/hooks/useCredits";
 import { FeatureGateModal } from "@/components/FeatureGateModal";
@@ -158,6 +158,25 @@ const EphemeralSpace = () => {
       if (error || !room) {
         toast.error("Room not found");
         return;
+      }
+
+      // Check if room is locked
+      if (room.is_locked) {
+        // Check if user is already a participant
+        const { data: participant } = await supabase
+          .from("room_participants")
+          .select("id")
+          .eq("room_id", room.id)
+          .eq("user_id", user.id)
+          .single();
+
+        if (!participant) {
+          toast.error("This room is locked by the creator", {
+            icon: <Lock className="h-4 w-4" />,
+            description: "No new users can join this room.",
+          });
+          return;
+        }
       }
 
       navigate(`/room/${normalizedCode}`);
