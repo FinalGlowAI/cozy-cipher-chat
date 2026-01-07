@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { notifyNewMessage } from "@/lib/notifications";
 
@@ -35,6 +35,9 @@ const EphemeralRoom = () => {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [userColor, setUserColor] = useState("");
   const [activeUsers, setActiveUsers] = useState<{ id: string; color: string }[]>([]);
+  const [isLocked, setIsLocked] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -234,6 +237,9 @@ const EphemeralRoom = () => {
       }
 
       setRoomId(room.id);
+      setIsLocked(room.is_locked);
+      setIsCreator(room.created_by === user.id);
+      setCurrentUserId(user.id);
 
       // Add user to room_participants (upsert to handle rejoin)
       const { error: participantError } = await supabase
@@ -305,6 +311,26 @@ const EphemeralRoom = () => {
     toast.success("Room code copied!");
   };
 
+  const toggleRoomLock = async () => {
+    if (!roomId || !isCreator) return;
+
+    try {
+      const newLockState = !isLocked;
+      const { error } = await supabase
+        .from("ephemeral_rooms")
+        .update({ is_locked: newLockState })
+        .eq("id", roomId);
+
+      if (error) throw error;
+
+      setIsLocked(newLockState);
+      toast.success(newLockState ? "Room locked - no new users can join" : "Room unlocked - anyone with the code can join");
+    } catch (error) {
+      console.error("Error toggling room lock:", error);
+      toast.error("Failed to update room lock status");
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative">
       <NeuralBackground key="neural-bg" />
@@ -343,6 +369,11 @@ const EphemeralRoom = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {isLocked && (
+              <div title="Room is locked">
+                <Lock className="h-4 w-4 text-yellow-500" />
+              </div>
+            )}
             <span className="font-mono text-lg text-primary">{roomCode}</span>
             <Button
               variant="ghost"
@@ -351,6 +382,20 @@ const EphemeralRoom = () => {
             >
               <Copy className="h-4 w-4" />
             </Button>
+            {isCreator && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleRoomLock}
+                title={isLocked ? "Unlock room" : "Lock room"}
+              >
+                {isLocked ? (
+                  <Unlock className="h-4 w-4 text-yellow-500" />
+                ) : (
+                  <Lock className="h-4 w-4" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </div>

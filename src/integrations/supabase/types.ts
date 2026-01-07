@@ -154,6 +154,7 @@ export type Database = {
           created_by: string | null
           expires_at: string
           id: string
+          is_locked: boolean
           room_code: string
         }
         Insert: {
@@ -161,6 +162,7 @@ export type Database = {
           created_by?: string | null
           expires_at?: string
           id?: string
+          is_locked?: boolean
           room_code: string
         }
         Update: {
@@ -168,6 +170,7 @@ export type Database = {
           created_by?: string | null
           expires_at?: string
           id?: string
+          is_locked?: boolean
           room_code?: string
         }
         Relationships: []
