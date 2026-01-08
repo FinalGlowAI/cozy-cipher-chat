@@ -36,7 +36,7 @@ const TermsOfUse = () => {
           </div>
 
           <div className="space-y-6 text-muted-foreground">
-            <p className="text-sm">Last updated: November 15, 2025</p>
+            <p className="text-sm">Last updated: January 8, 2026</p>
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">1. Acceptance of Terms</h2>
@@ -72,11 +72,65 @@ const TermsOfUse = () => {
                 <li>Keep your passwords and encryption keys secure</li>
                 <li>Not attempt to breach or test the security of the platform</li>
                 <li>Not interfere with the proper working of the service</li>
+                <li>Respect other users in ephemeral rooms and shared spaces</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">4. Privacy and Security</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">4. Credit System Terms</h2>
+              <p>OCX operates a credit-based system for accessing premium features:</p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Free users receive 5 free text encryptions and 5 free decryptions per day</li>
+                <li>Credits can be earned by playing brain-training games (Memory Challenge, Symbol Match, Flash Number)</li>
+                <li>Credit costs: 2 credits per text operation (after free limit), 5 credits for image encryption, 3 credits for image decryption, 10 credits for ephemeral room creation</li>
+                <li>Each game can only award credits once per 24-hour period</li>
+                <li>Game progress and daily limits reset at midnight UTC</li>
+                <li>Credits have no cash value and cannot be transferred between accounts</li>
+                <li>Unused credits do not expire for active accounts</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">5. Ephemeral Room Terms</h2>
+              <p>Users of ephemeral rooms agree to the following:</p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Room creation costs 10 credits (premium subscribers have unlimited access)</li>
+                <li>Joining existing rooms is free for all users</li>
+                <li>Room creators have the ability to lock rooms to prevent new participants</li>
+                <li>All messages are permanently deleted when all participants leave</li>
+                <li>Rooms automatically expire 24 hours after creation</li>
+                <li>Users must not share room codes with unauthorized parties</li>
+                <li>Content shared in rooms must comply with all applicable laws</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">6. Image Encryption Terms</h2>
+              <p>Users of image encryption features agree to:</p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Maximum file size of 5MB per image</li>
+                <li>Images are stored locally in browser storage</li>
+                <li>Shareable codes expire according to selected duration (1 hour to 30 days)</li>
+                <li>Expired codes cannot be recovered or reactivated</li>
+                <li>Users are responsible for the content of encrypted images</li>
+                <li>Do not use this feature to encrypt or share illegal content</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">7. Gaming Terms</h2>
+              <p>Users who participate in credit-earning games agree to:</p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Play fairly without using automated tools or exploits</li>
+                <li>Accept that game performance depends on device and browser capabilities</li>
+                <li>Understand that game results and credit awards are final</li>
+                <li>Not attempt to manipulate or exploit the gaming system</li>
+                <li>Accept daily limits on game credit earnings</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">8. Privacy and Security</h2>
               <p>
                 OCX performs all encryption and decryption locally on your device. We do not store
                 your encrypted messages, passwords, or encryption keys. However, you are solely
@@ -86,7 +140,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">5. Service Availability</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">9. Service Availability</h2>
               <p>
                 We strive to maintain the availability of OCX, but we do not guarantee uninterrupted
                 access. The service may be temporarily unavailable due to maintenance, updates, or
@@ -95,7 +149,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">6. Limitations</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">10. Limitations</h2>
               <p>
                 In no event shall OCX or its suppliers be liable for any damages arising out of the
                 use or inability to use the materials on OCX, even if we have been notified of the
@@ -104,7 +158,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">7. Revisions</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">11. Revisions</h2>
               <p>
                 We may revise these terms of use at any time without notice. By using OCX, you are
                 agreeing to be bound by the current version of these terms of use.
@@ -112,7 +166,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">8. Governing Law</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">12. Governing Law</h2>
               <p>
                 These terms and conditions are governed by and construed in accordance with
                 applicable laws, and you irrevocably submit to the exclusive jurisdiction of the
