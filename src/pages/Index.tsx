@@ -99,8 +99,74 @@ const Index = () => {
       <div className="relative z-10">
         {/* Header */}
         <header className="border-b border-primary/20 backdrop-blur-xl bg-card/30">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-between">
+          <div className="container mx-auto px-4 py-4">
+            {/* Mobile Layout */}
+            <div className="flex flex-col gap-3 md:hidden">
+              {/* Top row: Logo + Nav actions */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <img src={ocxLogo} alt="OCX Logo" className="h-10 w-10 object-contain" />
+                  <div>
+                    <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                      OCX
+                    </h1>
+                    <p className="text-[10px] text-muted-foreground">Secure Messaging</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate("/ephemeral")}
+                    className="h-9 w-9"
+                  >
+                    💬
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate("/image-encryption")}
+                    className="h-9 w-9"
+                  >
+                    🖼️
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={() => navigate("/admin")}
+                      className="h-9 w-9"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLogout}
+                    className="h-9 w-9"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              {/* Bottom row: Credits + Game centered */}
+              <div className="flex items-center justify-center gap-3">
+                <CreditDisplay />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setGameOpen(true)}
+                  className="h-10 w-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 shadow-lg hover:shadow-pink-500/30 transition-all"
+                  title="Play Games to Earn Credits"
+                >
+                  <Gamepad2 className="h-5 w-5 text-white" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden md:flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img src={ocxLogo} alt="OCX Logo" className="h-12 w-12 object-contain" />
                 <div>
@@ -112,7 +178,7 @@ const Index = () => {
               </div>
 
               {/* Center: Credits + Game Button */}
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <CreditDisplay />
                 <Button
                   variant="ghost"
@@ -125,8 +191,8 @@ const Index = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-2 md:gap-4">
-                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Lock className="h-4 w-4" />
                   <span>100% Private</span>
                 </div>
@@ -136,16 +202,14 @@ const Index = () => {
                     size="sm"
                     onClick={() => navigate("/ephemeral")}
                   >
-                    <span className="hidden md:inline">Ephemeral Space</span>
-                    <span className="md:hidden">💬</span>
+                    Ephemeral Space
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate("/image-encryption")}
                   >
-                    <span className="hidden md:inline">Image Encryption</span>
-                    <span className="md:hidden">🖼️</span>
+                    Image Encryption
                   </Button>
                 </div>
                 {isAdmin && (
@@ -156,7 +220,7 @@ const Index = () => {
                     className="gap-2"
                   >
                     <Settings className="h-4 w-4" />
-                    <span className="hidden md:inline">Admin</span>
+                    Admin
                   </Button>
                 )}
                 <Button
@@ -166,7 +230,7 @@ const Index = () => {
                   className="gap-2"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden md:inline">Logout</span>
+                  Logout
                 </Button>
               </div>
             </div>
