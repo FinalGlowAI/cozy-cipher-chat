@@ -226,13 +226,6 @@ const Index = () => {
                 </Button>
                 <Button
                   variant="link"
-                  onClick={() => navigate("/refund-policy")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Refund Policy
-                </Button>
-                <Button
-                  variant="link"
                   onClick={() => navigate("/settings")}
                   className="text-muted-foreground hover:text-foreground"
                 >
