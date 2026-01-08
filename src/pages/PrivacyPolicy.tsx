@@ -36,7 +36,7 @@ const PrivacyPolicy = () => {
           </div>
 
           <div className="space-y-6 text-muted-foreground">
-            <p className="text-sm">Last updated: November 15, 2025</p>
+            <p className="text-sm">Last updated: January 8, 2026</p>
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">
@@ -48,6 +48,8 @@ const PrivacyPolicy = () => {
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
                 <li>Email address (for account creation and authentication only)</li>
+                <li>Credit balance and transaction history (for premium features)</li>
+                <li>Daily usage counts (text encryptions/decryptions per day)</li>
                 <li>Usage statistics (anonymous, for service improvement)</li>
               </ul>
               <p className="mt-4">
@@ -57,6 +59,8 @@ const PrivacyPolicy = () => {
                 <li>Your encrypted messages or their content</li>
                 <li>Your encryption passwords or keys</li>
                 <li>The content you encrypt or decrypt</li>
+                <li>Messages sent in ephemeral rooms</li>
+                <li>Encrypted image content</li>
               </ul>
             </section>
 
@@ -68,6 +72,8 @@ const PrivacyPolicy = () => {
               <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
                 <li>Provide and maintain the OCX service</li>
                 <li>Authenticate your account</li>
+                <li>Track credit balance for premium features</li>
+                <li>Enforce daily usage limits for free accounts</li>
                 <li>Improve and optimize the service</li>
                 <li>Communicate important service updates</li>
               </ul>
@@ -92,43 +98,92 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">5. Third-Party Services</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">5. Ephemeral Room Privacy</h2>
               <p>
-                We do not sell, trade, or otherwise transfer your information to third parties. We
-                may use trusted third-party services for hosting and analytics, but these services
-                do not have access to your encrypted content.
+                Ephemeral rooms provide the highest level of message privacy:
               </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">6. Cookies and Tracking</h2>
-              <p>
-                We use minimal cookies necessary for authentication and service functionality. We do
-                not use tracking cookies for advertising purposes.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">7. Your Rights</h2>
-              <p>You have the right to:</p>
               <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
-                <li>Access your account information</li>
-                <li>Request deletion of your account</li>
-                <li>Opt-out of non-essential communications</li>
-                <li>Export your data</li>
+                <li>Messages are encrypted end-to-end during transmission</li>
+                <li>All messages are permanently deleted when the room empties</li>
+                <li>No message history is retained on our servers</li>
+                <li>Participant presence is visible in real-time to room members only</li>
+                <li>Room codes are randomly generated and not linked to user identities</li>
+                <li>Rooms automatically expire after 24 hours</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">8. Data Retention</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">6. Image Encryption Privacy</h2>
               <p>
-                We retain your email and account information only as long as your account is active.
-                Upon account deletion, all associated data is permanently removed from our systems.
+                Image encryption maintains strict privacy standards:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Encrypted images are stored in local browser storage only</li>
+                <li>6-character sharing codes are generated locally</li>
+                <li>Automatic cleanup of expired images</li>
+                <li>No server-side storage of unencrypted image content</li>
+                <li>Encryption keys are never transmitted to our servers</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">7. Credit System Data</h2>
+              <p>
+                For the credit-based economy, we store:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Credit balances associated with your account</li>
+                <li>Transaction history for auditing purposes</li>
+                <li>Daily usage counts to enforce free tier limits</li>
+                <li>Game progress is stored locally in your browser and resets daily</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">8. Third-Party Services</h2>
+              <p>
+                We do not sell, trade, or otherwise transfer your information to third parties. We
+                may use trusted third-party services for hosting, payment processing, and analytics,
+                but these services do not have access to your encrypted content.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">9. Children's Privacy</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">9. Cookies and Local Storage</h2>
+              <p>
+                We use minimal cookies necessary for authentication and service functionality. We also use local storage for:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Game progress tracking</li>
+                <li>Encrypted image storage</li>
+                <li>User preferences</li>
+              </ul>
+              <p className="mt-4">We do not use tracking cookies for advertising purposes.</p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">10. Your Rights</h2>
+              <p>You have the right to:</p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Access your account information</li>
+                <li>Request deletion of your account and all associated data</li>
+                <li>Opt-out of non-essential communications</li>
+                <li>Export your data (credit balance, transaction history)</li>
+                <li>Clear locally stored data at any time</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">11. Data Retention</h2>
+              <p>
+                We retain your email and account information only as long as your account is active.
+                Upon account deletion, all associated data is permanently removed from our systems.
+                Ephemeral room messages are deleted immediately when rooms are vacated.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">12. Children's Privacy</h2>
               <p>
                 OCX is not intended for use by children under 13. We do not knowingly collect
                 information from children under 13.
@@ -137,7 +192,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">
-                10. Changes to This Privacy Policy
+                13. Changes to This Privacy Policy
               </h2>
               <p>
                 We may update our privacy policy from time to time. We will notify you of any
@@ -147,10 +202,15 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">11. Contact Us</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">14. Contact Us</h2>
               <p>
-                If you have any questions about this privacy policy, please contact us through our
-                support channels.
+                If you have any questions about this privacy policy, please contact us at{" "}
+                <a
+                  href="mailto:support@ocodx.store"
+                  className="text-primary hover:underline font-semibold"
+                >
+                  support@ocodx.store
+                </a>
               </p>
             </section>
           </div>

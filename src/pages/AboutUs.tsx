@@ -53,14 +53,40 @@ const AboutUs = () => {
                 unencrypted state. This approach ensures maximum privacy and security for your
                 communications.
               </p>
+              <p className="mt-4">
+                Our platform offers multiple privacy solutions including text encryption, image encryption
+                with shareable codes, and ephemeral rooms for real-time private conversations that
+                automatically delete when all participants leave.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Our Features</h2>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li><strong className="text-foreground">Text Encryption:</strong> AES-256 encryption with time-limited keys for enhanced security</li>
+                <li><strong className="text-foreground">Image Encryption:</strong> Encrypt images and share them using secure 6-character codes with customizable expiration</li>
+                <li><strong className="text-foreground">Ephemeral Rooms:</strong> Create private chat rooms that auto-delete all messages when participants leave</li>
+                <li><strong className="text-foreground">Credit System:</strong> Earn credits by playing brain-training games to unlock additional features</li>
+              </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">Our Technology</h2>
               <p>
                 We use industry-standard AES-256 encryption combined with secure key derivation
-                functions. Our technology ensures the highest standards of security and
-                transparency for your encrypted communications.
+                functions. Our zero-knowledge architecture ensures that we never have access to your
+                unencrypted data, passwords, or encryption keys. All cryptographic operations happen
+                entirely within your browser.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Gamified Experience</h2>
+              <p>
+                OCX features a unique credit-based system where users can earn credits by playing
+                engaging brain-training games including Memory Challenge, Symbol Match, and Flash Number.
+                These credits can be used to access premium features like additional text encryptions,
+                image encryption, and ephemeral room creation.
               </p>
             </section>
 
@@ -68,16 +94,20 @@ const AboutUs = () => {
               <h2 className="text-2xl font-semibold text-foreground mb-4">Why Choose OCX</h2>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>100% client-side encryption - your data never leaves your device unencrypted</li>
-                <li>No data storage - we don't store your messages or encryption keys</li>
+                <li>No data storage - we do not store your messages or encryption keys</li>
                 <li>Easy to use - powerful encryption made simple</li>
-                <li>Offline capable - works without an internet connection</li>
+                <li>Offline capable - works without an internet connection for text encryption</li>
+                <li>Ephemeral rooms with auto-delete functionality for ultimate privacy</li>
+                <li>Image encryption with expiring shareable codes</li>
+                <li>Gamified experience - earn credits by playing brain games</li>
+                <li>Time-limited encryption keys for enhanced security</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">Contact Us</h2>
               <p>
-                Have questions or need support? We're here to help. Reach out to us at{" "}
+                Have questions or need support? We are here to help. Reach out to us at{" "}
                 <a
                   href="mailto:support@ocodx.store"
                   className="text-primary hover:underline font-semibold"

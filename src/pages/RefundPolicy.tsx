@@ -36,6 +36,8 @@ const RefundPolicy = () => {
           </div>
 
           <div className="space-y-6 text-muted-foreground">
+            <p className="text-sm">Last updated: January 8, 2026</p>
+
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">General Policy</h2>
               <p>
@@ -45,21 +47,36 @@ const RefundPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">Eligibility</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Subscription Eligibility</h2>
               <p className="mb-3">
-                Refund requests may be considered under the following conditions:
+                Refund requests for premium subscriptions may be considered under the following conditions:
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Request is made within 14 days of the initial purchase</li>
                 <li>Technical issues that prevent you from using the service</li>
                 <li>Accidental duplicate purchases</li>
+                <li>Service was not as described</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Credits Policy</h2>
+              <p className="mb-3">
+                Regarding credits earned and used within OCX:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Credits earned through gameplay are virtual rewards and are non-refundable</li>
+                <li>Credits have no cash value and cannot be exchanged for money</li>
+                <li>Credits cannot be transferred between accounts</li>
+                <li>Spent credits cannot be recovered or refunded</li>
+                <li>If your account is deleted, all credits are permanently lost</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">How to Request a Refund</h2>
               <p>
-                To request a refund, please contact us at{" "}
+                To request a refund for a subscription purchase, please contact us at{" "}
                 <a
                   href="mailto:support@ocodx.store"
                   className="text-primary hover:underline"
@@ -84,6 +101,22 @@ const RefundPolicy = () => {
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Subscriptions that have been active for more than 14 days</li>
                 <li>Partial month refunds for subscription services</li>
+                <li>Credits earned through gameplay</li>
+                <li>Credits spent on features (text encryption, image encryption, room creation)</li>
+                <li>Free trial periods that have been used</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Subscription Cancellation</h2>
+              <p className="mb-3">
+                You can cancel your subscription at any time:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Access will continue until the end of your current billing period</li>
+                <li>No refund will be provided for the remaining time in your billing cycle</li>
+                <li>You will retain access to basic free features after cancellation</li>
+                <li>Any unused credits will remain available for use</li>
               </ul>
             </section>
 

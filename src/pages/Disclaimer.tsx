@@ -63,6 +63,71 @@ const Disclaimer = () => {
             </section>
 
             <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
+                Ephemeral Room Disclaimer
+              </h2>
+              <p>
+                Ephemeral rooms are designed for temporary, private conversations. Users should understand:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>All messages are permanently deleted when all participants leave the room</li>
+                <li>No message recovery is possible after deletion - this is by design</li>
+                <li>Room creators can lock rooms to prevent new participants from joining</li>
+                <li>Rooms automatically expire after 24 hours of creation</li>
+                <li>We cannot recover any messages or room content under any circumstances</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
+                Image Encryption Disclaimer
+              </h2>
+              <p>
+                Image encryption features are subject to the following limitations:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Encrypted images are stored locally in your browser storage</li>
+                <li>Shareable 6-character codes expire based on user selection (1 hour, 1 day, 7 days, or 30 days)</li>
+                <li>Expired codes cannot be recovered or extended</li>
+                <li>Maximum image file size is 5MB</li>
+                <li>Clearing browser data will delete locally stored encrypted images</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
+                Credit and Subscription Disclaimer
+              </h2>
+              <p>
+                OCX uses a credit-based system for accessing premium features:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Credits are virtual currency with no cash value</li>
+                <li>Credits earned through games are non-refundable</li>
+                <li>Daily game progress resets every 24 hours</li>
+                <li>Free users receive 5 free text encryptions/decryptions per day</li>
+                <li>Credit costs: 2 credits per text operation, 5 for image encryption, 3 for image decryption, 10 for room creation</li>
+                <li>Premium subscriptions provide unlimited access to all features</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
+                Game Disclaimer
+              </h2>
+              <p>
+                Brain-training games within OCX are provided for earning credits:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Games are for entertainment and credit-earning purposes only</li>
+                <li>Performance may vary by device and browser</li>
+                <li>Each game can only be won once per 24-hour period</li>
+                <li>Game progress is stored locally and resets daily</li>
+                <li>We make no claims about cognitive benefits from gameplay</li>
+              </ul>
+            </section>
+
+            <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">Limitation of Liability</h2>
               <p>
                 Under no circumstance shall OCX have any liability to you for any loss or damage of
@@ -77,9 +142,9 @@ const Disclaimer = () => {
                 Professional Disclaimer
               </h2>
               <p>
-                OCX is not responsible for the content of encrypted messages. The platform is a tool
-                for encryption and decryption only. Users are solely responsible for the content
-                they encrypt and share.
+                OCX is not responsible for the content of encrypted messages, images, or ephemeral
+                room conversations. The platform is a tool for encryption and secure communication only.
+                Users are solely responsible for the content they encrypt, share, and communicate.
               </p>
             </section>
 
