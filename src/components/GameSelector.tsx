@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Gamepad2, Brain, Zap } from "lucide-react";
+import { Gamepad2, Brain, Zap, Hash } from "lucide-react";
 import { MemoryGame } from "./MemoryGame";
 import { SymbolMatchGame } from "./SymbolMatchGame";
+import { FlashNumberGame } from "./FlashNumberGame";
 
 interface GameSelectorProps {
   open: boolean;
@@ -11,7 +12,7 @@ interface GameSelectorProps {
   onWin?: () => void;
 }
 
-type SelectedGame = "none" | "memory" | "symbol-match";
+type SelectedGame = "none" | "memory" | "symbol-match" | "flash-number";
 
 export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) => {
   const [selectedGame, setSelectedGame] = useState<SelectedGame>("none");
@@ -43,6 +44,19 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
   if (selectedGame === "symbol-match") {
     return (
       <SymbolMatchGame
+        open={true}
+        onOpenChange={(isOpen) => {
+          handleGameClose(isOpen);
+          if (!isOpen) onOpenChange(false);
+        }}
+        onWin={onWin}
+      />
+    );
+  }
+
+  if (selectedGame === "flash-number") {
+    return (
+      <FlashNumberGame
         open={true}
         onOpenChange={(isOpen) => {
           handleGameClose(isOpen);
@@ -100,6 +114,24 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
                   <h3 className="font-semibold">Symbol Match</h3>
                   <p className="text-xs text-muted-foreground">
                     Tap matching symbols as they fall
+                  </p>
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 justify-start hover:border-primary hover:bg-primary/10 transition-all"
+              onClick={() => setSelectedGame("flash-number")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/20">
+                  <Hash className="h-6 w-6 text-green-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold">Flash Number</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Remember flashing number sequences
                   </p>
                 </div>
               </div>
