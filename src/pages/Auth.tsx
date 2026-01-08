@@ -7,21 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, Users, Shield, Key, Clock, Image, MessageSquare, ShieldCheck, Zap, FileKey } from "lucide-react";
+import { Eye, EyeOff, Shield, Key, Clock, Image, MessageSquare, ShieldCheck, Zap, FileKey } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
-interface Testimonial {
-  id: string;
-  user_name: string;
-  user_title: string | null;
-  comment: string;
-  rating: number;
-  created_at: string;
-}
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -33,10 +24,6 @@ const Auth = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
-  const [newTestimonial, setNewTestimonial] = useState({ name: "", title: "", comment: "", rating: 5 });
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -55,54 +42,8 @@ const Auth = () => {
       });
     }
 
-    // Fetch testimonials
-    const fetchTestimonials = async () => {
-      const { data, error } = await supabase
-        .from("testimonials")
-        .select("*")
-        .eq("is_approved", true)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (data && !error) {
-        setTestimonials(data);
-      }
-    };
-
-    fetchTestimonials();
-
-    // Subscribe to new testimonials
-    const channel = supabase
-      .channel("testimonials-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "testimonials",
-          filter: "is_approved=eq.true",
-        },
-        (payload) => {
-          setTestimonials((prev) => [payload.new as Testimonial, ...prev].slice(0, 10));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [navigate, isSigningUp]);
 
-  // Auto-rotate testimonials
-  useEffect(() => {
-    if (testimonials.length === 0) return;
-    
-    const interval = setInterval(() => {
-      setCurrentTestimonialIndex((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [testimonials.length]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,54 +127,6 @@ const Auth = () => {
     }
   };
 
-  const handleSubmitTestimonial = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const name = newTestimonial.name.trim();
-    const title = newTestimonial.title.trim();
-    const comment = newTestimonial.comment.trim();
-    
-    if (!name || !comment) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    // Input validation
-    if (name.length > 100) {
-      toast.error("Name must be less than 100 characters");
-      return;
-    }
-    
-    if (title.length > 100) {
-      toast.error("Title must be less than 100 characters");
-      return;
-    }
-    
-    if (comment.length > 500) {
-      toast.error("Comment must be less than 500 characters");
-      return;
-    }
-
-    // Sanitize - remove potential HTML/script tags
-    const sanitizedName = name.replace(/<[^>]*>/g, '');
-    const sanitizedTitle = title.replace(/<[^>]*>/g, '');
-    const sanitizedComment = comment.replace(/<[^>]*>/g, '');
-
-    const { error } = await supabase.from("testimonials").insert({
-      user_name: sanitizedName,
-      user_title: sanitizedTitle || null,
-      comment: sanitizedComment,
-      rating: newTestimonial.rating,
-    });
-
-    if (error) {
-      toast.error("Failed to submit testimonial");
-    } else {
-      toast.success("Thank you! Your testimonial will be reviewed.");
-      setNewTestimonial({ name: "", title: "", comment: "", rating: 5 });
-      setIsDialogOpen(false);
-    }
-  };
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -379,107 +272,9 @@ const Auth = () => {
 
         {/* Login/Signup Section */}
         {showLoginForm && (
-        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 items-start">
-        <div className="space-y-6 lg:space-y-8">
-          <div className="text-center mb-6 lg:mb-8">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <h2 className="text-3xl lg:text-4xl font-bold text-foreground">Join 100,000+ Users</h2>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 rounded-full animate-pulse">
-                <Users className="h-4 w-4 text-primary" />
-                <span className="text-xs font-bold text-primary">TRUSTED</span>
-              </div>
-            </div>
-            <p className="text-sm lg:text-base text-muted-foreground">Who trust us with their secure encryption</p>
-          </div>
-          
-          <div className="space-y-4 min-h-[400px] flex flex-col">
-            {testimonials.length > 0 ? (
-              <Card className="border-primary/20 bg-card/60 backdrop-blur-sm transition-all duration-500 flex-1">
-                <CardContent className="pt-6">
-                  <div className="flex gap-1 mb-3">
-                    {[...Array(testimonials[currentTestimonialIndex].rating)].map((_, i) => (
-                      <span key={i} className="text-primary">★</span>
-                    ))}
-                  </div>
-                  <p className="text-foreground mb-4">"{testimonials[currentTestimonialIndex].comment}"</p>
-                  <p className="text-sm text-muted-foreground font-semibold">
-                    - {testimonials[currentTestimonialIndex].user_name}
-                    {testimonials[currentTestimonialIndex].user_title && `, ${testimonials[currentTestimonialIndex].user_title}`}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-primary/20 bg-card/60 backdrop-blur-sm flex-1">
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground text-center">Loading testimonials...</p>
-                </CardContent>
-              </Card>
-            )}
+        <div className="flex justify-center">
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full min-h-[44px]">Share Your Experience</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Share Your Testimonial</DialogTitle>
-                  <DialogDescription>
-                    Tell us about your experience. Your testimonial will be reviewed before appearing on the page.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmitTestimonial} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="testimonial-name">Name *</Label>
-                    <Input
-                      id="testimonial-name"
-                      value={newTestimonial.name}
-                      onChange={(e) => setNewTestimonial({ ...newTestimonial, name: e.target.value })}
-                      placeholder="Your name"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="testimonial-title">Title (Optional)</Label>
-                    <Input
-                      id="testimonial-title"
-                      value={newTestimonial.title}
-                      onChange={(e) => setNewTestimonial({ ...newTestimonial, title: e.target.value })}
-                      placeholder="e.g., Security Analyst"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="testimonial-comment">Your Experience *</Label>
-                    <Textarea
-                      id="testimonial-comment"
-                      value={newTestimonial.comment}
-                      onChange={(e) => setNewTestimonial({ ...newTestimonial, comment: e.target.value })}
-                      placeholder="Share your thoughts..."
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Rating</Label>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map((rating) => (
-                        <button
-                          key={rating}
-                          type="button"
-                          onClick={() => setNewTestimonial({ ...newTestimonial, rating })}
-                          className={`text-2xl ${rating <= newTestimonial.rating ? "text-primary" : "text-muted-foreground"}`}
-                        >
-                          ★
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full min-h-[44px]">Submit Testimonial</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-
-        <Card className="w-full border-primary/20 bg-card/80 backdrop-blur-xl">
+        <Card className="w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl">
         <CardHeader className="space-y-2 sm:space-y-3 text-center px-4 sm:px-6 pt-6 sm:pt-8">
           <div className="flex justify-center mb-3 sm:mb-4">
             <img src={ocxLogo} alt="OCX Logo" className="h-16 w-16 sm:h-20 sm:w-20 object-contain" />
