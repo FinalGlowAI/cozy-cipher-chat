@@ -361,6 +361,15 @@ export type Database = {
           room_code: string
         }[]
       }
+      get_user_sessions: {
+        Args: { _user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          last_active: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
