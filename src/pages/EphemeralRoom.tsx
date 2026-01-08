@@ -224,17 +224,17 @@ const EphemeralRoom = () => {
         return;
       }
 
-      const { data: room, error: roomError } = await supabase
-        .from("ephemeral_rooms")
-        .select("*")
-        .eq("room_code", roomCode)
-        .single();
+      // Use RPC function to look up room by code (bypasses restricted SELECT policy)
+      const { data: roomData, error: roomError } = await supabase
+        .rpc('get_room_by_code', { _room_code: roomCode });
 
-      if (roomError || !room) {
+      if (roomError || !roomData || roomData.length === 0) {
         toast.error("Room not found");
         navigate("/ephemeral");
         return;
       }
+
+      const room = roomData[0];
 
       setRoomId(room.id);
       setIsLocked(room.is_locked);

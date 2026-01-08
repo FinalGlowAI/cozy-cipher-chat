@@ -347,6 +347,17 @@ export type Database = {
       cleanup_expired_encrypted_images: { Args: never; Returns: number }
       delete_encrypted_image: { Args: { _code: string }; Returns: string }
       generate_room_code: { Args: never; Returns: string }
+      get_room_by_code: {
+        Args: { _room_code: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          is_locked: boolean
+          room_code: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
