@@ -149,16 +149,16 @@ const EphemeralSpace = () => {
 
       const normalizedCode = normalizeRoomCode(roomCode);
 
-      const { data: room, error } = await supabase
-        .from("ephemeral_rooms")
-        .select("*")
-        .eq("room_code", normalizedCode)
-        .single();
+      // Use RPC function to look up room by code (bypasses restricted SELECT policy)
+      const { data: roomData, error } = await supabase
+        .rpc('get_room_by_code', { _room_code: normalizedCode });
 
-      if (error || !room) {
+      if (error || !roomData || roomData.length === 0) {
         toast.error("Room not found");
         return;
       }
+
+      const room = roomData[0];
 
       // Check if room is locked
       if (room.is_locked) {
