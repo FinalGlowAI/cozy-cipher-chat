@@ -316,15 +316,30 @@ const Auth = () => {
 
           {/* Features Link */}
           <div className="flex justify-center mb-12">
-            <Button
-              size="lg"
-              variant="outline"
+            <div
               onClick={() => navigate("/features")}
-              className="gap-2 border-primary/40 hover:border-primary hover:bg-primary/10"
+              className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 p-[1px] transition-all duration-300 hover:from-primary/40 hover:via-accent/40 hover:to-primary/40 hover:shadow-lg hover:shadow-primary/20"
             >
-              <Shield className="h-5 w-5" />
-              Explore All Features
-            </Button>
+              <div className="relative flex items-center gap-4 rounded-2xl bg-card/80 backdrop-blur-sm px-8 py-5 transition-all duration-300 group-hover:bg-card/60">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 group-hover:from-primary/50 group-hover:to-accent/50 transition-all duration-300">
+                  <Shield className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
+                    Explore All Features
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    See demos of Text, Image & Ephemeral encryption
+                  </p>
+                </div>
+                <div className="ml-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Technical Transparency */}
