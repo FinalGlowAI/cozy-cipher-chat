@@ -7,6 +7,7 @@ interface CreditState {
   totalCredits: number;
   lifetimeEarned: number;
   loading: boolean;
+  decayTime: Date | null;
 }
 
 // Credit rewards per level
@@ -20,11 +21,15 @@ const LEVEL_CREDITS: Record<number, number> = {
   7: 50,
 };
 
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+const DECAY_RATE = 0.5; // 50% decay
+
 export const useCredits = () => {
   const [state, setState] = useState<CreditState>({
     totalCredits: 0,
     lifetimeEarned: 0,
     loading: true,
+    decayTime: null,
   });
 
   const fetchCredits = useCallback(async () => {
@@ -48,16 +53,57 @@ export const useCredits = () => {
       }
 
       if (data) {
-        setState({
-          totalCredits: data.total_credits,
-          lifetimeEarned: data.lifetime_earned,
-          loading: false,
-        });
+        const lastDecayAt = new Date(data.last_decay_at);
+        const now = new Date();
+        const timeSinceDecay = now.getTime() - lastDecayAt.getTime();
+
+        // Check if 24 hours have passed since last decay
+        if (timeSinceDecay >= TWENTY_FOUR_HOURS) {
+          const decayedCredits = Math.floor(data.total_credits * DECAY_RATE);
+          
+          // Apply decay
+          const { error: updateError } = await supabase
+            .from("user_credits")
+            .update({
+              total_credits: decayedCredits,
+              last_decay_at: now.toISOString(),
+            })
+            .eq("user_id", user.id);
+
+          if (updateError) {
+            console.error("Error applying decay:", updateError);
+          } else if (data.total_credits > 0) {
+            toast.info(`Daily decay applied: ${data.total_credits} → ${decayedCredits} credits`);
+          }
+
+          setState({
+            totalCredits: decayedCredits,
+            lifetimeEarned: data.lifetime_earned,
+            loading: false,
+            decayTime: new Date(now.getTime() + TWENTY_FOUR_HOURS),
+          });
+        } else {
+          // No decay needed, calculate next decay time
+          const nextDecayTime = new Date(lastDecayAt.getTime() + TWENTY_FOUR_HOURS);
+          
+          setState({
+            totalCredits: data.total_credits,
+            lifetimeEarned: data.lifetime_earned,
+            loading: false,
+            decayTime: nextDecayTime,
+          });
+        }
       } else {
         // Create initial credits record
+        const now = new Date();
         const { data: newData, error: insertError } = await supabase
           .from("user_credits")
-          .insert({ user_id: user.id, total_credits: 0, lifetime_earned: 0 })
+          .insert({ 
+            user_id: user.id, 
+            total_credits: 0, 
+            lifetime_earned: 0,
+            last_decay_at: now.toISOString(),
+          })
           .select()
           .single();
 
@@ -69,6 +115,7 @@ export const useCredits = () => {
           totalCredits: newData?.total_credits ?? 0,
           lifetimeEarned: newData?.lifetime_earned ?? 0,
           loading: false,
+          decayTime: new Date(now.getTime() + TWENTY_FOUR_HOURS),
         });
       }
     } catch (error) {
@@ -236,6 +283,7 @@ export const useCredits = () => {
     credits: state.totalCredits,
     lifetimeEarned: state.lifetimeEarned,
     loading: state.loading,
+    decayTime: state.decayTime,
     earnCredits,
     spendCredits,
     checkCanAfford,
