@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins } from "lucide-react";
+import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/crypto";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
@@ -29,6 +29,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [keyValidity, setKeyValidity] = useState<string>("never");
   const [showGateModal, setShowGateModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { getRemainingFreeUses, isWithinFreeLimit, incrementUsage, FREE_LIMIT } = useDailyUsage();
   const { credits, spendCredits } = useCredits();
@@ -227,12 +228,20 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
             </div>
             <div className="flex gap-2">
               <Input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your secret password (min 8 characters)"
                 className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
               />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
               <Button
                 size="icon"
                 variant="ghost"
