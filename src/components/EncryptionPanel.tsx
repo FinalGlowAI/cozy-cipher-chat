@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,13 +6,14 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff, HelpCircle } from "lucide-react";
+import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff, HelpCircle, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/crypto";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { useDailyUsage } from "@/hooks/useDailyUsage";
 import { useCredits } from "@/hooks/useCredits";
 import { FeatureGateModal } from "./FeatureGateModal";
+import { EncryptionTutorial } from "./EncryptionTutorial";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 
 const TEXT_CREDIT_COST = 2;
+const TUTORIAL_STORAGE_KEY = "ocx_encryption_tutorial_seen";
 
 interface EncryptionPanelProps {
   onOpenGames?: () => void;
@@ -37,6 +39,20 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
   const [keyValidity, setKeyValidity] = useState<string>("never");
   const [showGateModal, setShowGateModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Check if tutorial should be shown on first visit
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem(TUTORIAL_STORAGE_KEY);
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+    localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
+  };
 
   const { getRemainingFreeUses, isWithinFreeLimit, incrementUsage, FREE_LIMIT } = useDailyUsage();
   const { credits, spendCredits } = useCredits();
@@ -188,6 +204,16 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           Decrypt
         </Button>
         
+        {/* Tutorial Button */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => setShowTutorial(true)}
+          title="Show Tutorial"
+        >
+          <GraduationCap className="h-5 w-5" />
+        </Button>
+
         {/* How it Works Dialog */}
         <Dialog>
           <DialogTrigger asChild>
@@ -467,6 +493,12 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         creditCost={TEXT_CREDIT_COST}
         currentCredits={credits}
         onPlayGames={() => onOpenGames?.()}
+      />
+
+      {/* Tutorial Overlay */}
+      <EncryptionTutorial
+        isVisible={showTutorial}
+        onComplete={handleTutorialComplete}
       />
     </div>
   );
