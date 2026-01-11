@@ -6,13 +6,20 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff } from "lucide-react";
+import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/crypto";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { useDailyUsage } from "@/hooks/useDailyUsage";
 import { useCredits } from "@/hooks/useCredits";
 import { FeatureGateModal } from "./FeatureGateModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const TEXT_CREDIT_COST = 2;
 
@@ -162,7 +169,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
-      {/* Mode Toggle */}
+      {/* Mode Toggle with How it Works */}
       <div className="flex items-center justify-center gap-4">
         <Button
           variant={mode === "encrypt" ? "default" : "outline"}
@@ -180,6 +187,64 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           <Unlock className="h-4 w-4" />
           Decrypt
         </Button>
+        
+        {/* How it Works Dialog */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" title="How it Works">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                How Text Encryption Works
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-sm">
+              <div>
+                <h4 className="font-semibold text-primary mb-2">🔐 AES-256-GCM Encryption</h4>
+                <p className="text-muted-foreground">
+                  Your messages are protected using AES-256-GCM, the same military-grade encryption used by banks and governments. 
+                  This algorithm provides both confidentiality and integrity protection, ensuring your data cannot be read or tampered with.
+                </p>
+              </div>
+              
+              <div className="border-t border-primary/20 pt-4">
+                <h4 className="font-semibold text-primary mb-2">📝 Standard Mode</h4>
+                <ul className="text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>You provide your own password</li>
+                  <li>Password must be 8+ characters with uppercase, lowercase, and numbers</li>
+                  <li>Same password encrypts and decrypts</li>
+                  <li>You must remember and securely share the password</li>
+                  <li>Best for: Personal encryption, trusted recipients</li>
+                </ul>
+              </div>
+              
+              <div className="border-t border-primary/20 pt-4">
+                <h4 className="font-semibold text-primary mb-2">🛡️ Secure Mode</h4>
+                <ul className="text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>System generates a unique cryptographic key</li>
+                  <li>Optional time-based expiration (5 min to 12 hours)</li>
+                  <li>Key can only be used once within validity period</li>
+                  <li>Higher security for sensitive communications</li>
+                  <li>Best for: Sensitive data, time-critical messages</li>
+                </ul>
+              </div>
+              
+              <div className="border-t border-primary/20 pt-4">
+                <h4 className="font-semibold text-primary mb-2">✅ Best Practices</h4>
+                <ul className="text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Never share passwords over the same channel as encrypted text</li>
+                  <li>Use Secure Mode for highly sensitive data</li>
+                  <li>Set short expiration times for maximum security</li>
+                  <li>All encryption happens locally on your device</li>
+                </ul>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Usage Counter */}
