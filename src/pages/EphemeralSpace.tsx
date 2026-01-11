@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Info, Coins, Lock } from "lucide-react";
+import { ArrowLeft, Info, Coins, Lock, GraduationCap } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { useCredits } from "@/hooks/useCredits";
 import { FeatureGateModal } from "@/components/FeatureGateModal";
 import { GameSelector } from "@/components/GameSelector";
+import { EphemeralSpaceTutorial } from "@/components/EphemeralSpaceTutorial";
 import {
   Dialog,
   DialogContent,
@@ -20,12 +21,14 @@ import {
 } from "@/components/ui/dialog";
 
 const ROOM_CREATION_COST = 10;
+const EPHEMERAL_SPACE_TUTORIAL_KEY = "ocx_ephemeral_space_tutorial_seen";
 
 const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [showGateModal, setShowGateModal] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
   const { credits, spendCredits, checkCanAfford, refetch } = useCredits();
 
@@ -41,6 +44,19 @@ const EphemeralSpace = () => {
     
     checkAuth();
   }, [navigate]);
+
+  // Show tutorial on first visit
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem(EPHEMERAL_SPACE_TUTORIAL_KEY);
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+    localStorage.setItem(EPHEMERAL_SPACE_TUTORIAL_KEY, "true");
+  };
 
   const createNewRoom = async () => {
     // Check if user can afford room creation
@@ -206,13 +222,24 @@ const EphemeralSpace = () => {
           <CardTitle className="text-2xl">
             Create or Join an Ephemeral Room
           </CardTitle>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="mt-2">
-                <Info className="mr-2 h-4 w-4" />
-                How it Works
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-1.5"
+              onClick={() => setShowTutorial(true)}
+              title="Show Tutorial"
+            >
+              <GraduationCap className="h-4 w-4" />
+              <span className="text-sm">Tutorial</span>
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                  <Info className="h-4 w-4" />
+                  <span className="text-sm">How it Works</span>
+                </Button>
+              </DialogTrigger>
             <DialogContent className="backdrop-blur-xl bg-card/95 border-primary/20">
               <DialogHeader>
                 <DialogTitle>How Ephemeral Rooms Work</DialogTitle>
@@ -233,6 +260,7 @@ const EphemeralSpace = () => {
               </DialogHeader>
             </DialogContent>
           </Dialog>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Credit Cost Notice */}
@@ -298,6 +326,12 @@ const EphemeralSpace = () => {
         onWin={() => {
           refetch();
         }}
+      />
+
+      {/* Tutorial Overlay */}
+      <EphemeralSpaceTutorial 
+        isVisible={showTutorial} 
+        onComplete={handleTutorialComplete} 
       />
     </div>
   );
