@@ -217,8 +217,9 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         {/* How it Works Dialog */}
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" title="How it Works">
-              <HelpCircle className="h-5 w-5" />
+            <Button variant="ghost" size="sm" className="gap-1.5" title="How it Works">
+              <HelpCircle className="h-4 w-4" />
+              <span className="text-sm">How it Works</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
