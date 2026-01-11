@@ -4,7 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info, Coins } from "lucide-react";
+import { Camera, Image as ImageIcon, ArrowLeft, Copy, Check, Clock, Info, Coins, GraduationCap } from "lucide-react";
+import { ImageEncryptionTutorial } from "@/components/ImageEncryptionTutorial";
+
+const IMAGE_TUTORIAL_STORAGE_KEY = "ocx_image_encryption_tutorial_seen";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { storeImage, retrieveImage, cleanupExpiredImages } from "@/lib/imageStorage";
@@ -36,6 +39,7 @@ const ImageEncryption = () => {
   const [validity, setValidity] = useState<string>("60"); // minutes
   const [showGateModal, setShowGateModal] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const { credits, spendCredits, checkCanAfford } = useCredits();
 
@@ -56,6 +60,19 @@ const ImageEncryption = () => {
     // Cleanup expired images on mount
     cleanupExpiredImages();
   }, []);
+
+  // Show tutorial on first visit
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem(IMAGE_TUTORIAL_STORAGE_KEY);
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+    localStorage.setItem(IMAGE_TUTORIAL_STORAGE_KEY, "true");
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -184,13 +201,24 @@ const ImageEncryption = () => {
             <p className="text-muted-foreground">
               Get a 6-character code - stored locally in your browser
             </p>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="mt-4">
-                  <Info className="mr-2 h-4 w-4" />
-                  How it Works
-                </Button>
-              </DialogTrigger>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-1.5"
+                onClick={() => setShowTutorial(true)}
+                title="Show Tutorial"
+              >
+                <GraduationCap className="h-4 w-4" />
+                <span className="text-sm">Tutorial</span>
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1.5">
+                    <Info className="h-4 w-4" />
+                    <span className="text-sm">How it Works</span>
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="backdrop-blur-xl bg-card/95 border-primary/20">
                 <DialogHeader>
                   <DialogTitle>How Image Encryption Works</DialogTitle>
@@ -211,6 +239,7 @@ const ImageEncryption = () => {
                 </DialogHeader>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
 
           {/* Credit Cost Notice */}
@@ -421,6 +450,12 @@ const ImageEncryption = () => {
         open={gameOpen} 
         onOpenChange={setGameOpen}
         onWin={() => {}}
+      />
+
+      {/* Tutorial Overlay */}
+      <ImageEncryptionTutorial 
+        isVisible={showTutorial} 
+        onComplete={handleTutorialComplete} 
       />
     </div>
   );
