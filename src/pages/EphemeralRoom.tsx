@@ -5,8 +5,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { EphemeralRoomTutorial } from "@/components/EphemeralRoomTutorial";
+
+const EPHEMERAL_TUTORIAL_STORAGE_KEY = "ocx_ephemeral_room_tutorial_seen";
 import { notifyNewMessage } from "@/lib/notifications";
 
 interface Message {
@@ -38,10 +41,24 @@ const EphemeralRoom = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isInitialLoad = useRef(true);
+
+  // Check if tutorial should be shown on first visit
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem(EPHEMERAL_TUTORIAL_STORAGE_KEY);
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+    localStorage.setItem(EPHEMERAL_TUTORIAL_STORAGE_KEY, "true");
+  };
 
   useEffect(() => {
     checkRoomAndLoadMessages();
@@ -396,6 +413,14 @@ const EphemeralRoom = () => {
                 )}
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowTutorial(true)}
+              title="Show Tutorial"
+            >
+              <GraduationCap className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
@@ -480,6 +505,12 @@ const EphemeralRoom = () => {
           </Button>
         </div>
       </div>
+
+      {/* Tutorial Overlay */}
+      <EphemeralRoomTutorial
+        isVisible={showTutorial}
+        onComplete={handleTutorialComplete}
+      />
     </div>
   );
 };
