@@ -225,13 +225,33 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
               <KeyRound className="h-4 w-4 text-primary" />
               <Label className="text-sm font-medium">Your Password</Label>
             </div>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your secret password (min 8 characters)"
-              className="bg-background/50 border-primary/30 focus:border-primary"
-            />
+            <div className="flex gap-2">
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your secret password (min 8 characters)"
+                className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => handleCopy(password)}
+                disabled={!password}
+                title="Copy password"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => handleShare(password)}
+                disabled={!password}
+                title="Share password"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </div>
             {mode === "encrypt" && <PasswordStrengthIndicator password={password} />}
             <p className="text-xs text-muted-foreground mt-2">
               You must use the same password to decrypt the message later.
