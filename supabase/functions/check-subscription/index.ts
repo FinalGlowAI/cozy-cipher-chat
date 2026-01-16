@@ -59,8 +59,13 @@ serve(async (req) => {
     logStep("Function started");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logStep("Stripe key verified");
+    const isStripeConfigured = stripeKey && !stripeKey.includes("PLACEHOLDER") && stripeKey.startsWith("sk_");
+    
+    if (isStripeConfigured) {
+      logStep("Stripe key verified");
+    } else {
+      logStep("Stripe not configured, all users default to free tier");
+    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -109,6 +114,18 @@ serve(async (req) => {
         subscribed: true,
         subscription_end: null,
         is_free_user: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // If Stripe is not configured, return free tier for all users
+    if (!isStripeConfigured) {
+      logStep("Returning free tier (Stripe not configured)");
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        is_basic_user: true
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
