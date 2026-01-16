@@ -60,6 +60,10 @@ const EphemeralRoom = () => {
     localStorage.setItem(EPHEMERAL_TUTORIAL_STORAGE_KEY, "true");
   };
 
+  const handleDontShowAgain = () => {
+    localStorage.setItem(EPHEMERAL_TUTORIAL_STORAGE_KEY, "permanent");
+  };
+
   useEffect(() => {
     checkRoomAndLoadMessages();
     
@@ -510,6 +514,7 @@ const EphemeralRoom = () => {
       <EphemeralRoomTutorial
         isVisible={showTutorial}
         onComplete={handleTutorialComplete}
+        onDontShowAgain={handleDontShowAgain}
       />
     </div>
   );

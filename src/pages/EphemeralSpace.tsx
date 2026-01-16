@@ -58,6 +58,10 @@ const EphemeralSpace = () => {
     localStorage.setItem(EPHEMERAL_SPACE_TUTORIAL_KEY, "true");
   };
 
+  const handleDontShowAgain = () => {
+    localStorage.setItem(EPHEMERAL_SPACE_TUTORIAL_KEY, "permanent");
+  };
+
   const createNewRoom = async () => {
     // Check if user can afford room creation
     if (!checkCanAfford(ROOM_CREATION_COST)) {
@@ -331,7 +335,8 @@ const EphemeralSpace = () => {
       {/* Tutorial Overlay */}
       <EphemeralSpaceTutorial 
         isVisible={showTutorial} 
-        onComplete={handleTutorialComplete} 
+        onComplete={handleTutorialComplete}
+        onDontShowAgain={handleDontShowAgain}
       />
     </div>
   );
