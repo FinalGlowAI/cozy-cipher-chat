@@ -54,6 +54,10 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
     localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
   };
 
+  const handleDontShowAgain = () => {
+    localStorage.setItem(TUTORIAL_STORAGE_KEY, "permanent");
+  };
+
   const { getRemainingFreeUses, isWithinFreeLimit, incrementUsage, FREE_LIMIT } = useDailyUsage();
   const { credits, spendCredits } = useCredits();
 
@@ -500,6 +504,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
       <EncryptionTutorial
         isVisible={showTutorial}
         onComplete={handleTutorialComplete}
+        onDontShowAgain={handleDontShowAgain}
       />
     </div>
   );

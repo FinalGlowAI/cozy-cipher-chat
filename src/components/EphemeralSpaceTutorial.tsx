@@ -44,10 +44,11 @@ const tutorialSteps: TutorialStep[] = [
 
 interface EphemeralSpaceTutorialProps {
   onComplete: () => void;
+  onDontShowAgain?: () => void;
   isVisible: boolean;
 }
 
-export const EphemeralSpaceTutorial = ({ onComplete, isVisible }: EphemeralSpaceTutorialProps) => {
+export const EphemeralSpaceTutorial = ({ onComplete, onDontShowAgain, isVisible }: EphemeralSpaceTutorialProps) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
@@ -77,6 +78,11 @@ export const EphemeralSpaceTutorial = ({ onComplete, isVisible }: EphemeralSpace
   };
 
   const handleSkip = () => {
+    onComplete();
+  };
+
+  const handleDontShowAgain = () => {
+    onDontShowAgain?.();
     onComplete();
   };
 
@@ -155,14 +161,21 @@ export const EphemeralSpaceTutorial = ({ onComplete, isVisible }: EphemeralSpace
           </Button>
         </div>
 
-        {/* Skip Link */}
+        {/* Skip Links */}
         {!isLastStep && (
-          <div className="text-center mt-4">
+          <div className="flex items-center justify-center gap-4 mt-4">
             <button
               onClick={handleSkip}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               Skip tutorial
+            </button>
+            <span className="text-muted-foreground/50">•</span>
+            <button
+              onClick={handleDontShowAgain}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Don't show again
             </button>
           </div>
         )}

@@ -74,6 +74,10 @@ const ImageEncryption = () => {
     localStorage.setItem(IMAGE_TUTORIAL_STORAGE_KEY, "true");
   };
 
+  const handleDontShowAgain = () => {
+    localStorage.setItem(IMAGE_TUTORIAL_STORAGE_KEY, "permanent");
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -455,7 +459,8 @@ const ImageEncryption = () => {
       {/* Tutorial Overlay */}
       <ImageEncryptionTutorial 
         isVisible={showTutorial} 
-        onComplete={handleTutorialComplete} 
+        onComplete={handleTutorialComplete}
+        onDontShowAgain={handleDontShowAgain}
       />
     </div>
   );

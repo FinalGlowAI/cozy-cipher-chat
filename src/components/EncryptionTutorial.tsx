@@ -50,10 +50,11 @@ const tutorialSteps: TutorialStep[] = [
 
 interface EncryptionTutorialProps {
   onComplete: () => void;
+  onDontShowAgain?: () => void;
   isVisible: boolean;
 }
 
-export const EncryptionTutorial = ({ onComplete, isVisible }: EncryptionTutorialProps) => {
+export const EncryptionTutorial = ({ onComplete, onDontShowAgain, isVisible }: EncryptionTutorialProps) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
@@ -83,6 +84,11 @@ export const EncryptionTutorial = ({ onComplete, isVisible }: EncryptionTutorial
   };
 
   const handleSkip = () => {
+    onComplete();
+  };
+
+  const handleDontShowAgain = () => {
+    onDontShowAgain?.();
     onComplete();
   };
 
@@ -161,14 +167,21 @@ export const EncryptionTutorial = ({ onComplete, isVisible }: EncryptionTutorial
           </Button>
         </div>
 
-        {/* Skip Link */}
+        {/* Skip Links */}
         {!isLastStep && (
-          <div className="text-center mt-4">
+          <div className="flex items-center justify-center gap-4 mt-4">
             <button
               onClick={handleSkip}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               Skip tutorial
+            </button>
+            <span className="text-muted-foreground/50">•</span>
+            <button
+              onClick={handleDontShowAgain}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Don't show again
             </button>
           </div>
         )}
