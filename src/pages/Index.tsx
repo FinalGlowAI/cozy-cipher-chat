@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
-import { Lock, LogOut, Settings, Loader2, Gamepad2 } from "lucide-react";
+import { Lock, LogOut, Settings, Loader2, Gamepad2, Shield, Key, Eye, Cpu, RefreshCw, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -239,17 +239,95 @@ const Index = () => {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-12">
+          {/* Hero Section */}
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">
-              Encrypt Your Messages,
-              <br />
-              <span className="bg-gradient-primary bg-clip-text text-transparent">
-                Protect Your Privacy
-              </span>
+              🔐 Security & Privacy Architecture
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              Military-grade encryption for your sensitive communications. Start encrypting instantly.
+            <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
+              End-to-end client-side encryption. All messages and sensitive data are encrypted locally on your device before transmission.
             </p>
+          </div>
+
+          {/* Security Features Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 max-w-6xl mx-auto">
+            {/* Encryption Algorithm */}
+            <div className="p-6 rounded-xl border border-primary/20 bg-card/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/20">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Encryption Algorithm</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-primary font-medium">AES-256-GCM</span> – Advanced Encryption Standard in Galois/Counter Mode. A modern authenticated encryption standard widely used in high-security environments.
+              </p>
+            </div>
+
+            {/* Key Derivation */}
+            <div className="p-6 rounded-xl border border-primary/20 bg-card/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/20">
+                  <Key className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Key Derivation & Protection</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-primary font-medium">PBKDF2 with SHA-256</span> – 100,000 iterations with unique random salts for each encryption, significantly increasing resistance against brute-force attacks.
+              </p>
+            </div>
+
+            {/* Zero-Knowledge */}
+            <div className="p-6 rounded-xl border border-primary/20 bg-card/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/20">
+                  <Eye className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Zero-Knowledge Design</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Encryption and decryption occur exclusively on the client side. No plaintext data or encryption keys are transmitted or stored on servers.
+              </p>
+            </div>
+
+            {/* Native Cryptography */}
+            <div className="p-6 rounded-xl border border-primary/20 bg-card/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/20">
+                  <Cpu className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Native Cryptography</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-primary font-medium">Web Crypto API</span> – All cryptographic operations rely on native, standards-based browser APIs. Private keys are never exposed to application logic.
+              </p>
+            </div>
+
+            {/* Forward & Backward Compatibility */}
+            <div className="p-6 rounded-xl border border-primary/20 bg-card/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/20">
+                  <RefreshCw className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Forward & Backward Compatibility</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Legacy encrypted content remains accessible, while all new encryptions automatically use the latest supported cryptographic standards.
+              </p>
+            </div>
+
+            {/* Proven Standards */}
+            <div className="p-6 rounded-xl border border-primary/20 bg-card/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-primary/20">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground">Built on Proven Standards</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                OcodX relies on open, peer-reviewed cryptographic primitives rather than proprietary mechanisms. Security through transparent design.
+              </p>
+            </div>
           </div>
 
           <EncryptionPanel onOpenGames={() => setGameOpen(true)} />
