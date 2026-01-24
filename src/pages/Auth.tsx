@@ -182,8 +182,7 @@ const Auth = () => {
               <span className="block text-primary mt-2">You Can Trust</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Built with AES-256-GCM Military-Grade encryption and zero-knowledge architecture. 
-              Your data remains encrypted end-to-end - we never have access.
+              Built using industry-standard encryption. Sensitive data is encrypted on the device before transmission using modern cryptographic APIs.
             </p>
             
             {/* Security Badges */}
