@@ -178,36 +178,109 @@ const Auth = () => {
         <div className="mb-12">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              OCX encryption
-              <span className="block text-primary mt-2">You Can Trust</span>
+              🔐 Security & Privacy Architecture
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Built using industry-standard encryption. Sensitive data is encrypted on the device before transmission using modern cryptographic APIs.
-            </p>
-            
-            {/* Security Badges */}
-            <div className="flex flex-wrap justify-center gap-3 mt-6">
-              <Badge variant="secondary" className="px-4 py-2 text-sm gap-2">
-                <ShieldCheck className="h-4 w-4" />
-                AES-256-GCM
-              </Badge>
-              <Badge variant="secondary" className="px-4 py-2 text-sm gap-2">
-                <Key className="h-4 w-4" />
-                PBKDF2 Key Derivation
-              </Badge>
-              <Badge variant="secondary" className="px-4 py-2 text-sm gap-2">
-                <Shield className="h-4 w-4" />
-                Zero-Knowledge
-              </Badge>
-              <Badge variant="secondary" className="px-4 py-2 text-sm gap-2">
-                <Zap className="h-4 w-4" />
-                Client-Side Only
-              </Badge>
-            </div>
           </div>
 
+          {/* Security Architecture Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
+            {/* End-to-End Client-Side Encryption */}
+            <Card className="border-primary/20 bg-card/30 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  End-to-End Client-Side Encryption
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                All messages and sensitive data are encrypted locally on the user's device before transmission. Encryption keys are generated and used client-side, ensuring encrypted content is never accessible in plaintext outside the user's environment.
+              </CardContent>
+            </Card>
+
+            {/* Encryption Algorithm */}
+            <Card className="border-primary/20 bg-card/30 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  Encryption Algorithm
+                </CardTitle>
+                <CardDescription>AES-256-GCM (Advanced Encryption Standard – Galois/Counter Mode)</CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                A modern authenticated encryption standard widely used in high-security environments to protect data confidentiality and integrity.
+              </CardContent>
+            </Card>
+
+            {/* Key Derivation & Protection */}
+            <Card className="border-primary/20 bg-card/30 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Key className="h-5 w-5 text-primary" />
+                  Key Derivation & Protection
+                </CardTitle>
+                <CardDescription>PBKDF2 with SHA-256</CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Encryption keys are derived using a hardened key derivation function with 100,000 iterations and unique random salts for each encryption operation, significantly increasing resistance against brute-force and dictionary attacks.
+              </CardContent>
+            </Card>
+
+            {/* Zero-Knowledge Design */}
+            <Card className="border-primary/20 bg-card/30 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileKey className="h-5 w-5 text-primary" />
+                  Zero-Knowledge Design
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                The platform is designed so that encryption and decryption occur exclusively on the client side. No plaintext data or encryption keys are transmitted or stored on servers, preventing third-party access by design.
+              </CardContent>
+            </Card>
+
+            {/* Native Cryptography */}
+            <Card className="border-primary/20 bg-card/30 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" />
+                  Native Cryptography
+                </CardTitle>
+                <CardDescription>Web Crypto API</CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                All cryptographic operations rely on native, standards-based browser cryptography APIs. Private keys are never exposed to application logic, reducing the attack surface and improving overall security.
+              </CardContent>
+            </Card>
+
+            {/* Forward & Backward Compatibility */}
+            <Card className="border-primary/20 bg-card/30 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Forward & Backward Compatibility
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Legacy encrypted content remains accessible, while all new encryptions automatically use the latest supported cryptographic standards to ensure long-term security and reliability.
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Built on Proven Standards */}
+          <Card className="border-primary/20 bg-card/30 backdrop-blur-sm max-w-4xl mx-auto mb-12">
+            <CardHeader className="text-center">
+              <CardTitle className="text-xl flex items-center justify-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                Built on Proven Security Standards
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center text-muted-foreground">
+              OcodX relies on open, peer-reviewed cryptographic primitives rather than proprietary or obscure mechanisms. Security is achieved through transparent design and industry-recognized standards.
+            </CardContent>
+          </Card>
+
           {/* Features Link */}
-          <div className="flex justify-center mb-12">
+          <div className="flex justify-center">
             <div
               onClick={() => navigate("/features")}
               className="group relative cursor-pointer overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 p-[1px] transition-all duration-300 hover:from-primary/40 hover:via-accent/40 hover:to-primary/40 hover:shadow-lg hover:shadow-primary/20"
@@ -233,39 +306,6 @@ const Auth = () => {
               </div>
             </div>
           </div>
-
-          {/* Technical Transparency */}
-          <Card className="border-primary/20 bg-card/30 backdrop-blur-sm mb-12">
-            <CardHeader className="text-center">
-              <CardTitle className="text-xl flex items-center justify-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-primary" />
-                Built on Proven Security Standards
-              </CardTitle>
-              <CardDescription>Don't just trust us - verify our security claims</CardDescription>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-6 text-sm">
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-semibold text-foreground mb-1">Encryption Algorithm</h4>
-                  <p className="text-muted-foreground">AES-256-GCM (Advanced Encryption Standard in Galois/Counter Mode) - approved by NSA for TOP SECRET information.</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground mb-1">Key Derivation</h4>
-                  <p className="text-muted-foreground">PBKDF2 with SHA-256 using 100,000 iterations and random salt generation for each encryption.</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-semibold text-foreground mb-1">Browser Security</h4>
-                  <p className="text-muted-foreground">Web Crypto API - native browser encryption that never exposes keys to JavaScript. All encryption happens client-side.</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground mb-1">Backward Compatible</h4>
-                  <p className="text-muted-foreground">Legacy encrypted messages are automatically supported while all new encryptions use the latest AES-256-GCM standard.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
         )}
 
