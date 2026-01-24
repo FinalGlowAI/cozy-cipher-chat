@@ -239,6 +239,19 @@ const Index = () => {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-12">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">
+              Encrypt Your Messages,
+              <br />
+              <span className="bg-gradient-primary bg-clip-text text-transparent">
+                Protect Your Privacy
+              </span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Military-grade encryption for your sensitive communications. Start encrypting instantly.
+            </p>
+          </div>
+
           <EncryptionPanel onOpenGames={() => setGameOpen(true)} />
         </main>
 
