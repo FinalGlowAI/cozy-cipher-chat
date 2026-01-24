@@ -182,7 +182,7 @@ const Auth = () => {
               <span className="block text-primary mt-2">Designed with privacy in mind</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              OcodX Designed with privacy in mind, Designed with privacy-first, client-side encryption using industry-standard cryptographic technologies.
+              Privacy-first, client-side encryption using industry-standard cryptographic technologies.
             </p>
             
             {/* Security Badges */}
