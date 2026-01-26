@@ -110,7 +110,7 @@ const Index = () => {
                     <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                       OCX
                     </h1>
-                    <p className="text-[10px] text-muted-foreground">Secure Messaging</p>
+                    <p className="text-[10px] text-muted-foreground">Designed with privacy-first</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ const Index = () => {
                   <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                     OCX
                   </h1>
-                  <p className="text-xs text-muted-foreground">Secure Messaging</p>
+                  <p className="text-xs text-muted-foreground">Designed with privacy-first</p>
                 </div>
               </div>
 
@@ -248,7 +248,7 @@ const Index = () => {
               </span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-              Military-grade encryption for your sensitive communications. Start encrypting instantly.
+              AES-256 encryption for your sensitive communications. Start encrypting instantly.
             </p>
           </div>
 
