@@ -33,26 +33,15 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Only redirect if we have a session and we're not currently signing up
-      if (session && !isSigningUp && event !== 'SIGNED_OUT') {
-        navigate("/", { replace: true });
-      }
-    });
-
-    // Then check current session
+    // Check if user is already logged in (but not if we're in the middle of signing up)
     if (!isSigningUp) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
-          navigate("/", { replace: true });
+          navigate("/");
         }
       });
     }
 
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [navigate, isSigningUp]);
 
 
@@ -91,7 +80,7 @@ const Auth = () => {
         });
         if (error) throw error;
         toast.success("Successfully logged in!");
-        // Navigation will be handled by onAuthStateChange listener
+        navigate("/");
       } else {
         setIsSigningUp(true);
         const { error } = await supabase.auth.signUp({

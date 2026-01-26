@@ -42,7 +42,6 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [lastEncryptionType, setLastEncryptionType] = useState<"keyless" | "password" | "secure" | null>(null);
-  const [detectedKeyless, setDetectedKeyless] = useState<boolean | null>(null);
 
   // Check if tutorial should be shown on first visit
   useEffect(() => {
@@ -219,10 +218,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
       <div className="flex items-center justify-center gap-4">
         <Button
           variant={mode === "encrypt" ? "default" : "outline"}
-          onClick={() => {
-            setMode("encrypt");
-            setDetectedKeyless(null);
-          }}
+          onClick={() => setMode("encrypt")}
           className="gap-2"
         >
           <Lock className="h-4 w-4" />
@@ -230,13 +226,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         </Button>
         <Button
           variant={mode === "decrypt" ? "default" : "outline"}
-          onClick={() => {
-            setMode("decrypt");
-            // Check if current input is keyless when switching to decrypt
-            if (inputText.trim()) {
-              setDetectedKeyless(isKeylessEncrypted(inputText.trim()));
-            }
-          }}
+          onClick={() => setMode("decrypt")}
           className="gap-2"
         >
           <Unlock className="h-4 w-4" />
@@ -532,42 +522,12 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
 
       {/* Input Panel */}
       <Card className="p-6 backdrop-blur-xl bg-card/50 border-primary/20 shadow-glow-primary">
-        <div className="flex items-center justify-between mb-2">
-          <Label className="text-sm font-medium">
-            {mode === "encrypt" ? "Plain Text" : "Encrypted Text"}
-          </Label>
-          {mode === "decrypt" && detectedKeyless !== null && inputText.trim() && (
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-              detectedKeyless 
-                ? "bg-accent/20 text-accent border border-accent/30" 
-                : "bg-muted text-muted-foreground border border-muted-foreground/30"
-            }`}>
-              {detectedKeyless ? (
-                <>
-                  <Zap className="h-3 w-3" />
-                  Keyless - No password needed
-                </>
-              ) : (
-                <>
-                  <KeyRound className="h-3 w-3" />
-                  Password required
-                </>
-              )}
-            </span>
-          )}
-        </div>
+        <Label className="text-sm font-medium mb-2 block">
+          {mode === "encrypt" ? "Plain Text" : "Encrypted Text"}
+        </Label>
         <Textarea
           value={inputText}
-          onChange={(e) => {
-            const newText = e.target.value;
-            setInputText(newText);
-            // Auto-detect keyless messages in decrypt mode
-            if (mode === "decrypt" && newText.trim()) {
-              setDetectedKeyless(isKeylessEncrypted(newText.trim()));
-            } else {
-              setDetectedKeyless(null);
-            }
-          }}
+          onChange={(e) => setInputText(e.target.value)}
           placeholder={mode === "encrypt" ? "Type your message here..." : "Paste encrypted text here..."}
           className="min-h-[150px] resize-none bg-background/50 border-primary/30 focus:border-primary"
         />
