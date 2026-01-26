@@ -21,11 +21,28 @@ const Index = () => {
   useEffect(() => {
     let mounted = true;
 
-    const safetyTimeout = setTimeout(() => {
+    // Safety timeout: if initial session loading hangs, re-check session once more
+    // before deciding the user is logged out.
+    const safetyTimeout = setTimeout(async () => {
       if (!mounted) return;
-      setSession((prev) => (prev === undefined ? null : prev));
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+        setSession(session ?? null);
+      } catch {
+        if (!mounted) return;
+        setSession(null);
+      }
     }, 7000);
 
+    // Subscribe first to avoid missing a rapid SIGNED_IN event during navigation.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+      if (!mounted) return;
+      clearTimeout(safetyTimeout);
+      setSession(sess ?? null);
+    });
+
+    // Then read the current session from storage.
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         if (!mounted) return;
@@ -34,14 +51,9 @@ const Index = () => {
       })
       .catch(() => {
         if (!mounted) return;
+        clearTimeout(safetyTimeout);
         setSession(null);
       });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
-      if (!mounted) return;
-      clearTimeout(safetyTimeout);
-      setSession(sess ?? null);
-    });
 
     return () => {
       mounted = false;
@@ -52,9 +64,23 @@ const Index = () => {
 
   // Redirect to auth when session is confirmed missing
   useEffect(() => {
-    if (session === null) {
-      navigate("/auth", { replace: true });
-    }
+    if (session !== null) return;
+
+    // Double-check to prevent redirect loops when session propagation is delayed.
+    let cancelled = false;
+    (async () => {
+      const { data: { session: latest } } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (latest) {
+        setSession(latest);
+      } else {
+        navigate("/auth", { replace: true });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [session, navigate]);
 
   const handleLogout = async () => {
