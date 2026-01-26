@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Gamepad2, Brain, Zap, Hash } from "lucide-react";
+import { Brain, Zap, Hash } from "lucide-react";
 import { MemoryGame } from "./MemoryGame";
 import { SymbolMatchGame } from "./SymbolMatchGame";
 import { FlashNumberGame } from "./FlashNumberGame";
+import ocxLogo from "@/assets/ocx-logo.png";
 
 interface GameSelectorProps {
   open: boolean;
@@ -72,7 +73,7 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
       <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-primary/30">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Gamepad2 className="h-5 w-5 text-primary" />
+            <img src={ocxLogo} alt="OCODX Logo" className="h-8 w-8 object-contain" />
             Daily Challenge Games
           </DialogTitle>
         </DialogHeader>
