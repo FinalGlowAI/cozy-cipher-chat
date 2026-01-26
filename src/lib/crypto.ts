@@ -461,3 +461,92 @@ const safeBase64ToUtf8 = (b64: string): string => {
       .join("")
   );
 };
+
+// ============================================================================
+// KEYLESS ENCRYPTION (Obfuscation - No password required)
+// ============================================================================
+
+const KEYLESS_VERSION = 4; // Version marker for keyless encryption
+const KEYLESS_SHUFFLE_KEY = [3, 1, 4, 1, 5, 9, 2, 6]; // Fixed shuffle pattern
+
+/**
+ * Encrypt text without requiring a key (obfuscation)
+ * Uses reversible transformations that don't require a password
+ */
+export const encryptKeyless = (text: string): string => {
+  try {
+    const textBytes = new TextEncoder().encode(text);
+    
+    // Apply simple reversible transformation
+    const transformed = new Uint8Array(textBytes.length);
+    for (let i = 0; i < textBytes.length; i++) {
+      // XOR with position-based pattern and shuffle key
+      const shuffleValue = KEYLESS_SHUFFLE_KEY[i % KEYLESS_SHUFFLE_KEY.length];
+      transformed[i] = textBytes[i] ^ ((i + shuffleValue) % 256);
+    }
+    
+    // Reverse the bytes for additional obfuscation
+    const reversed = new Uint8Array(transformed.length);
+    for (let i = 0; i < transformed.length; i++) {
+      reversed[i] = transformed[transformed.length - 1 - i];
+    }
+    
+    // Add version marker
+    const result = new Uint8Array(1 + reversed.length);
+    result[0] = KEYLESS_VERSION;
+    result.set(reversed, 1);
+    
+    return bytesToBase64(result);
+  } catch (error) {
+    console.error("Keyless encryption error:", error);
+    throw new Error("Failed to encrypt text");
+  }
+};
+
+/**
+ * Decrypt keyless encrypted text (no password required)
+ */
+export const decryptKeyless = (encrypted: string): string => {
+  try {
+    const data = base64ToBytes(encrypted);
+    
+    // Check version
+    if (data[0] !== KEYLESS_VERSION) {
+      throw new Error("Not a keyless encrypted message");
+    }
+    
+    const reversed = data.slice(1);
+    
+    // Reverse the bytes back
+    const transformed = new Uint8Array(reversed.length);
+    for (let i = 0; i < reversed.length; i++) {
+      transformed[i] = reversed[reversed.length - 1 - i];
+    }
+    
+    // Reverse the XOR transformation
+    const original = new Uint8Array(transformed.length);
+    for (let i = 0; i < transformed.length; i++) {
+      const shuffleValue = KEYLESS_SHUFFLE_KEY[i % KEYLESS_SHUFFLE_KEY.length];
+      original[i] = transformed[i] ^ ((i + shuffleValue) % 256);
+    }
+    
+    return new TextDecoder().decode(original);
+  } catch (error) {
+    if (error instanceof Error && error.message === "Not a keyless encrypted message") {
+      throw error;
+    }
+    throw new Error("Invalid keyless encrypted text");
+  }
+};
+
+/**
+ * Check if encrypted text is keyless format
+ */
+export const isKeylessEncrypted = (encrypted: string): boolean => {
+  try {
+    const data = base64ToBytes(encrypted);
+    return data[0] === KEYLESS_VERSION;
+  } catch {
+    return false;
+  }
+};

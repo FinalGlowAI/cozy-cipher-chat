@@ -6,9 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff, HelpCircle, GraduationCap } from "lucide-react";
+import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff, HelpCircle, GraduationCap, Zap } from "lucide-react";
 import { toast } from "sonner";
-import { encryptText, decryptText, encryptWithKey, decryptWithKey } from "@/lib/crypto";
+import { encryptText, decryptText, encryptWithKey, decryptWithKey, encryptKeyless, decryptKeyless, isKeylessEncrypted } from "@/lib/crypto";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { useDailyUsage } from "@/hooks/useDailyUsage";
 import { useCredits } from "@/hooks/useCredits";
@@ -33,6 +33,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
   const [secureMode, setSecureMode] = useState(false);
+  const [keylessMode, setKeylessMode] = useState(false);
   const [decryptionKey, setDecryptionKey] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
@@ -94,7 +95,14 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
 
     try {
       if (mode === "encrypt") {
-        if (secureMode) {
+        if (keylessMode) {
+          // Keyless encryption - no password needed
+          const encrypted = encryptKeyless(inputText);
+          setOutputText(encrypted);
+          setDecryptionKey("");
+          toast.success("Encrypted successfully! No key needed to decrypt.");
+          return;
+        } else if (secureMode) {
           const expirationMinutes = keyValidity === "never" ? undefined : parseInt(keyValidity);
           const { encrypted, key } = await encryptWithKey(inputText, expirationMinutes);
           setOutputText(encrypted);
@@ -126,6 +134,14 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
       // Decrypt mode
       let decrypted = "";
 
+      // Auto-detect keyless encrypted messages
+      if (isKeylessEncrypted(inputText)) {
+        decrypted = decryptKeyless(inputText);
+        setOutputText(decrypted);
+        toast.success("Decrypted successfully! (Keyless message)");
+        return;
+      }
+
       if (secureMode) {
         if (!decryptionKey.trim()) {
           toast.error("This message requires a decryption key. Please enter the key to decrypt.");
@@ -151,6 +167,8 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
     } catch (error) {
       if (error instanceof Error && error.message === "Decryption key has expired") {
         toast.error("Decryption key has expired and can no longer decrypt this message.");
+      } else if (error instanceof Error && error.message === "Not a keyless encrypted message") {
+        toast.error("This is not a keyless encrypted message. Please provide a password or key.");
       } else if (error instanceof Error && error.message.includes("Password must be at least")) {
         toast.error("Password must be at least 8 characters with uppercase, lowercase, and a number");
       } else if (error instanceof Error && error.message.includes("Password must contain")) {
@@ -240,6 +258,17 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
                   This algorithm provides both confidentiality and integrity protection, ensuring your data cannot be read or tampered with.
                 </p>
               </div>
+
+              <div className="border-t border-primary/20 pt-4">
+                <h4 className="font-semibold text-accent mb-2">⚡ Keyless Mode</h4>
+                <ul className="text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>No password required to encrypt or decrypt</li>
+                  <li>Quick obfuscation for casual sharing</li>
+                  <li>Anyone with the encrypted text can decrypt it</li>
+                  <li>Auto-detected during decryption</li>
+                  <li>Best for: Quick sharing, non-sensitive messages</li>
+                </ul>
+              </div>
               
               <div className="border-t border-primary/20 pt-4">
                 <h4 className="font-semibold text-primary mb-2">📝 Standard Mode</h4>
@@ -266,6 +295,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
               <div className="border-t border-primary/20 pt-4">
                 <h4 className="font-semibold text-primary mb-2">✅ Best Practices</h4>
                 <ul className="text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Use Keyless Mode only for non-sensitive messages</li>
                   <li>Never share passwords over the same channel as encrypted text</li>
                   <li>Use Secure Mode for highly sensitive data</li>
                   <li>Set short expiration times for maximum security</li>
@@ -293,112 +323,195 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         </div>
       </div>
 
-      {/* Secure Mode Toggle */}
-      <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            <div>
-              <Label htmlFor="secure-mode" className="text-base font-medium">
-                Secure Mode
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Generate a unique key for enhanced security
+      {/* Encryption Mode Selector - Only show in encrypt mode */}
+      {mode === "encrypt" && (
+        <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20">
+          {/* Keyless Mode Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Zap className="h-5 w-5 text-accent" />
+              <div>
+                <Label htmlFor="keyless-mode" className="text-base font-medium">
+                  Keyless Mode
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Encrypt without password - anyone can decrypt
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="keyless-mode"
+              checked={keylessMode}
+              onCheckedChange={(checked) => {
+                setKeylessMode(checked);
+                if (checked) setSecureMode(false);
+              }}
+            />
+          </div>
+
+          {/* Secure Mode Toggle - Only show if keyless is off */}
+          {!keylessMode && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-primary/20">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                <div>
+                  <Label htmlFor="secure-mode" className="text-base font-medium">
+                    Secure Mode
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Generate a unique key for enhanced security
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="secure-mode"
+                checked={secureMode}
+                onCheckedChange={setSecureMode}
+              />
+            </div>
+          )}
+          
+          {/* Password input for standard mode (not keyless, not secure) */}
+          {!keylessMode && !secureMode && (
+            <div className="mt-4 pt-4 border-t border-primary/20">
+              <div className="flex items-center gap-2 mb-3">
+                <KeyRound className="h-4 w-4 text-primary" />
+                <Label className="text-sm font-medium">Your Password</Label>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your secret password (min 8 characters)"
+                  className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleCopy(password)}
+                  disabled={!password}
+                  title="Copy password"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleShare(password)}
+                  disabled={!password}
+                  title="Share password"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <PasswordStrengthIndicator password={password} />
+              <p className="text-xs text-muted-foreground mt-2">
+                You must use the same password to decrypt the message later.
               </p>
             </div>
-          </div>
-          <Switch
-            id="secure-mode"
-            checked={secureMode}
-            onCheckedChange={setSecureMode}
-          />
-        </div>
-        
-        {/* Password input for standard mode */}
-        {!secureMode && (
-          <div className="mt-4 pt-4 border-t border-primary/20">
-            <div className="flex items-center gap-2 mb-3">
-              <KeyRound className="h-4 w-4 text-primary" />
-              <Label className="text-sm font-medium">Your Password</Label>
+          )}
+          
+          {/* Key Validity Selector - Only show with secure mode enabled */}
+          {!keylessMode && secureMode && (
+            <div className="mt-4 pt-4 border-t border-primary/20">
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="h-4 w-4 text-primary" />
+                <Label className="text-sm font-medium">Key Validity Duration</Label>
+              </div>
+              <RadioGroup value={keyValidity} onValueChange={setKeyValidity} className="grid grid-cols-3 gap-3">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="5" id="5min" />
+                  <Label htmlFor="5min" className="text-sm cursor-pointer">5 min</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="15" id="15min" />
+                  <Label htmlFor="15min" className="text-sm cursor-pointer">15 min</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="30" id="30min" />
+                  <Label htmlFor="30min" className="text-sm cursor-pointer">30 min</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="60" id="1h" />
+                  <Label htmlFor="1h" className="text-sm cursor-pointer">1 hour</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="720" id="12h" />
+                  <Label htmlFor="12h" className="text-sm cursor-pointer">12 hours</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="never" id="never" />
+                  <Label htmlFor="never" className="text-sm cursor-pointer">Never</Label>
+                </div>
+              </RadioGroup>
             </div>
-            <div className="flex gap-2">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your secret password (min 8 characters)"
-                className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setShowPassword(!showPassword)}
-                title={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => handleCopy(password)}
-                disabled={!password}
-                title="Copy password"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => handleShare(password)}
-                disabled={!password}
-                title="Share password"
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
+          )}
+        </Card>
+      )}
+
+      {/* Decrypt Mode Options */}
+      {mode === "decrypt" && (
+        <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              <div>
+                <Label htmlFor="secure-mode-decrypt" className="text-base font-medium">
+                  Secure Mode
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Use decryption key instead of password
+                </p>
+              </div>
             </div>
-            {mode === "encrypt" && <PasswordStrengthIndicator password={password} />}
-            <p className="text-xs text-muted-foreground mt-2">
-              You must use the same password to decrypt the message later.
-            </p>
+            <Switch
+              id="secure-mode-decrypt"
+              checked={secureMode}
+              onCheckedChange={setSecureMode}
+            />
           </div>
-        )}
-        
-        {/* Key Validity Selector - Only show in encrypt mode with secure mode enabled */}
-        {mode === "encrypt" && secureMode && (
-          <div className="mt-4 pt-4 border-t border-primary/20">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="h-4 w-4 text-primary" />
-              <Label className="text-sm font-medium">Key Validity Duration</Label>
+          
+          <p className="text-xs text-muted-foreground mt-3 p-2 bg-accent/10 rounded">
+            💡 <strong>Tip:</strong> Keyless messages are auto-detected and decrypted without any password or key.
+          </p>
+
+          {/* Password input for standard decrypt mode */}
+          {!secureMode && (
+            <div className="mt-4 pt-4 border-t border-primary/20">
+              <div className="flex items-center gap-2 mb-3">
+                <KeyRound className="h-4 w-4 text-primary" />
+                <Label className="text-sm font-medium">Your Password</Label>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password to decrypt"
+                  className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
-            <RadioGroup value={keyValidity} onValueChange={setKeyValidity} className="grid grid-cols-3 gap-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="5" id="5min" />
-                <Label htmlFor="5min" className="text-sm cursor-pointer">5 min</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="15" id="15min" />
-                <Label htmlFor="15min" className="text-sm cursor-pointer">15 min</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="30" id="30min" />
-                <Label htmlFor="30min" className="text-sm cursor-pointer">30 min</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="60" id="1h" />
-                <Label htmlFor="1h" className="text-sm cursor-pointer">1 hour</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="720" id="12h" />
-                <Label htmlFor="12h" className="text-sm cursor-pointer">12 hours</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="never" id="never" />
-                <Label htmlFor="never" className="text-sm cursor-pointer">Never</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        )}
-      </Card>
+          )}
+        </Card>
+      )}
 
       {/* Input Panel */}
       <Card className="p-6 backdrop-blur-xl bg-card/50 border-primary/20 shadow-glow-primary">
