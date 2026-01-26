@@ -12,12 +12,12 @@ const features = [
   {
     id: "text-encryption",
     title: "Text Encryption",
-    description: "Military-grade AES-256-GCM encryption for your messages",
+    description: "AES-256-GCM encryption for your messages",
     video: textEncryptionVideo,
     icon: MessageSquare,
     badge: null,
     details: [
-      { icon: Shield, text: "AES-256-GCM encryption - the same standard used by governments and military" },
+      { icon: Shield, text: "AES-256-GCM encryption - the industry standard for secure communications" },
       { icon: Key, text: "PBKDF2 key derivation with 100,000 iterations for maximum security" },
       { icon: Zap, text: "Client-side only - your original text never touches our servers" },
       { icon: Clock, text: "Optional time-limited keys for enhanced security" },
@@ -228,7 +228,7 @@ const Features = () => {
               </div>
               <div className="text-sm text-muted-foreground">
                 <p>© 2026 OCX. Your privacy is our priority.</p>
-                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · Military-grade security</p>
+                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · AES-256-GCM</p>
               </div>
             </div>
           </div>
