@@ -504,7 +504,7 @@ const Auth = () => {
               </div>
               <div className="text-sm text-muted-foreground">
                 <p>© 2026 OCX. Your privacy is our priority.</p>
-                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · Military-grade security</p>
+                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · AES-256-GCM</p>
               </div>
             </div>
           </div>
