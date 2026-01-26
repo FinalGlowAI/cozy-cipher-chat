@@ -236,7 +236,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
               <div>
                 <h4 className="font-semibold text-primary mb-2">🔐 AES-256-GCM Encryption</h4>
                 <p className="text-muted-foreground">
-                  Your messages are protected using AES-256-GCM, the same military-grade encryption used by banks and governments. 
+                  Your messages are protected using AES-256-GCM, an industry-standard encryption used by banks and governments.
                   This algorithm provides both confidentiality and integrity protection, ensuring your data cannot be read or tampered with.
                 </p>
               </div>

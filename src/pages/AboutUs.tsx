@@ -39,8 +39,8 @@ const AboutUs = () => {
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">Our Mission</h2>
               <p>
-                At OCX, we believe that privacy is a fundamental right. Our mission is to provide
-                military-grade encryption tools that are accessible to everyone, ensuring that your
+              At OCX, we believe that privacy is a fundamental right. Our mission is to provide
+                AES-256-GCM encryption tools that are accessible to everyone, ensuring that your
                 sensitive communications remain private and secure.
               </p>
             </section>
