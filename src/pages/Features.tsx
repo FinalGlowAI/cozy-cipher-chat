@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MessageSquare, Image, Users, Gamepad2, Shield, Key, Clock, Zap } from "lucide-react";
+import ocxLogo from "@/assets/ocx-logo.png";
 import textEncryptionVideo from "@/assets/feature-text-encryption.mp4";
 import imageEncryptionVideo from "@/assets/feature-image-encryption.mp4";
 import ephemeralRoomsVideo from "@/assets/feature-ephemeral-rooms.mp4";
@@ -95,11 +96,16 @@ const Features = () => {
 
         <main className="container mx-auto px-4 py-12 max-w-6xl">
           <div className="text-center mb-12">
+            <img 
+              src={ocxLogo} 
+              alt="OcodX Logo" 
+              className="h-20 w-20 mx-auto mb-6"
+            />
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
-              OCX Features
+              OcodX Features
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover the powerful security tools that make OCX the ultimate privacy-first encryption platform.
+              Discover the powerful security tools that make OcodX the ultimate privacy-first encryption platform.
             </p>
           </div>
 
