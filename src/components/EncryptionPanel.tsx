@@ -41,6 +41,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
   const [showGateModal, setShowGateModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [lastEncryptionType, setLastEncryptionType] = useState<"keyless" | "password" | "secure" | null>(null);
 
   // Check if tutorial should be shown on first visit
   useEffect(() => {
@@ -100,6 +101,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           const encrypted = encryptKeyless(inputText);
           setOutputText(encrypted);
           setDecryptionKey("");
+          setLastEncryptionType("keyless");
           toast.success("Encrypted successfully! No key needed to decrypt.");
           return;
         } else if (secureMode) {
@@ -107,6 +109,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           const { encrypted, key } = await encryptWithKey(inputText, expirationMinutes);
           setOutputText(encrypted);
           setDecryptionKey(key);
+          setLastEncryptionType("secure");
         } else {
           // Standard mode with user password
           if (!password || password.length < 8) {
@@ -125,6 +128,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           const encrypted = await encryptText(inputText, password);
           setOutputText(encrypted);
           setDecryptionKey("");
+          setLastEncryptionType("password");
         }
 
         toast.success("Encrypted successfully!");
@@ -138,6 +142,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
       if (isKeylessEncrypted(inputText)) {
         decrypted = decryptKeyless(inputText);
         setOutputText(decrypted);
+        setLastEncryptionType("keyless");
         toast.success("Decrypted successfully! (Keyless message)");
         return;
       }
@@ -148,6 +153,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           return;
         }
         decrypted = await decryptWithKey(inputText, decryptionKey);
+        setLastEncryptionType("secure");
       } else {
         // Standard mode with user password
         if (!password) {
@@ -155,6 +161,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           return;
         }
         decrypted = await decryptText(inputText, password);
+        setLastEncryptionType("password");
       }
 
       // If we don't get a real plaintext back, don't claim success.
@@ -553,9 +560,25 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
       {/* Output Panel */}
       <Card className="p-6 backdrop-blur-xl bg-card/50 border-accent/20 shadow-glow-accent">
         <div className="flex items-center justify-between mb-2">
-          <Label className="text-sm font-medium">
-            {mode === "encrypt" ? "Encrypted Text" : "Decrypted Text"}
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-medium">
+              {mode === "encrypt" ? "Encrypted Text" : "Decrypted Text"}
+            </Label>
+            {outputText && lastEncryptionType && (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                lastEncryptionType === "keyless" 
+                  ? "bg-accent/20 text-accent border border-accent/30" 
+                  : lastEncryptionType === "secure"
+                  ? "bg-primary/20 text-primary border border-primary/30"
+                  : "bg-muted text-muted-foreground border border-muted-foreground/30"
+              }`}>
+                {lastEncryptionType === "keyless" && <Zap className="h-3 w-3" />}
+                {lastEncryptionType === "secure" && <ShieldCheck className="h-3 w-3" />}
+                {lastEncryptionType === "password" && <KeyRound className="h-3 w-3" />}
+                {lastEncryptionType === "keyless" ? "Keyless" : lastEncryptionType === "secure" ? "Secure" : "Password"}
+              </span>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button
               size="sm"
