@@ -298,7 +298,7 @@ const Index = () => {
               </div>
             <div className="text-sm text-muted-foreground">
                 <p>© 2026 OCX. Your privacy is our priority.</p>
-                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · Military-grade security</p>
+                <p className="mt-2">Client-side encryption · Zero-knowledge architecture · AES-256 encryption</p>
                 <p className="mt-1">Text & Image Encryption · Ephemeral Rooms · Gamified Credits</p>
               </div>
             </div>
