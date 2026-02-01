@@ -30,30 +30,61 @@ const Auth = () => {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
       // Only redirect if we have a session and we're not currently signing up
       if (session && !isSigningUp && event !== 'SIGNED_OUT') {
         navigate("/", { replace: true });
+      } else {
+        setIsCheckingSession(false);
       }
     });
 
     // Then check current session
     if (!isSigningUp) {
       supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!mounted) return;
         if (session) {
           navigate("/", { replace: true });
+        } else {
+          setIsCheckingSession(false);
         }
+      }).catch(() => {
+        if (!mounted) return;
+        setIsCheckingSession(false);
       });
+    } else {
+      setIsCheckingSession(false);
     }
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, isSigningUp]);
+
+  // Show branded loading screen while checking session
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-surface opacity-30" />
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          <img src={ocxLogo} alt="OCX Logo" className="h-16 w-16 object-contain animate-pulse" />
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span>Loading…</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
 
   const handleAuth = async (e: React.FormEvent) => {
