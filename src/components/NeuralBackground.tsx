@@ -1,177 +1,52 @@
-import { useRef, useMemo, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
-import { useIsMobile } from '@/hooks/use-mobile';
-
-function Particles({ isMobile }: { isMobile: boolean }) {
-  const particlesRef = useRef<THREE.Points>(null);
-  const linesRef = useRef<THREE.LineSegments>(null);
-  const sparksRef = useRef<THREE.Points>(null);
-  
-  const particleCount = isMobile ? 40 : 150;
-  const connectionDistance = 3;
-
-  // Create particles with larger spread to fill viewport
-  const particles = useMemo(() => {
-    const positions = new Float32Array(particleCount * 3);
-    const velocities = new Float32Array(particleCount * 3);
-    
-    for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 40;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-      
-      velocities[i * 3] = (Math.random() - 0.5) * 0.02;
-      velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.02;
-      velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
-    }
-    
-    return { positions, velocities };
-  }, []);
-
-  // Animate particles and connections
-  useFrame((state) => {
-    if (!particlesRef.current || !linesRef.current || !sparksRef.current) return;
-    
-    const positions = particlesRef.current.geometry.attributes.position.array as Float32Array;
-    const linePositions: number[] = [];
-    const sparkPositions: number[] = [];
-    
-    // Update particle positions
-    for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] += particles.velocities[i * 3];
-      positions[i * 3 + 1] += particles.velocities[i * 3 + 1];
-      positions[i * 3 + 2] += particles.velocities[i * 3 + 2];
-      
-      // Bounce off boundaries - expanded for full viewport coverage
-      if (Math.abs(positions[i * 3]) > 20) particles.velocities[i * 3] *= -1;
-      if (Math.abs(positions[i * 3 + 1]) > 20) particles.velocities[i * 3 + 1] *= -1;
-      if (Math.abs(positions[i * 3 + 2]) > 10) particles.velocities[i * 3 + 2] *= -1;
-    }
-    
-    // Create connections and sparks
-    for (let i = 0; i < particleCount; i++) {
-      for (let j = i + 1; j < particleCount; j++) {
-        const dx = positions[i * 3] - positions[j * 3];
-        const dy = positions[i * 3 + 1] - positions[j * 3 + 1];
-        const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
-        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        
-        if (distance < connectionDistance) {
-          linePositions.push(
-            positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2],
-            positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2]
-          );
-          
-          // Add spark effect in the middle of connection
-          if (Math.random() > 0.95) {
-            sparkPositions.push(
-              (positions[i * 3] + positions[j * 3]) / 2,
-              (positions[i * 3 + 1] + positions[j * 3 + 1]) / 2,
-              (positions[i * 3 + 2] + positions[j * 3 + 2]) / 2
-            );
-          }
-        }
-      }
-    }
-    
-    particlesRef.current.geometry.attributes.position.needsUpdate = true;
-    
-    // Update lines
-    linesRef.current.geometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute(linePositions, 3)
-    );
-    
-    // Update sparks
-    sparksRef.current.geometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute(sparkPositions, 3)
-    );
-    
-    // Rotate camera slowly
-    state.camera.position.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.5;
-    state.camera.position.y = Math.cos(state.clock.elapsedTime * 0.15) * 0.5;
-    state.camera.lookAt(0, 0, 0);
-  });
-
-  return (
-    <>
-      {/* Particles */}
-      <points ref={particlesRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={particleCount}
-            array={particles.positions}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <pointsMaterial
-          size={0.1}
-          color="#a855f7"
-          transparent
-          opacity={0.8}
-          sizeAttenuation
-        />
-      </points>
-
-      {/* Neural connections */}
-      <lineSegments ref={linesRef}>
-        <bufferGeometry />
-        <lineBasicMaterial
-          color="#3b82f6"
-          transparent
-          opacity={0.3}
-        />
-      </lineSegments>
-
-      {/* Sparks */}
-      <points ref={sparksRef}>
-        <bufferGeometry />
-        <pointsMaterial
-          size={0.2}
-          color="#60a5fa"
-          transparent
-          opacity={0.9}
-          sizeAttenuation
-        />
-      </points>
-    </>
-  );
-}
+/**
+ * NeuralBackground - Pure CSS animated background
+ * 
+ * This replaces the WebGL/Three.js version to prevent blank screen issues
+ * on iOS devices (especially iPads) that was causing App Store rejections.
+ * 
+ * Uses CSS-only animations for maximum compatibility across all devices.
+ */
 
 export function NeuralBackground() {
-  const isMobile = useIsMobile();
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    // Check if WebGL is available
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) {
-      setHasError(true);
-    }
-  }, []);
-
-  if (hasError) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 -z-10 opacity-40 pointer-events-none w-screen h-screen">
-      <Canvas 
-        camera={{ position: [0, 0, 12], fov: 90 }}
-        onCreated={({ gl }) => {
-          gl.domElement.addEventListener('webglcontextlost', (e) => {
-            e.preventDefault();
-            setHasError(true);
-          });
+    <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+      {/* Base gradient layer */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-card to-background opacity-80" />
+      
+      {/* Animated orbs - CSS only, no WebGL */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px] animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-accent/10 blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+      
+      {/* Subtle grid pattern overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `
+            linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
         }}
-      >
-        <color attach="background" args={['#0a0a0f']} />
-        <Particles isMobile={isMobile} />
-      </Canvas>
+      />
+      
+      {/* Floating particles - pure CSS */}
+      <div className="absolute inset-0">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-primary/40"
+            style={{
+              left: `${10 + (i * 7) % 80}%`,
+              top: `${15 + (i * 13) % 70}%`,
+              animation: `float ${6 + (i % 4)}s ease-in-out infinite`,
+              animationDelay: `${i * 0.5}s`,
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* CSS Animation keyframes are defined in index.css */}
     </div>
   );
 }

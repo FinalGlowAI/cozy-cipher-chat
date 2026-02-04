@@ -35,7 +35,56 @@
 </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Immediate loading state - shows before React mounts -->
+      <!-- This prevents blank screen on slow devices / iOS -->
+      <div id="initial-loader" style="
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, hsl(225 25% 8%) 0%, hsl(225 20% 12%) 100%);
+        gap: 16px;
+        z-index: 9999;
+      ">
+        <img 
+          src="/icon-192.png" 
+          alt="OCX" 
+          width="64" 
+          height="64"
+          style="animation: pulse 2s ease-in-out infinite;"
+        />
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: hsl(215 20% 65%);
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 14px;
+        ">
+          <div style="
+            width: 20px;
+            height: 20px;
+            border: 2px solid hsl(262 83% 58%);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          "></div>
+          <span>Loading OCX...</span>
+        </div>
+      </div>
+      <style>
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
