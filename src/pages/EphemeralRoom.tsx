@@ -356,7 +356,22 @@ const EphemeralRoom = () => {
     <div className="min-h-screen flex flex-col relative">
       <NeuralBackground key="neural-bg" />
       {/* Header */}
-      <div className="p-4 border-b border-border bg-card/50 backdrop-blur-xl relative z-10">
+      <div className="p-2 border-b border-border bg-card/50 backdrop-blur-xl relative z-10">
+        {/* Room ID - Top Center */}
+        <div className="flex justify-center items-center gap-1 mb-1">
+          <span className="font-mono text-xs text-primary">{roomCode}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5"
+            onClick={copyRoomCode}
+            title="Copy Room Code"
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
+        
+        {/* Main Header Row */}
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-1">
             <Button
@@ -378,15 +393,15 @@ const EphemeralRoom = () => {
           </div>
           
           {/* Active Users Indicator */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
               {activeUsers.map((user, index) => (
                 <div
                   key={user.id}
-                  className="w-6 h-6 rounded-full border-2 border-background shadow-lg"
+                  className="w-5 h-5 rounded-full border-2 border-background shadow-lg"
                   style={{ 
                     backgroundColor: user.color,
-                    marginLeft: index > 0 ? '-6px' : '0',
+                    marginLeft: index > 0 ? '-4px' : '0',
                     zIndex: activeUsers.length - index
                   }}
                   title={`User ${index + 1}`}
@@ -394,26 +409,18 @@ const EphemeralRoom = () => {
               ))}
             </div>
             {activeUsers.length > 0 && (
-              <span className="text-sm text-muted-foreground">
-                {activeUsers.length} {activeUsers.length === 1 ? 'user' : 'users'}
+              <span className="text-xs text-muted-foreground">
+                {activeUsers.length}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {isLocked && (
               <div title="Room is locked">
                 <Lock className="h-4 w-4 text-yellow-500" />
               </div>
             )}
-            <span className="font-mono text-lg text-primary">{roomCode}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={copyRoomCode}
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
             {isCreator && (
               <Button
                 variant="ghost"
