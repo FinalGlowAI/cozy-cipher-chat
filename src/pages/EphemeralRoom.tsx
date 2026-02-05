@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { EphemeralRoomTutorial } from "@/components/EphemeralRoomTutorial";
 
@@ -358,14 +358,24 @@ const EphemeralRoom = () => {
       {/* Header */}
       <div className="p-4 border-b border-border bg-card/50 backdrop-blur-xl relative z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/ephemeral")}
-            title="Leave Room"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/ephemeral")}
+              title="Leave Room"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={checkRoomAndLoadMessages}
+              title="Refresh Messages"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
           
           {/* Active Users Indicator */}
           <div className="flex items-center gap-3">
