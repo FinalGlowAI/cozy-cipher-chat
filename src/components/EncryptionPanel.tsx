@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff, HelpCircle, GraduationCap, Zap } from "lucide-react";
+import { Copy, Share2, Lock, Unlock, ShieldCheck, Clock, KeyRound, Coins, Eye, EyeOff, HelpCircle, GraduationCap, Zap, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { encryptText, decryptText, encryptWithKey, decryptWithKey, encryptKeyless, decryptKeyless, isKeylessEncrypted } from "@/lib/crypto";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
@@ -241,6 +241,24 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         >
           <Unlock className="h-4 w-4" />
           Decrypt
+        </Button>
+        
+        {/* Refresh Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            setInputText("");
+            setOutputText("");
+            setPassword("");
+            setDecryptionKey("");
+            setDetectedKeyless(null);
+            setLastEncryptionType(null);
+            toast.success("Form cleared");
+          }}
+          title="Clear & Start Fresh"
+        >
+          <RefreshCw className="h-5 w-5" />
         </Button>
         
         {/* Tutorial Button */}
