@@ -243,24 +243,6 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           Decrypt
         </Button>
         
-        {/* Refresh Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => {
-            setInputText("");
-            setOutputText("");
-            setPassword("");
-            setDecryptionKey("");
-            setDetectedKeyless(null);
-            setLastEncryptionType(null);
-            toast.success("Form cleared");
-          }}
-          title="Clear & Start Fresh"
-        >
-          <RefreshCw className="h-5 w-5" />
-        </Button>
-        
         {/* Tutorial Button */}
         <Button 
           variant="ghost" 
@@ -355,6 +337,24 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           {(mode === "encrypt" ? remainingEncrypts : remainingDecrypts) === 0 && (
             <span className="text-primary font-medium">• {TEXT_CREDIT_COST} credits/use</span>
           )}
+          {/* Refresh Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 ml-1"
+            onClick={() => {
+              setInputText("");
+              setOutputText("");
+              setPassword("");
+              setDecryptionKey("");
+              setDetectedKeyless(null);
+              setLastEncryptionType(null);
+              toast.success("Form cleared");
+            }}
+            title="Clear & Start Fresh"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </div>
 
