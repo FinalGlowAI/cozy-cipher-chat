@@ -354,6 +354,7 @@ const Auth = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                   className="min-h-[44px] text-base pr-12"
                 />
                 <button
@@ -383,6 +384,7 @@ const Auth = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     minLength={8}
+                    autoComplete="new-password"
                     className="min-h-[44px] text-base pr-12"
                   />
                   <button
