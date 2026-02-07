@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, UserX, MoreVertical } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, UserX, MoreVertical, LogOut } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { EphemeralRoomTutorial } from "@/components/EphemeralRoomTutorial";
 import { ReportDialog } from "@/components/ReportDialog";
@@ -108,7 +108,7 @@ const EphemeralRoom = () => {
       supabase.removeChannel(channelRef.current);
     }
 
-    // Subscribe to realtime messages and presence
+    // Subscribe to realtime messages, presence, and kick events
     const channel = supabase
       .channel(`room_${roomId}`)
       .on(
@@ -127,6 +127,17 @@ const EphemeralRoom = () => {
           const { data: { user } } = await supabase.auth.getUser();
           if (user && newMsg.user_id !== user.id && document.hidden) {
             notifyNewMessage(roomCode || 'unknown');
+          }
+        }
+      )
+      .on(
+        "broadcast",
+        { event: "user_kicked" },
+        async (payload) => {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && payload.payload.kicked_user_id === user.id) {
+            toast.error("You have been removed from this room by the creator.");
+            navigate("/ephemeral");
           }
         }
       )
@@ -187,7 +198,7 @@ const EphemeralRoom = () => {
         channelRef.current = null;
       }
     };
-  }, [roomId, userColor, roomCode]);
+  }, [roomId, userColor, roomCode, navigate]);
 
   useEffect(() => {
     if (isInitialLoad.current && messages.length > 0) {
@@ -368,6 +379,35 @@ const EphemeralRoom = () => {
   const handleBlockUser = (message: Message) => {
     blockUser(message.user_id, message.user_color, roomCode);
     toast.success("User blocked. Their messages will be hidden.");
+  };
+
+  const handleKickUser = async (message: Message) => {
+    if (!roomId || !isCreator) return;
+
+    try {
+      // Remove user from room_participants
+      const { error } = await supabase
+        .from("room_participants")
+        .delete()
+        .eq("room_id", roomId)
+        .eq("user_id", message.user_id);
+
+      if (error) throw error;
+
+      // Broadcast kick event to notify the user in real-time
+      if (channelRef.current) {
+        await channelRef.current.send({
+          type: "broadcast",
+          event: "user_kicked",
+          payload: { kicked_user_id: message.user_id },
+        });
+      }
+
+      toast.success("User has been removed from the room.");
+    } catch (error) {
+      console.error("Error kicking user:", error);
+      toast.error("Failed to remove user from room.");
+    }
   };
 
   // Filter out blocked users' messages
@@ -563,6 +603,15 @@ const EphemeralRoom = () => {
                               <UserX className="h-4 w-4 mr-2" />
                               Block User
                             </DropdownMenuItem>
+                            {isCreator && (
+                              <DropdownMenuItem 
+                                onClick={() => handleKickUser(message)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <LogOut className="h-4 w-4 mr-2" />
+                                Remove from Room
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}
