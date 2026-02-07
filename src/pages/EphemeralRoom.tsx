@@ -5,9 +5,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, UserX, MoreVertical } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { EphemeralRoomTutorial } from "@/components/EphemeralRoomTutorial";
+import { ReportDialog } from "@/components/ReportDialog";
+import { useBlockedUsers } from "@/hooks/useBlockedUsers";
+import { filterContent } from "@/lib/contentFilter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const EPHEMERAL_TUTORIAL_STORAGE_KEY = "ocx_ephemeral_room_tutorial_seen";
 import { notifyNewMessage } from "@/lib/notifications";
@@ -42,10 +57,14 @@ const EphemeralRoom = () => {
   const [isCreator, setIsCreator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ userId?: string; color?: string; messagePreview?: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isInitialLoad = useRef(true);
+  
+  const { blockedUsers, blockUser, isBlocked } = useBlockedUsers();
 
   // Check if tutorial should be shown on first visit
   useEffect(() => {
@@ -299,6 +318,16 @@ const EphemeralRoom = () => {
   const sendMessage = async () => {
     if (!newMessage.trim() || !roomId) return;
 
+    // Client-side content filtering
+    const filterResult = filterContent(newMessage);
+    if (filterResult.isBlocked) {
+      toast.error(filterResult.reason || "This message cannot be sent.");
+      return;
+    }
+    if (filterResult.hasWarning) {
+      toast.warning(filterResult.reason || "Please review your message.");
+    }
+
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -326,6 +355,23 @@ const EphemeralRoom = () => {
       setLoading(false);
     }
   };
+
+  const handleReportUser = (message: Message) => {
+    setReportTarget({
+      userId: message.user_id,
+      color: message.user_color,
+      messagePreview: message.content,
+    });
+    setShowReportDialog(true);
+  };
+
+  const handleBlockUser = (message: Message) => {
+    blockUser(message.user_id, message.user_color, roomCode);
+    toast.success("User blocked. Their messages will be hidden.");
+  };
+
+  // Filter out blocked users' messages
+  const visibleMessages = messages.filter((msg) => !isBlocked(msg.user_id));
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode || "");
@@ -474,28 +520,57 @@ const EphemeralRoom = () => {
             </div>
           )}
 
-          {messages.length === 0 ? (
+          {visibleMessages.length === 0 ? (
             <div className="text-center text-muted-foreground mt-8">
-              No messages yet. Start the conversation!
+              {messages.length > 0 && blockedUsers.length > 0
+                ? "All messages are from blocked users."
+                : "No messages yet. Start the conversation!"}
             </div>
           ) : (
-            messages.map((message) => (
-              <Card
-                key={message.id}
-                className="backdrop-blur-xl bg-card/50 border-primary/20"
-                style={{ borderLeftColor: message.user_color, borderLeftWidth: "4px" }}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
-                      style={{ backgroundColor: message.user_color }}
-                    />
-                    <p className="text-foreground text-sm flex-1 break-words">{message.content}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+            <TooltipProvider>
+              {visibleMessages.map((message) => (
+                <Card
+                  key={message.id}
+                  className="backdrop-blur-xl bg-card/50 border-primary/20 group"
+                  style={{ borderLeftColor: message.user_color, borderLeftWidth: "4px" }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
+                        style={{ backgroundColor: message.user_color }}
+                      />
+                      <p className="text-foreground text-sm flex-1 break-words">{message.content}</p>
+                      
+                      {/* Report/Block menu - only show for other users' messages */}
+                      {message.user_id !== currentUserId && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleReportUser(message)}>
+                              <Flag className="h-4 w-4 mr-2 text-destructive" />
+                              Report User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleBlockUser(message)}>
+                              <UserX className="h-4 w-4 mr-2" />
+                              Block User
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TooltipProvider>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -533,6 +608,19 @@ const EphemeralRoom = () => {
         isVisible={showTutorial}
         onComplete={handleTutorialComplete}
         onDontShowAgain={handleDontShowAgain}
+      />
+
+      {/* Report Dialog */}
+      <ReportDialog
+        isOpen={showReportDialog}
+        onClose={() => {
+          setShowReportDialog(false);
+          setReportTarget(null);
+        }}
+        reportedUserId={reportTarget?.userId}
+        reportedUserColor={reportTarget?.color}
+        roomCode={roomCode}
+        messagePreview={reportTarget?.messagePreview}
       />
     </div>
   );

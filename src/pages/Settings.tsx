@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { NeuralBackground } from "@/components/NeuralBackground";
+import { BlockedUsersManager } from "@/components/BlockedUsersManager";
 import { isIOSPWA } from "@/lib/platformDetection";
-import { ArrowLeft, CreditCard, User, Lock, Trash2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, CreditCard, User, Lock, Trash2, Eye, EyeOff, Mail } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -323,6 +324,32 @@ const Settings = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Blocked Users Management */}
+            <BlockedUsersManager />
+
+            {/* Contact Support Card */}
+            <Card className="border-primary/20 bg-card/50 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Contact Support
+                </CardTitle>
+                <CardDescription>Need help? Report an issue or get assistance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => window.open("mailto:support@ocodx.store", "_blank")}
+                >
+                  Email Support
+                </Button>
+                <p className="text-xs text-muted-foreground mt-3">
+                  support@ocodx.store
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>

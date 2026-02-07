@@ -105,7 +105,35 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">6. Image Encryption Terms</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">6. Content Moderation & Community Guidelines</h2>
+              <p>
+                OCX is committed to maintaining a safe environment for all users. The following content and behavior are strictly prohibited:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Harassment, bullying, or intimidation of other users</li>
+                <li>Hate speech, slurs, or discriminatory content</li>
+                <li>Threats of violence or harm</li>
+                <li>Sharing of illegal content, including child exploitation material</li>
+                <li>Spam, scams, or fraudulent activity</li>
+                <li>Impersonation of other users or entities</li>
+                <li>Distribution of malware or malicious content</li>
+              </ul>
+              <p className="mt-4">
+                <strong className="text-foreground">Reporting & Blocking:</strong> Users can report objectionable content or block other users directly within ephemeral rooms. Reports are sent to our support team for review. Blocked users' messages will be hidden from your view.
+              </p>
+              <p className="mt-4">
+                <strong className="text-foreground">Consequences:</strong> Violation of these guidelines may result in account suspension or termination. Severe violations may be reported to appropriate authorities.
+              </p>
+              <p className="mt-4">
+                <strong className="text-foreground">Contact:</strong> To report abuse or violations, email{" "}
+                <a href="mailto:support@ocodx.store" className="text-primary hover:underline font-semibold">
+                  support@ocodx.store
+                </a>
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">7. Image Encryption Terms</h2>
               <p>Users of image encryption features agree to:</p>
               <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
                 <li>Maximum file size of 5MB per image</li>
@@ -118,7 +146,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">7. Gaming Terms</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">8. Gaming Terms</h2>
               <p>Users who participate in credit-earning games agree to:</p>
               <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
                 <li>Play fairly without using automated tools or exploits</li>
@@ -130,7 +158,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">8. Privacy and Security</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">9. Privacy and Security</h2>
               <p>
                 OCX performs all encryption and decryption locally on your device. We do not store
                 your encrypted messages, passwords, or encryption keys. However, you are solely
@@ -140,7 +168,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">9. Service Availability</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">10. Service Availability</h2>
               <p>
                 We strive to maintain the availability of OCX, but we do not guarantee uninterrupted
                 access. The service may be temporarily unavailable due to maintenance, updates, or
@@ -149,7 +177,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">10. Limitations</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">11. Limitations</h2>
               <p>
                 In no event shall OCX or its suppliers be liable for any damages arising out of the
                 use or inability to use the materials on OCX, even if we have been notified of the
@@ -158,7 +186,7 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">11. Revisions</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">12. Revisions</h2>
               <p>
                 We may revise these terms of use at any time without notice. By using OCX, you are
                 agreeing to be bound by the current version of these terms of use.
@@ -166,11 +194,24 @@ const TermsOfUse = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">12. Governing Law</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">13. Governing Law</h2>
               <p>
                 These terms and conditions are governed by and construed in accordance with
                 applicable laws, and you irrevocably submit to the exclusive jurisdiction of the
                 courts in that location.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">14. Contact</h2>
+              <p>
+                For questions about these terms or to report violations, contact us at{" "}
+                <a
+                  href="mailto:support@ocodx.store"
+                  className="text-primary hover:underline font-semibold"
+                >
+                  support@ocodx.store
+                </a>
               </p>
             </section>
           </div>
