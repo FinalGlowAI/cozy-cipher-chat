@@ -140,7 +140,23 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">8. Third-Party Services</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">8. Content Moderation & Reports</h2>
+              <p>
+                To maintain a safe community, OCX provides content moderation features:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>User reports are submitted via email to our support team - no report data is stored in our database</li>
+                <li>Blocked user lists are stored locally on your device (localStorage) and are not synced to our servers</li>
+                <li>Client-side content filtering operates entirely in your browser - flagged content is never transmitted to us</li>
+                <li>We may receive abuse reports containing limited context (room codes, user colors, message excerpts)</li>
+              </ul>
+              <p className="mt-4">
+                This approach ensures your privacy while allowing us to respond to serious violations when reported.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">9. Third-Party Services</h2>
               <p>
                 We do not sell, trade, or otherwise transfer your information to third parties. We
                 may use trusted third-party services for hosting, payment processing, and analytics,
@@ -149,7 +165,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">9. Cookies and Local Storage</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">10. Cookies and Local Storage</h2>
               <p>
                 We use minimal cookies necessary for authentication and service functionality. We also use local storage for:
               </p>
@@ -157,12 +173,13 @@ const PrivacyPolicy = () => {
                 <li>Game progress tracking</li>
                 <li>Encrypted image storage</li>
                 <li>User preferences</li>
+                <li>Blocked user lists (for content moderation)</li>
               </ul>
               <p className="mt-4">We do not use tracking cookies for advertising purposes.</p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">10. Your Rights</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">11. Your Rights</h2>
               <p>You have the right to:</p>
               <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
                 <li>Access your account information</li>
@@ -174,7 +191,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">11. Data Retention</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">12. Data Retention</h2>
               <p>
                 We retain your email and account information only as long as your account is active.
                 Upon account deletion, all associated data is permanently removed from our systems.
@@ -183,7 +200,7 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">12. Children's Privacy</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">13. Children's Privacy</h2>
               <p>
                 OCX is not intended for use by children under 13. We do not knowingly collect
                 information from children under 13.
@@ -192,7 +209,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">
-                13. Changes to This Privacy Policy
+                14. Changes to This Privacy Policy
               </h2>
               <p>
                 We may update our privacy policy from time to time. We will notify you of any
@@ -202,9 +219,9 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">14. Contact Us</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">15. Contact Us</h2>
               <p>
-                If you have any questions about this privacy policy, please contact us at{" "}
+                If you have any questions about this privacy policy or to report privacy concerns, please contact us at{" "}
                 <a
                   href="mailto:support@ocodx.store"
                   className="text-primary hover:underline font-semibold"

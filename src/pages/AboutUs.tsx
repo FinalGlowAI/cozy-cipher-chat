@@ -105,16 +105,38 @@ const AboutUs = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-foreground mb-4">Contact Us</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Community Safety</h2>
               <p>
-                Have questions or need support? We are here to help. Reach out to us at{" "}
+                OCX is committed to maintaining a safe environment for all users. Our platform includes:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4 mt-4">
+                <li>Client-side content filtering to warn about potentially inappropriate content</li>
+                <li>User blocking functionality to hide messages from specific users</li>
+                <li>Easy-to-use reporting system for objectionable content</li>
+                <li>Clear community guidelines in our Terms of Use</li>
+              </ul>
+              <p className="mt-4">
+                All moderation features are designed to respect your privacy - blocked users are stored locally on your device, and reports are handled via direct email to our support team.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4">Contact & Support</h2>
+              <p>
+                Have questions, need support, or want to report an issue? We're here to help:
+              </p>
+              <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="font-semibold text-foreground">Email Support</p>
                 <a
                   href="mailto:support@ocodx.store"
-                  className="text-primary hover:underline font-semibold"
+                  className="text-primary hover:underline font-semibold text-lg"
                 >
                   support@ocodx.store
                 </a>
-              </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  We typically respond within 24-48 hours.
+                </p>
+              </div>
             </section>
           </div>
         </main>
