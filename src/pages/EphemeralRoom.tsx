@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, UserX, MoreVertical, LogOut } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, UserX, MoreVertical, LogOut, Ban } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { EphemeralRoomTutorial } from "@/components/EphemeralRoomTutorial";
 import { ReportDialog } from "@/components/ReportDialog";
@@ -59,6 +59,7 @@ const EphemeralRoom = () => {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ userId?: string; color?: string; messagePreview?: string } | null>(null);
+  const [kickedUsers, setKickedUsers] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -403,6 +404,9 @@ const EphemeralRoom = () => {
         });
       }
 
+      // Track kicked user locally to show indicator
+      setKickedUsers((prev) => new Set(prev).add(message.user_id));
+
       toast.success("User has been removed from the room.");
     } catch (error) {
       console.error("Error kicking user:", error);
@@ -581,6 +585,21 @@ const EphemeralRoom = () => {
                         style={{ backgroundColor: message.user_color }}
                       />
                       <p className="text-foreground text-sm flex-1 break-words">{message.content}</p>
+                      
+                      {/* Kicked user indicator - only visible to creator */}
+                      {isCreator && kickedUsers.has(message.user_id) && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 border border-destructive/20 flex-shrink-0">
+                              <Ban className="h-3 w-3 text-destructive" />
+                              <span className="text-xs text-destructive font-medium">Removed</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>This user has been removed from the room</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       
                       {/* Report/Block menu - only show for other users' messages */}
                       {message.user_id !== currentUserId && (
