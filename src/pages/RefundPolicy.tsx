@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Shield, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import ocxLogo from "@/assets/ocx-logo.png";
 
 const RefundPolicy = () => {
   const navigate = useNavigate();
@@ -27,9 +28,7 @@ const RefundPolicy = () => {
 
         <main className="container mx-auto px-4 py-12 max-w-4xl">
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-gradient-primary rounded-lg">
-              <Shield className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <img src={ocxLogo} alt="OcodX Logo" className="h-10 w-10" />
             <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Refund Policy
             </h1>
