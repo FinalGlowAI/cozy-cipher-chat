@@ -327,6 +327,13 @@ const Index = () => {
                 >
                   Settings
                 </Button>
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/contact")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Contact Us
+                </Button>
               </div>
             <div className="text-sm text-muted-foreground">
                 <p>© 2026 OCX. Your privacy is our priority.</p>
