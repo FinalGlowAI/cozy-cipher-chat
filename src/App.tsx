@@ -20,6 +20,7 @@ import Install from "./pages/Install";
 import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
 import Features from "./pages/Features";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/features" element={<Features />} />
+          <Route path="/contact" element={<Contact />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
