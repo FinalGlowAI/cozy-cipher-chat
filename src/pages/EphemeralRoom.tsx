@@ -60,6 +60,7 @@ const EphemeralRoom = () => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ userId?: string; color?: string; messagePreview?: string } | null>(null);
   const [kickedUsers, setKickedUsers] = useState<Set<string>>(new Set());
+  const kickedUsersRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -148,7 +149,8 @@ const EphemeralRoom = () => {
           id: presence.user_id,
           color: presence.color,
         }));
-        setActiveUsers(users);
+        // Filter out kicked users from active users count
+        setActiveUsers(users.filter((u: { id: string }) => !kickedUsersRef.current.has(u.id)));
         
         // If no users left, clean up all messages
         if (users.length === 0 && roomId) {
@@ -405,7 +407,14 @@ const EphemeralRoom = () => {
       }
 
       // Track kicked user locally to show indicator
-      setKickedUsers((prev) => new Set(prev).add(message.user_id));
+      setKickedUsers((prev) => {
+        const next = new Set(prev).add(message.user_id);
+        kickedUsersRef.current = next;
+        return next;
+      });
+
+      // Immediately remove kicked user from active users count
+      setActiveUsers((prev) => prev.filter((u) => u.id !== message.user_id));
 
       toast.success("User has been removed from the room.");
     } catch (error) {
