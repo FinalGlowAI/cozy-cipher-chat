@@ -295,6 +295,20 @@ const EphemeralRoom = () => {
       setIsCreator(room.created_by === user.id);
       setCurrentUserId(user.id);
 
+      // Check if user was kicked from this room
+      const { data: kickData } = await supabase
+        .from("kicked_participants")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (kickData) {
+        toast.error("You have been removed from this room and cannot rejoin.");
+        navigate("/ephemeral");
+        return;
+      }
+
       // Add user to room_participants (upsert to handle rejoin)
       const { error: participantError } = await supabase
         .from("room_participants")
@@ -305,7 +319,11 @@ const EphemeralRoom = () => {
 
       if (participantError) {
         console.error("Error joining room:", participantError);
-        toast.error("Failed to join room");
+        if (participantError.message?.includes('row-level security')) {
+          toast.error("You are not allowed to join this room.");
+        } else {
+          toast.error("Failed to join room");
+        }
         navigate("/ephemeral");
         return;
       }
@@ -388,6 +406,11 @@ const EphemeralRoom = () => {
     if (!roomId || !isCreator) return;
 
     try {
+      // Record the kick to prevent rejoining
+      await supabase
+        .from("kicked_participants")
+        .insert({ room_id: roomId, user_id: message.user_id });
+
       // Remove user from room_participants
       const { error } = await supabase
         .from("room_participants")

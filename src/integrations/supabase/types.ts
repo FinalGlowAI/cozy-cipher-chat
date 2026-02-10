@@ -199,6 +199,35 @@ export type Database = {
         }
         Relationships: []
       }
+      kicked_participants: {
+        Row: {
+          id: string
+          kicked_at: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          kicked_at?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          kicked_at?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kicked_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "ephemeral_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_participants: {
         Row: {
           id: string
