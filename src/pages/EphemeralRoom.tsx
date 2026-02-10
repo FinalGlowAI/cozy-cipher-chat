@@ -446,6 +446,34 @@ const EphemeralRoom = () => {
     }
   };
 
+  const handleUnkickUser = async (userId: string) => {
+    if (!roomId || !isCreator) return;
+
+    try {
+      // Remove from kicked_participants to allow rejoining
+      const { error } = await supabase
+        .from("kicked_participants")
+        .delete()
+        .eq("room_id", roomId)
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      // Remove from local kicked tracking
+      setKickedUsers((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        kickedUsersRef.current = next;
+        return next;
+      });
+
+      toast.success("User has been unblocked and can rejoin the room.");
+    } catch (error) {
+      console.error("Error unkicking user:", error);
+      toast.error("Failed to unblock user.");
+    }
+  };
+
   // Filter out blocked users' messages
   const visibleMessages = messages.filter((msg) => !isBlocked(msg.user_id));
 
@@ -620,17 +648,27 @@ const EphemeralRoom = () => {
                       
                       {/* Kicked user indicator - only visible to creator */}
                       {isCreator && kickedUsers.has(message.user_id) && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 border border-destructive/20 flex-shrink-0">
-                              <Ban className="h-3 w-3 text-destructive" />
-                              <span className="text-xs text-destructive font-medium">Removed</span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>This user has been removed from the room</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 border border-destructive/20">
+                                <Ban className="h-3 w-3 text-destructive" />
+                                <span className="text-xs text-destructive font-medium">Removed</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>This user has been removed from the room</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => handleUnkickUser(message.user_id)}
+                          >
+                            Unblock
+                          </Button>
+                        </div>
                       )}
                       
                       {/* Report/Block menu - only show for other users' messages */}
