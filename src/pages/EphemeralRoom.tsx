@@ -68,7 +68,7 @@ const EphemeralRoom = () => {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isInitialLoad = useRef(true);
   
-  const { blockedUsers, blockUser, isBlocked } = useBlockedUsers();
+  const { blockedUsers, blockUser, isBlocked } = useBlockedUsers(roomCode);
 
   // Check if tutorial should be shown on first visit
   useEffect(() => {
