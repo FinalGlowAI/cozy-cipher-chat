@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, UserX, MoreVertical, LogOut, Ban } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, UserX, MoreVertical, LogOut, Ban, ChevronDown, ChevronUp, ShieldOff } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { EphemeralRoomTutorial } from "@/components/EphemeralRoomTutorial";
 import { ReportDialog } from "@/components/ReportDialog";
@@ -60,6 +60,8 @@ const EphemeralRoom = () => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ userId?: string; color?: string; messagePreview?: string } | null>(null);
   const [kickedUsers, setKickedUsers] = useState<Set<string>>(new Set());
+  const [kickedUserDetails, setKickedUserDetails] = useState<{ user_id: string; kicked_at: string; color?: string }[]>([]);
+  const [showKickedPanel, setShowKickedPanel] = useState(false);
   const kickedUsersRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -295,6 +297,21 @@ const EphemeralRoom = () => {
       setIsCreator(room.created_by === user.id);
       setCurrentUserId(user.id);
 
+      // Load kicked users for the room (creator only)
+      if (room.created_by === user.id) {
+        const { data: kickedData } = await supabase
+          .from("kicked_participants")
+          .select("user_id, kicked_at")
+          .eq("room_id", room.id);
+
+        if (kickedData && kickedData.length > 0) {
+          const kickedSet = new Set(kickedData.map((k) => k.user_id));
+          setKickedUsers(kickedSet);
+          kickedUsersRef.current = kickedSet;
+          setKickedUserDetails(kickedData.map((k) => ({ user_id: k.user_id, kicked_at: k.kicked_at })));
+        }
+      }
+
       // Check if user was kicked from this room
       const { data: kickData } = await supabase
         .from("kicked_participants")
@@ -436,6 +453,12 @@ const EphemeralRoom = () => {
         return next;
       });
 
+      // Track details for the panel
+      setKickedUserDetails((prev) => [
+        ...prev,
+        { user_id: message.user_id, kicked_at: new Date().toISOString(), color: message.user_color },
+      ]);
+
       // Immediately remove kicked user from active users count
       setActiveUsers((prev) => prev.filter((u) => u.id !== message.user_id));
 
@@ -466,6 +489,9 @@ const EphemeralRoom = () => {
         kickedUsersRef.current = next;
         return next;
       });
+
+      // Remove from details
+      setKickedUserDetails((prev) => prev.filter((k) => k.user_id !== userId));
 
       toast.success("User has been unblocked and can rejoin the room.");
     } catch (error) {
@@ -595,6 +621,59 @@ const EphemeralRoom = () => {
             </Button>
           </div>
         </div>
+
+        {/* Kicked Users Panel - Creator Only */}
+        {isCreator && kickedUserDetails.length > 0 && (
+          <div className="max-w-4xl mx-auto mt-1">
+            <button
+              onClick={() => setShowKickedPanel((v) => !v)}
+              className="flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors w-full justify-center py-1"
+            >
+              <Ban className="h-3 w-3" />
+              <span>{kickedUserDetails.length} removed user{kickedUserDetails.length !== 1 ? "s" : ""}</span>
+              {showKickedPanel ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </button>
+            {showKickedPanel && (
+              <div className="space-y-1 py-2 px-2">
+                {kickedUserDetails.map((kicked) => {
+                  // Try to find color from messages
+                  const msgWithColor = messages.find((m) => m.user_id === kicked.user_id);
+                  const color = kicked.color || msgWithColor?.user_color;
+                  return (
+                    <div
+                      key={kicked.user_id}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-background/50 border border-border"
+                    >
+                      <div className="flex items-center gap-2">
+                        {color && (
+                          <div
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: color }}
+                          />
+                        )}
+                        <div>
+                          <span className="text-xs font-medium text-foreground">Anonymous User</span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            Removed {new Date(kicked.kicked_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs gap-1"
+                        onClick={() => handleUnkickUser(kicked.user_id)}
+                      >
+                        <ShieldOff className="h-3 w-3" />
+                        Unblock
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Messages Area */}
