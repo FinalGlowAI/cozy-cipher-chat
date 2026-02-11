@@ -5,45 +5,48 @@ const BLOCKED_USERS_KEY = "ocx_blocked_users";
 interface BlockedUser {
   id: string;
   blockedAt: string;
-  color?: string; // User color for display in ephemeral rooms
-  context?: string; // Where the block occurred (e.g., room code)
+  color?: string;
+  context?: string; // Room code where the block occurred
 }
 
 /**
- * Session-based blocked users hook
- * Blocks are stored in localStorage and persist within the session
- * This is privacy-respecting - no server-side storage
+ * Session-based blocked users hook with optional room-specific filtering.
+ * Pass a `roomContext` to scope blocks to a specific room.
  */
-export const useBlockedUsers = () => {
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+export const useBlockedUsers = (roomContext?: string) => {
+  const [allBlockedUsers, setAllBlockedUsers] = useState<BlockedUser[]>([]);
 
   // Load blocked users from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(BLOCKED_USERS_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored) as BlockedUser[];
-        setBlockedUsers(parsed);
+        setAllBlockedUsers(JSON.parse(stored) as BlockedUser[]);
       }
     } catch (error) {
       console.error("Error loading blocked users:", error);
-      setBlockedUsers([]);
+      setAllBlockedUsers([]);
     }
   }, []);
 
-  // Save to localStorage whenever blockedUsers changes
+  // Save to localStorage whenever allBlockedUsers changes
   useEffect(() => {
     try {
-      localStorage.setItem(BLOCKED_USERS_KEY, JSON.stringify(blockedUsers));
+      localStorage.setItem(BLOCKED_USERS_KEY, JSON.stringify(allBlockedUsers));
     } catch (error) {
       console.error("Error saving blocked users:", error);
     }
-  }, [blockedUsers]);
+  }, [allBlockedUsers]);
+
+  // Filtered list scoped to current room (or all if no context)
+  const blockedUsers = roomContext
+    ? allBlockedUsers.filter((u) => u.context === roomContext)
+    : allBlockedUsers;
 
   const blockUser = useCallback((userId: string, color?: string, context?: string) => {
-    setBlockedUsers((prev) => {
-      // Don't add duplicate
-      if (prev.some((u) => u.id === userId)) {
+    setAllBlockedUsers((prev) => {
+      // Don't add duplicate for same user + context
+      if (prev.some((u) => u.id === userId && u.context === context)) {
         return prev;
       }
       return [
@@ -59,8 +62,10 @@ export const useBlockedUsers = () => {
   }, []);
 
   const unblockUser = useCallback((userId: string) => {
-    setBlockedUsers((prev) => prev.filter((u) => u.id !== userId));
-  }, []);
+    setAllBlockedUsers((prev) =>
+      prev.filter((u) => !(u.id === userId && (!roomContext || u.context === roomContext)))
+    );
+  }, [roomContext]);
 
   const isBlocked = useCallback(
     (userId: string): boolean => {
@@ -70,9 +75,14 @@ export const useBlockedUsers = () => {
   );
 
   const clearAllBlocked = useCallback(() => {
-    setBlockedUsers([]);
-    localStorage.removeItem(BLOCKED_USERS_KEY);
-  }, []);
+    if (roomContext) {
+      // Only clear blocks for this room
+      setAllBlockedUsers((prev) => prev.filter((u) => u.context !== roomContext));
+    } else {
+      setAllBlockedUsers([]);
+      localStorage.removeItem(BLOCKED_USERS_KEY);
+    }
+  }, [roomContext]);
 
   return {
     blockedUsers,
