@@ -5,11 +5,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, UserX, MoreVertical, LogOut, Ban, ChevronDown, ChevronUp, ShieldOff } from "lucide-react";
+import { ArrowLeft, Send, Copy, Loader2, Lock, Unlock, GraduationCap, RefreshCw, Flag, MoreVertical, LogOut, Ban, ChevronDown, ChevronUp, ShieldOff } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { EphemeralRoomTutorial } from "@/components/EphemeralRoomTutorial";
 import { ReportDialog } from "@/components/ReportDialog";
-import { useBlockedUsers } from "@/hooks/useBlockedUsers";
+
 import { filterContent } from "@/lib/contentFilter";
 import {
   DropdownMenu,
@@ -68,7 +68,7 @@ const EphemeralRoom = () => {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isInitialLoad = useRef(true);
   
-  const { blockedUsers, blockUser, isBlocked } = useBlockedUsers(roomCode);
+  
 
   // Check if tutorial should be shown on first visit
   useEffect(() => {
@@ -414,10 +414,6 @@ const EphemeralRoom = () => {
     setShowReportDialog(true);
   };
 
-  const handleBlockUser = (message: Message) => {
-    blockUser(message.user_id, message.user_color, roomCode);
-    toast.success("User blocked. Their messages will be hidden.");
-  };
 
   const handleKickUser = async (message: Message) => {
     if (!roomId || !isCreator) return;
@@ -500,8 +496,7 @@ const EphemeralRoom = () => {
     }
   };
 
-  // Filter out blocked users' messages
-  const visibleMessages = messages.filter((msg) => !isBlocked(msg.user_id));
+  const visibleMessages = messages;
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode || "");
@@ -705,9 +700,7 @@ const EphemeralRoom = () => {
 
           {visibleMessages.length === 0 ? (
             <div className="text-center text-muted-foreground mt-8">
-              {messages.length > 0 && blockedUsers.length > 0
-                ? "All messages are from blocked users."
-                : "No messages yet. Start the conversation!"}
+              No messages yet. Start the conversation!
             </div>
           ) : (
             <TooltipProvider>
@@ -766,10 +759,6 @@ const EphemeralRoom = () => {
                             <DropdownMenuItem onClick={() => handleReportUser(message)}>
                               <Flag className="h-4 w-4 mr-2 text-destructive" />
                               Report User
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleBlockUser(message)}>
-                              <UserX className="h-4 w-4 mr-2" />
-                              Block User
                             </DropdownMenuItem>
                             {isCreator && (
                               <DropdownMenuItem 
