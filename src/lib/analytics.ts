@@ -1,7 +1,7 @@
 import posthog from 'posthog-js';
 
 const POSTHOG_KEY = 'phc_xZGnEzoyhqyTGYNhS1xmkpRx1sPNgCsF05RbWSuBAGU';
-const POSTHOG_HOST = 'https://app.posthog.com';
+const POSTHOG_HOST = 'https://us.posthog.com';
 
 const getAppVersion = (): string => '1.0.0';
 const getBuildNumber = (): string => '1';
@@ -24,31 +24,22 @@ const isFirstSession = (): boolean => {
 
 export const initAnalytics = () => {
   try {
-    posthog.init(POSTHOG_KEY, {
-      api_host: POSTHOG_HOST,
-      autocapture: false,
-      capture_pageview: false, // we handle manually
-      capture_pageleave: true,
-      persistence: 'localStorage',
-      disable_session_recording: true,
-      loaded: (ph) => {
-        ph.register({
-          app_name: 'OcodX',
-          environment: 'production',
-          platform: getPlatform(),
-          app_version: getAppVersion(),
-          build_number: getBuildNumber(),
-        });
-
-        console.log('PostHog initialized successfully');
-
-        ph.capture('app_opened');
-
-        if (isFirstSession()) {
-          ph.capture('reviewer_session_started');
-        }
-      },
+    // PostHog is already initialized in posthog-init.ts — just register global properties
+    posthog.register({
+      app_name: 'OcodX',
+      environment: 'production',
+      platform: getPlatform(),
+      app_version: getAppVersion(),
+      build_number: getBuildNumber(),
     });
+
+    console.log('PostHog global properties registered');
+
+    posthog.capture('app_opened');
+
+    if (isFirstSession()) {
+      posthog.capture('reviewer_session_started');
+    }
   } catch (e) {
     // Silent fail — never block app
   }
