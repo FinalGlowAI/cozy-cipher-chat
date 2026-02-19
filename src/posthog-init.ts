@@ -1,7 +1,7 @@
 import posthog from 'posthog-js';
 
 // Initialize PostHog at the ABSOLUTE ROOT before anything else
-posthog.init('phc_xZGnEzoyhqyTGYNhS1xmkpRx1sPNgCsF05RbWSuBAGU', {
+posthog.init('phc_xZGnEzoyhqyTGYNhSlxmkpRxlSPNgCsFO5RbWSuBAGU', {
   api_host: 'https://us.posthog.com',
   ui_host: 'https://us.posthog.com',
   autocapture: true,
