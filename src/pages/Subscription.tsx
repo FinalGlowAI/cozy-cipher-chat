@@ -10,6 +10,7 @@ import { NeuralBackground } from "@/components/NeuralBackground";
 import { isIOSPWA } from "@/lib/platformDetection";
 import { ArrowLeft, Check, Crown } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
+import { trackEvent, trackStripeError } from "@/lib/analytics";
 
 const Subscription = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -43,6 +44,7 @@ const Subscription = () => {
 
     setLoading(true);
     try {
+      trackEvent('subscription_clicked');
       // iOS PWA users must subscribe via website (App Store compliance)
       if (isIOSPWA()) {
         window.open('https://ocodx.website/subscription', '_blank');
@@ -62,6 +64,7 @@ const Subscription = () => {
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
+      trackStripeError({ error_message: String(error) });
       toast.error("Failed to start checkout process");
     } finally {
       setLoading(false);
