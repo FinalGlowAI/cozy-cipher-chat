@@ -1,6 +1,6 @@
 import posthog from 'posthog-js';
 
-const POSTHOG_KEY = 'phc_xZGnEzoyhqyTGYNhS1xmkpRx1sPNgCsF05RbWSuBAGU';
+const POSTHOG_KEY = 'phc_xZGnEzoyhqyTGYNhSlxmkpRxlSPNgCsFO5RbWSuBAGU';
 const POSTHOG_HOST = 'https://us.posthog.com';
 
 const getAppVersion = (): string => '1.0.0';
