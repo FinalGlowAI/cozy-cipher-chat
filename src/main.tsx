@@ -1,3 +1,22 @@
+import posthog from 'posthog-js';
+
+// Initialize PostHog at the ABSOLUTE ROOT before anything else
+posthog.init("phc_xZGnEzoyhqyTGYNhS1xmkpRx1sPNgCsF05RbWSuBAGU", {
+  api_host: "https://us.i.posthog.com",
+  capture_pageview: true,
+  autocapture: true,
+  persistence: "localStorage"
+});
+
+// Forced test event on every app open
+posthog.capture("posthog_test_event", {
+  source: "app_launch_test",
+  app: "OcodX",
+  environment: "production"
+});
+
+console.log("POSTHOG WORKING");
+
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
@@ -23,7 +42,7 @@ const hideInitialLoader = () => {
   }
 };
 
-// Initialize analytics
+// Initialize analytics (registers global props + additional events)
 initAnalytics();
 
 // Global error handler
