@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Crown, Check, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { isIOSPWA } from "@/lib/platformDetection";
+import { trackEvent, trackStripeError } from "@/lib/analytics";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -21,6 +22,10 @@ interface UpgradeModalProps {
 export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
+
+  useEffect(() => {
+    if (open) trackEvent('paywall_opened');
+  }, [open]);
   
   const features = [
     "Unlimited encryption & decryption",
@@ -31,7 +36,7 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
 
   const handleUpgrade = async () => {
     try {
-      setLoading(true);
+      trackEvent('subscription_clicked');
       
       // iOS PWA users must subscribe via website (App Store compliance)
       if (isIOSPWA()) {
@@ -55,6 +60,7 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
+      trackStripeError({ error_message: String(error) });
       toast.error('Failed to start checkout process');
     } finally {
       setLoading(false);
@@ -133,7 +139,7 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
         >
           {loading ? "Loading..." : isIOSPWA() ? "Subscribe on ocodx.website" : "Upgrade Now"}
         </Button>
-        <Button variant="ghost" className="w-full" onClick={() => onOpenChange(false)}>
+        <Button variant="ghost" className="w-full" onClick={() => { trackEvent('paywall_closed'); onOpenChange(false); }}>
           Maybe Later
         </Button>
       </DialogContent>

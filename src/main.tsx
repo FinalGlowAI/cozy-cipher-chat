@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { registerNotificationListeners, requestNotificationPermission, isNotificationsAvailable } from "./lib/notifications";
+import { initAnalytics, trackError } from "./lib/analytics";
 
 // Track when app started loading
 const loadStartTime = Date.now();
@@ -21,6 +22,17 @@ const hideInitialLoader = () => {
     }, remainingTime);
   }
 };
+
+// Initialize analytics
+initAnalytics();
+
+// Global error handler
+window.addEventListener('error', (e) => {
+  trackError(e.message, window.location.pathname);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  trackError(String(e.reason), window.location.pathname);
+});
 
 // Initialize notifications on app start
 if (isNotificationsAvailable()) {

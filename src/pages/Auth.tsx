@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, EyeOff, Shield, Key, Clock, Image, MessageSquare, ShieldCheck, Zap, FileKey } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
+import { trackEvent, trackError } from "@/lib/analytics";
 
 
 const Auth = () => {
@@ -32,6 +33,10 @@ const Auth = () => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    trackEvent('login_screen_opened');
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -121,6 +126,7 @@ const Auth = () => {
           password,
         });
         if (error) throw error;
+        trackEvent('login_success');
         toast.success("Successfully logged in!");
         // Navigation will be handled by onAuthStateChange listener
       } else {
@@ -162,6 +168,7 @@ const Auth = () => {
         }
       }
     } catch (error: any) {
+      trackEvent('login_failed', { error_message: error.message });
       toast.error(error.message);
       setIsSigningUp(false);
     } finally {
