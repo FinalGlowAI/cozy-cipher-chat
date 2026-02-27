@@ -25,25 +25,46 @@ const hideInitialLoader = () => {
 };
 
 // Initialize analytics (registers global props + additional events)
-initAnalytics();
+try {
+  initAnalytics();
+} catch (_) {
+  // Analytics should never crash the app
+}
 
 // Global error handler
 window.addEventListener('error', (e) => {
-  trackError(e.message, window.location.pathname);
+  try { trackError(e.message, window.location.pathname); } catch (_) {}
 });
 window.addEventListener('unhandledrejection', (e) => {
-  trackError(String(e.reason), window.location.pathname);
+  try { trackError(String(e.reason), window.location.pathname); } catch (_) {}
 });
 
 // Initialize notifications on app start
 if (isNotificationsAvailable()) {
-  registerNotificationListeners();
-  requestNotificationPermission();
+  try {
+    registerNotificationListeners();
+    requestNotificationPermission();
+  } catch (_) {}
 }
 
-const root = createRoot(document.getElementById("root")!);
-root.render(<App />);
+try {
+  const root = createRoot(document.getElementById("root")!);
+  root.render(<App />);
 
-requestAnimationFrame(() => {
-  requestAnimationFrame(hideInitialLoader);
-});
+  // Only hide loader after React successfully renders
+  requestAnimationFrame(() => {
+    requestAnimationFrame(hideInitialLoader);
+  });
+} catch (e) {
+  console.error('React failed to mount:', e);
+  // Show error in the initial loader instead of blank screen
+  const loader = document.getElementById("initial-loader");
+  if (loader) {
+    loader.innerHTML = `
+      <img src="/icon-192.png" alt="OCX" width="64" height="64" style="margin-bottom: 16px;" />
+      <p style="color: #fff; font-family: system-ui; font-size: 16px; margin-bottom: 8px;">Failed to load</p>
+      <p style="color: hsl(215 20% 65%); font-family: system-ui; font-size: 14px; margin-bottom: 24px;">Please reload the app</p>
+      <button onclick="window.location.reload()" style="padding: 12px 24px; border-radius: 8px; border: none; background: hsl(262 83% 58%); color: #fff; font-size: 16px; cursor: pointer;">Reload</button>
+    `;
+  }
+}
