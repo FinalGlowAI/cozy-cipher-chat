@@ -1,21 +1,24 @@
 import posthog from 'posthog-js';
 
-// Initialize PostHog at the ABSOLUTE ROOT before anything else
-posthog.init('phc_xZGnEzoyhqyTGYNhSlxmkpRxlSPNgCsFO5RbWSuBAGU', {
-  api_host: 'https://us.posthog.com',
-  ui_host: 'https://us.posthog.com',
-  autocapture: true,
-  capture_pageview: true,
-  persistence: 'localStorage',
-  secure_cookie: false
-});
-
-// Forced test event on every app open
-posthog.capture('posthog_connection_fixed', {
-  debug: 'working',
-  source: 'app_launch_test',
-  app: 'OcodX',
-  environment: 'production'
-});
-
-console.log("POSTHOG WORKING");
+// Initialize PostHog safely — must never crash the app
+try {
+  posthog.init('phc_xZGnEzoyhqyTGYNhSlxmkpRxlSPNgCsFO5RbWSuBAGU', {
+    api_host: 'https://us.posthog.com',
+    ui_host: 'https://us.posthog.com',
+    autocapture: true,
+    capture_pageview: true,
+    persistence: 'localStorage',
+    secure_cookie: false,
+    // Don't block app loading if PostHog can't connect
+    bootstrap: {},
+    loaded: () => {
+      try {
+        posthog.capture('app_opened', { source: 'app_launch', app: 'OcodX' });
+      } catch (_) {
+        // Silently fail — analytics should never crash the app
+      }
+    },
+  });
+} catch (e) {
+  console.warn('PostHog init failed:', e);
+}
