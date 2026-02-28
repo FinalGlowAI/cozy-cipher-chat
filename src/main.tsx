@@ -7,6 +7,18 @@ import "./index.css";
 import { registerNotificationListeners, requestNotificationPermission, isNotificationsAvailable } from "./lib/notifications";
 import { initAnalytics, trackError } from "./lib/analytics";
 
+// === Hard reload: clear all caches & unregister stale service workers ===
+if ('caches' in window) {
+  caches.keys().then(names => {
+    names.forEach(name => caches.delete(name));
+  });
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(reg => reg.unregister());
+  });
+}
+
 // Track when app started loading
 const loadStartTime = Date.now();
 const MIN_LOADER_TIME = 1500;
