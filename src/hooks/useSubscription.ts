@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useSubscription = () => {
@@ -7,10 +7,11 @@ export const useSubscription = () => {
   const [isBasicUser, setIsBasicUser] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      // ✅ Fix #2 : getUser() vérifie côté serveur
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         setIsPremium(false);
         setIsFreeUser(false);
         setIsBasicUser(false);
@@ -19,7 +20,7 @@ export const useSubscription = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('check-subscription');
-      
+
       if (error) {
         console.error('Error checking subscription:', error);
         setIsPremium(false);
@@ -38,16 +39,32 @@ export const useSubscription = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     checkSubscription();
 
-    // Check subscription every 60 seconds
-    const interval = setInterval(checkSubscription, 60000);
+    // ✅ Fix #1 : écoute les changements auth au lieu de polling
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        checkSubscription();
+      }
+      if (event === 'SIGNED_OUT') {
+        setIsPremium(false);
+        setIsFreeUser(false);
+        setIsBasicUser(false);
+        setLoading(false);
+      }
+    });
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [checkSubscription]);
 
-  return { isPremium, isFreeUser, isBasicUser, loading, refreshSubscription: checkSubscription };
+  return { 
+    isPremium, 
+    isFreeUser, 
+    isBasicUser, 
+    loading, 
+    refreshSubscription: checkSubscription 
+  };
 };
