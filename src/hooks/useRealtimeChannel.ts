@@ -32,9 +32,30 @@ export const useRealtimeChannel = ({
 }: UseRealtimeChannelOptions) => {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null); // ✅ Fix #2
   const maxReconnectAttempts = 5;
+  const isMounted = useRef(true); // ✅ Fix #2 : track si composant monté
+
+  // ✅ Fix #1 : stocker les callbacks dans des refs pour éviter les re-renders
+  const onPostgresChangeRef = useRef(onPostgresChange);
+  const onPresenceSyncRef = useRef(onPresenceSync);
+  const onPresenceJoinRef = useRef(onPresenceJoin);
+  const onPresenceLeaveRef = useRef(onPresenceLeave);
+  const presenceDataRef = useRef(presenceData);
+
+  // Mise à jour des refs sans recréer connect()
+  useEffect(() => { onPostgresChangeRef.current = onPostgresChange; }, [onPostgresChange]);
+  useEffect(() => { onPresenceSyncRef.current = onPresenceSync; }, [onPresenceSync]);
+  useEffect(() => { onPresenceJoinRef.current = onPresenceJoin; }, [onPresenceJoin]);
+  useEffect(() => { onPresenceLeaveRef.current = onPresenceLeave; }, [onPresenceLeave]);
+  useEffect(() => { presenceDataRef.current = presenceData; }, [presenceData]);
 
   const cleanup = useCallback(() => {
+    // ✅ Fix #2 : annule le timer de reconnexion
+    if (reconnectTimer.current) {
+      clearTimeout(reconnectTimer.current);
+      reconnectTimer.current = null;
+    }
     if (channelRef.current) {
       console.log(`[useRealtimeChannel] Cleaning up: ${channelName}`);
       supabase.removeChannel(channelRef.current);
@@ -42,61 +63,61 @@ export const useRealtimeChannel = ({
     }
   }, [channelName]);
 
+  // ✅ Fix #1 : connect() ne dépend que de channelName et enabled
   const connect = useCallback(async () => {
     if (!enabled) return;
-
     cleanup();
 
     let channel = supabase.channel(channelName);
 
-    // Add postgres changes listener
-    if (postgresChanges && onPostgresChange) {
+    if (postgresChanges && onPostgresChangeRef.current) {
       const { event, schema, table, filter } = postgresChanges;
       channel = channel.on(
         'postgres_changes' as any,
         { event, schema, table, filter } as any,
-        onPostgresChange
+        (payload) => onPostgresChangeRef.current?.(payload)
       );
     }
 
-    // Add presence listeners
-    if (onPresenceSync) {
+    if (onPresenceSyncRef.current) {
       channel = channel.on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
-        onPresenceSync(state);
+        onPresenceSyncRef.current?.(state);
       });
     }
 
-    if (onPresenceJoin) {
-      channel = channel.on('presence', { event: 'join' }, onPresenceJoin as any);
+    if (onPresenceJoinRef.current) {
+      channel = channel.on('presence', { event: 'join' },
+        (payload) => onPresenceJoinRef.current?.(payload as any)
+      );
     }
 
-    if (onPresenceLeave) {
-      channel = channel.on('presence', { event: 'leave' }, onPresenceLeave as any);
+    if (onPresenceLeaveRef.current) {
+      channel = channel.on('presence', { event: 'leave' },
+        (payload) => onPresenceLeaveRef.current?.(payload as any)
+      );
     }
 
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         console.log(`[useRealtimeChannel] Subscribed: ${channelName}`);
         reconnectAttempts.current = 0;
-
-        // Track presence if data provided
-        if (presenceData) {
-          await channel.track(presenceData);
+        if (presenceDataRef.current) {
+          await channel.track(presenceDataRef.current);
         }
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         console.error(`[useRealtimeChannel] Error on ${channelName}: ${status}`);
-        
-        // Exponential backoff reconnection
+
         if (reconnectAttempts.current < maxReconnectAttempts) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
           reconnectAttempts.current++;
-          
           console.log(`[useRealtimeChannel] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current})`);
-          
-          setTimeout(() => {
-            cleanup();
-            connect();
+
+          // ✅ Fix #2 : vérifie que le composant est encore monté avant reconnexion
+          reconnectTimer.current = setTimeout(() => {
+            if (isMounted.current) {
+              connect();
+            }
           }, delay);
         } else {
           console.error(`[useRealtimeChannel] Max reconnection attempts reached for ${channelName}`);
@@ -105,11 +126,15 @@ export const useRealtimeChannel = ({
     });
 
     channelRef.current = channel;
-  }, [channelName, enabled, postgresChanges, onPostgresChange, onPresenceSync, onPresenceJoin, onPresenceLeave, presenceData, cleanup]);
+  }, [channelName, enabled, postgresChanges, cleanup]); // ✅ Fix #1 : callbacks retirés des dépendances
 
   useEffect(() => {
+    isMounted.current = true;
     connect();
-    return cleanup;
+    return () => {
+      isMounted.current = false; // ✅ Fix #2
+      cleanup();
+    };
   }, [connect, cleanup]);
 
   const trackPresence = useCallback(async (data: Record<string, any>) => {
