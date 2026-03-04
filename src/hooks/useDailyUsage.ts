@@ -28,7 +28,7 @@ export const useDailyUsage = () => {
 
       const { data, error } = await supabase
         .from("daily_usage")
-        .select("*")
+        .select("text_encryptions, text_decryptions") // ✅ Fix #2 : select explicite
         .eq("user_id", user.id)
         .eq("usage_date", today)
         .single();
@@ -39,19 +39,11 @@ export const useDailyUsage = () => {
         return;
       }
 
-      if (data) {
-        setState({
-          textEncryptions: data.text_encryptions,
-          textDecryptions: data.text_decryptions,
-          loading: false,
-        });
-      } else {
-        setState({
-          textEncryptions: 0,
-          textDecryptions: 0,
-          loading: false,
-        });
-      }
+      setState({
+        textEncryptions: data?.text_encryptions ?? 0,
+        textDecryptions: data?.text_decryptions ?? 0,
+        loading: false,
+      });
     } catch (error) {
       console.error("Error in fetchUsage:", error);
       setState(prev => ({ ...prev, loading: false }));
@@ -62,71 +54,34 @@ export const useDailyUsage = () => {
     fetchUsage();
   }, [fetchUsage]);
 
-  const incrementUsage = useCallback(async (feature: "text_encryption" | "text_decryption"): Promise<boolean> => {
+  const incrementUsage = useCallback(async (
+    feature: "text_encryption" | "text_decryption"
+  ): Promise<boolean> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const today = new Date().toISOString().split("T")[0];
+      // ✅ Fix #1 : RPC atomique, pas de race condition
+      const { error } = await supabase.rpc("increment_daily_usage", {
+        p_user_id: user.id,
+        p_feature: feature,
+        p_date: new Date().toISOString().split("T")[0],
+      });
 
-      // Try to get existing record
-      const { data: existing, error: fetchError } = await supabase
-        .from("daily_usage")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("usage_date", today)
-        .single();
-
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching usage:", fetchError);
+      if (error) {
+        console.error("Error incrementing usage:", error);
         return false;
       }
 
-      if (existing) {
-        // Update existing record
-        const updateData = feature === "text_encryption"
-          ? { text_encryptions: existing.text_encryptions + 1 }
-          : { text_decryptions: existing.text_decryptions + 1 };
-
-        const { error: updateError } = await supabase
-          .from("daily_usage")
-          .update(updateData)
-          .eq("id", existing.id);
-
-        if (updateError) {
-          console.error("Error updating usage:", updateError);
-          return false;
-        }
-
-        setState(prev => ({
-          ...prev,
-          textEncryptions: feature === "text_encryption" ? prev.textEncryptions + 1 : prev.textEncryptions,
-          textDecryptions: feature === "text_decryption" ? prev.textDecryptions + 1 : prev.textDecryptions,
-        }));
-      } else {
-        // Create new record
-        const insertData = {
-          user_id: user.id,
-          usage_date: today,
-          text_encryptions: feature === "text_encryption" ? 1 : 0,
-          text_decryptions: feature === "text_decryption" ? 1 : 0,
-        };
-
-        const { error: insertError } = await supabase
-          .from("daily_usage")
-          .insert(insertData);
-
-        if (insertError) {
-          console.error("Error inserting usage:", insertError);
-          return false;
-        }
-
-        setState(prev => ({
-          ...prev,
-          textEncryptions: feature === "text_encryption" ? 1 : prev.textEncryptions,
-          textDecryptions: feature === "text_decryption" ? 1 : prev.textDecryptions,
-        }));
-      }
+      setState(prev => ({
+        ...prev,
+        textEncryptions: feature === "text_encryption"
+          ? prev.textEncryptions + 1
+          : prev.textEncryptions,
+        textDecryptions: feature === "text_decryption"
+          ? prev.textDecryptions + 1
+          : prev.textDecryptions,
+      }));
 
       return true;
     } catch (error) {
@@ -135,13 +90,21 @@ export const useDailyUsage = () => {
     }
   }, []);
 
-  const getRemainingFreeUses = useCallback((feature: "text_encryption" | "text_decryption"): number => {
-    const used = feature === "text_encryption" ? state.textEncryptions : state.textDecryptions;
+  const getRemainingFreeUses = useCallback((
+    feature: "text_encryption" | "text_decryption"
+  ): number => {
+    const used = feature === "text_encryption"
+      ? state.textEncryptions
+      : state.textDecryptions;
     return Math.max(0, FREE_LIMIT - used);
   }, [state.textEncryptions, state.textDecryptions]);
 
-  const isWithinFreeLimit = useCallback((feature: "text_encryption" | "text_decryption"): boolean => {
-    const used = feature === "text_encryption" ? state.textEncryptions : state.textDecryptions;
+  const isWithinFreeLimit = useCallback((
+    feature: "text_encryption" | "text_decryption"
+  ): boolean => {
+    const used = feature === "text_encryption"
+      ? state.textEncryptions
+      : state.textDecryptions;
     return used < FREE_LIMIT;
   }, [state.textEncryptions, state.textDecryptions]);
 
@@ -156,3 +119,31 @@ export const useDailyUsage = () => {
     FREE_LIMIT,
   };
 };
+```
+
+---
+
+**Et la fonction SQL à envoyer dans Lovable :**
+```
+Create this SQL function in Supabase using migrations:
+
+CREATE OR REPLACE FUNCTION increment_daily_usage(
+  p_user_id uuid,
+  p_feature text,
+  p_date date
+) RETURNS void AS $$
+BEGIN
+  INSERT INTO daily_usage (user_id, usage_date, text_encryptions, text_decryptions)
+  VALUES (
+    p_user_id,
+    p_date,
+    CASE WHEN p_feature = 'text_encryption' THEN 1 ELSE 0 END,
+    CASE WHEN p_feature = 'text_decryption' THEN 1 ELSE 0 END
+  )
+  ON CONFLICT (user_id, usage_date) DO UPDATE SET
+    text_encryptions = daily_usage.text_encryptions +
+      CASE WHEN p_feature = 'text_encryption' THEN 1 ELSE 0 END,
+    text_decryptions = daily_usage.text_decryptions +
+      CASE WHEN p_feature = 'text_decryption' THEN 1 ELSE 0 END;
+END;
+$$ LANGUAGE plpgsql;
