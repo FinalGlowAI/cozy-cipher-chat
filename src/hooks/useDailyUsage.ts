@@ -119,31 +119,3 @@ export const useDailyUsage = () => {
     FREE_LIMIT,
   };
 };
-```
-
----
-
-**Et la fonction SQL à envoyer dans Lovable :**
-```
-Create this SQL function in Supabase using migrations:
-
-CREATE OR REPLACE FUNCTION increment_daily_usage(
-  p_user_id uuid,
-  p_feature text,
-  p_date date
-) RETURNS void AS $$
-BEGIN
-  INSERT INTO daily_usage (user_id, usage_date, text_encryptions, text_decryptions)
-  VALUES (
-    p_user_id,
-    p_date,
-    CASE WHEN p_feature = 'text_encryption' THEN 1 ELSE 0 END,
-    CASE WHEN p_feature = 'text_decryption' THEN 1 ELSE 0 END
-  )
-  ON CONFLICT (user_id, usage_date) DO UPDATE SET
-    text_encryptions = daily_usage.text_encryptions +
-      CASE WHEN p_feature = 'text_encryption' THEN 1 ELSE 0 END,
-    text_decryptions = daily_usage.text_decryptions +
-      CASE WHEN p_feature = 'text_decryption' THEN 1 ELSE 0 END;
-END;
-$$ LANGUAGE plpgsql;
