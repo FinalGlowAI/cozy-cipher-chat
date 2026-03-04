@@ -410,6 +410,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_daily_usage: {
+        Args: { p_date: string; p_feature: string; p_user_id: string }
+        Returns: undefined
+      }
       is_free_user: { Args: never; Returns: boolean }
       is_premium_user: { Args: { user_id: string }; Returns: boolean }
       retrieve_encrypted_image: {
