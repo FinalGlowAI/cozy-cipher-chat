@@ -378,6 +378,10 @@ export type Database = {
     Functions: {
       cleanup_expired_encrypted_images: { Args: never; Returns: number }
       delete_encrypted_image: { Args: { _code: string }; Returns: string }
+      earn_credits: {
+        Args: { p_amount: number; p_source: string; p_user_id: string }
+        Returns: undefined
+      }
       generate_room_code: { Args: never; Returns: string }
       get_room_by_code: {
         Args: { _room_code: string }
@@ -416,6 +420,10 @@ export type Database = {
           expires_at: string
           storage_path: string
         }[]
+      }
+      spend_credits: {
+        Args: { p_amount: number; p_source: string; p_user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
