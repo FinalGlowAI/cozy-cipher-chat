@@ -2,15 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-// VitePWA temporarily disabled for App Store review debugging
-// import { VitePWA } from "vite-plugin-pwa";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
   },
+  base: "./",
   plugins: [
     react(),
     mode === "development" && componentTagger(),
@@ -19,5 +17,10 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  build: {
+    target: "es2015",
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
   },
 }));
