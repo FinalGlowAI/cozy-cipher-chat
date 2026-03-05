@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { emitCreditsChanged, onCreditsChanged } from "@/lib/creditsBus";
+import { showNotification } from "@/lib/notifications";
 
 interface CreditState {
   totalCredits: number;
@@ -73,6 +74,11 @@ export const useCredits = () => {
             console.error("Error granting daily credits:", updateError);
           } else {
             toast.info(`Daily bonus: +${DAILY_FREE_CREDITS} credits!`);
+            showNotification(
+              "Daily Bonus Available! 🎁",
+              `You received ${DAILY_FREE_CREDITS} free credits. Play games to earn more!`,
+              { tag: "daily-credits" }
+            );
           }
 
           setState({
@@ -122,6 +128,25 @@ export const useCredits = () => {
       setState(prev => ({ ...prev, loading: false }));
     }
   }, []);
+
+  // Schedule a push notification when the bonus becomes available during the session
+  useEffect(() => {
+    if (!state.decayTime) return;
+    const remaining = state.decayTime.getTime() - Date.now();
+    if (remaining <= 0) return;
+
+    const timer = setTimeout(() => {
+      showNotification(
+        "Daily Bonus Ready! 🎁",
+        `Your ${DAILY_FREE_CREDITS} free credits are waiting. Open the app to claim them!`,
+        { tag: "daily-credits-ready" }
+      );
+      // Auto-refresh to grant credits
+      fetchCredits();
+    }, remaining);
+
+    return () => clearTimeout(timer);
+  }, [state.decayTime, fetchCredits]);
 
   useEffect(() => {
     fetchCredits();
