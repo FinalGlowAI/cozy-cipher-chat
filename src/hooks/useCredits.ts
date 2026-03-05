@@ -22,7 +22,7 @@ const LEVEL_CREDITS: Record<number, number> = {
 };
 
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-const DECAY_RATE = 0.5; // 50% decay
+const DAILY_FREE_CREDITS = 10;
 
 export const useCredits = () => {
   const [state, setState] = useState<CreditState>({
@@ -57,40 +57,39 @@ export const useCredits = () => {
         const now = new Date();
         const timeSinceDecay = now.getTime() - lastDecayAt.getTime();
 
-        // Check if 24 hours have passed since last decay
+        // Check if 24 hours have passed — grant daily free credits
         if (timeSinceDecay >= TWENTY_FOUR_HOURS) {
-          const decayedCredits = Math.floor(data.total_credits * DECAY_RATE);
+          const newTotal = data.total_credits + DAILY_FREE_CREDITS;
           
-          // Apply decay
           const { error: updateError } = await supabase
             .from("user_credits")
             .update({
-              total_credits: decayedCredits,
+              total_credits: newTotal,
               last_decay_at: now.toISOString(),
             })
             .eq("user_id", user.id);
 
           if (updateError) {
-            console.error("Error applying decay:", updateError);
-          } else if (data.total_credits > 0) {
-            toast.info(`Daily decay applied: ${data.total_credits} → ${decayedCredits} credits`);
+            console.error("Error granting daily credits:", updateError);
+          } else {
+            toast.info(`Daily bonus: +${DAILY_FREE_CREDITS} credits!`);
           }
 
           setState({
-            totalCredits: decayedCredits,
+            totalCredits: newTotal,
             lifetimeEarned: data.lifetime_earned,
             loading: false,
             decayTime: new Date(now.getTime() + TWENTY_FOUR_HOURS),
           });
         } else {
-          // No decay needed, calculate next decay time
-          const nextDecayTime = new Date(lastDecayAt.getTime() + TWENTY_FOUR_HOURS);
+          // No grant needed, calculate next grant time
+          const nextGrantTime = new Date(lastDecayAt.getTime() + TWENTY_FOUR_HOURS);
           
           setState({
             totalCredits: data.total_credits,
             lifetimeEarned: data.lifetime_earned,
             loading: false,
-            decayTime: nextDecayTime,
+            decayTime: nextGrantTime,
           });
         }
       } else {

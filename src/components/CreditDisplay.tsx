@@ -59,7 +59,7 @@ export const CreditDisplay = () => {
         </TooltipTrigger>
         <TooltipContent>
           <p className="text-sm">
-            {credits} credits • 50% decay in {timeRemaining || "—"}
+            {credits} credits • Free refill in {timeRemaining || "—"}
           </p>
           <p className="text-xs text-muted-foreground">Play games to earn more!</p>
         </TooltipContent>
