@@ -130,7 +130,7 @@ export const SymbolMatchGame = ({ open, onOpenChange, onWin }: SymbolMatchGamePr
   const particleIdRef = useRef(0);
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
-  const spawnIntervalRef = useRef<NodeJS.Timeout>();
+  const spawnIntervalRef = useRef<ReturnType<typeof setInterval>>();
   
   const spawnParticles = useCallback((x: number, y: number) => {
     const colors = ["hsl(var(--primary))", "#FFD700", "#FF6B6B", "#4ECDC4", "#A855F7"];
