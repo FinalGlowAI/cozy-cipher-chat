@@ -14,6 +14,7 @@ import ocxLogo from "@/assets/ocx-logo.png";
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 import { trackEvent, trackError } from "@/lib/analytics";
 import { lovable } from "@/integrations/lovable/index";
+import { isNativeApp, nativeGoogleSignIn } from "@/lib/nativeGoogleAuth";
 
 
 const Auth = () => {
