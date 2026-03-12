@@ -505,12 +505,22 @@ const Auth = () => {
             onClick={async () => {
               setLoading(true);
               try {
-                const { error } = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin + "/auth",
-                });
-                if (error) {
-                  toast.error(error.message || "Google sign-in failed");
-                  trackEvent('google_login_failed', { error_message: error.message });
+                if (isNativeApp()) {
+                  // Use native Capacitor Google Sign In on iOS/Android
+                  const { error } = await nativeGoogleSignIn();
+                  if (error) {
+                    toast.error(error.message || "Google sign-in failed");
+                    trackEvent('google_login_failed', { error_message: error.message });
+                  }
+                } else {
+                  // Use web OAuth flow
+                  const { error } = await lovable.auth.signInWithOAuth("google", {
+                    redirect_uri: window.location.origin + "/auth",
+                  });
+                  if (error) {
+                    toast.error(error.message || "Google sign-in failed");
+                    trackEvent('google_login_failed', { error_message: error.message });
+                  }
                 }
               } catch (err: any) {
                 toast.error(err.message || "Google sign-in failed");
