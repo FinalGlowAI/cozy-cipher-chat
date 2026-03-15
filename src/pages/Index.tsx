@@ -25,11 +25,14 @@ const Index = () => {
     // before deciding the user is logged out.
     const safetyTimeout = setTimeout(async () => {
       if (!mounted) return;
+      console.log('[Index] Safety timeout triggered – re-checking session');
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Index] Safety timeout session:', session ? 'exists' : 'null');
         if (!mounted) return;
         setSession(session ?? null);
-      } catch {
+      } catch (err) {
+        console.error('[Index] Safety timeout error:', err);
         if (!mounted) return;
         setSession(null);
       }
@@ -37,6 +40,7 @@ const Index = () => {
 
     // Subscribe first to avoid missing a rapid SIGNED_IN event during navigation.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+      console.log('[Index] onAuthStateChange:', _event, sess ? 'session exists' : 'no session');
       if (!mounted) return;
       clearTimeout(safetyTimeout);
       setSession(sess ?? null);
@@ -45,11 +49,13 @@ const Index = () => {
     // Then read the current session from storage.
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
+        console.log('[Index] getSession resolved:', session ? 'session exists' : 'null');
         if (!mounted) return;
         clearTimeout(safetyTimeout);
         setSession(session ?? null);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[Index] getSession error:', err);
         if (!mounted) return;
         clearTimeout(safetyTimeout);
         setSession(null);
