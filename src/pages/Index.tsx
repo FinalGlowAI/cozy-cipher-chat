@@ -25,11 +25,14 @@ const Index = () => {
     // before deciding the user is logged out.
     const safetyTimeout = setTimeout(async () => {
       if (!mounted) return;
+      console.log('[Index] Safety timeout triggered – re-checking session');
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Index] Safety timeout session:', session ? 'exists' : 'null');
         if (!mounted) return;
         setSession(session ?? null);
-      } catch {
+      } catch (err) {
+        console.error('[Index] Safety timeout error:', err);
         if (!mounted) return;
         setSession(null);
       }
