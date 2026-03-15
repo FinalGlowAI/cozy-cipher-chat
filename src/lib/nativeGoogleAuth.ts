@@ -1,11 +1,18 @@
-import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Checks if running as a native Capacitor app (iOS/Android)
+ * Uses the global Capacitor object to avoid import-time crashes on web.
  */
 export const isNativeApp = (): boolean => {
-  return Capacitor.isNativePlatform();
+  try {
+    return (
+      typeof (window as any).Capacitor !== 'undefined' &&
+      (window as any).Capacitor?.isNativePlatform?.() === true
+    );
+  } catch {
+    return false;
+  }
 };
 
 /**
