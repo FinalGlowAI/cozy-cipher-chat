@@ -58,39 +58,47 @@ export const useCredits = () => {
         const now = new Date();
         const timeSinceDecay = now.getTime() - lastDecayAt.getTime();
 
-        // Check if 24 hours have passed — grant daily free credits
+        // Check if 24 hours have passed — grant daily free credits via atomic RPC
         if (timeSinceDecay >= TWENTY_FOUR_HOURS) {
-          const newTotal = data.total_credits + DAILY_FREE_CREDITS;
-          
-          const { error: updateError } = await supabase
-            .from("user_credits")
-            .update({
-              total_credits: newTotal,
-              last_decay_at: now.toISOString(),
-            })
-            .eq("user_id", user.id);
+          // FIX: use atomic earn_credits RPC to avoid race condition
+          const { error: rpcError } = await supabase.rpc("earn_credits", {
+            p_user_id: user.id,
+            p_amount: DAILY_FREE_CREDITS,
+            p_source: "daily_bonus",
+          });
 
-          if (updateError) {
-            console.error("Error granting daily credits:", updateError);
-          } else {
+          // Update last_decay_at separately (earn_credits doesn't touch it)
+          if (!rpcError) {
+            await supabase
+              .from("user_credits")
+              .update({ last_decay_at: now.toISOString() })
+              .eq("user_id", user.id);
+
             toast.info(`Daily bonus: +${DAILY_FREE_CREDITS} credits!`);
             showNotification(
               "Daily Bonus Available! 🎁",
               `You received ${DAILY_FREE_CREDITS} free credits. Play games to earn more!`,
               { tag: "daily-credits" }
             );
+          } else {
+            console.error("Error granting daily credits:", rpcError);
           }
 
+          // Re-fetch to get the updated balance after RPC
+          const { data: refreshed } = await supabase
+            .from("user_credits")
+            .select("*")
+            .eq("user_id", user.id)
+            .single();
+
           setState({
-            totalCredits: newTotal,
-            lifetimeEarned: data.lifetime_earned,
+            totalCredits: refreshed?.total_credits ?? data.total_credits + DAILY_FREE_CREDITS,
+            lifetimeEarned: refreshed?.lifetime_earned ?? data.lifetime_earned + DAILY_FREE_CREDITS,
             loading: false,
             decayTime: new Date(now.getTime() + TWENTY_FOUR_HOURS),
           });
         } else {
-          // No grant needed, calculate next grant time
           const nextGrantTime = new Date(lastDecayAt.getTime() + TWENTY_FOUR_HOURS);
-          
           setState({
             totalCredits: data.total_credits,
             lifetimeEarned: data.lifetime_earned,
@@ -103,9 +111,9 @@ export const useCredits = () => {
         const now = new Date();
         const { data: newData, error: insertError } = await supabase
           .from("user_credits")
-          .insert({ 
-            user_id: user.id, 
-            total_credits: 0, 
+          .insert({
+            user_id: user.id,
+            total_credits: 0,
             lifetime_earned: 0,
             last_decay_at: now.toISOString(),
           })
@@ -141,7 +149,6 @@ export const useCredits = () => {
         `Your ${DAILY_FREE_CREDITS} free credits are waiting. Open the app to claim them!`,
         { tag: "daily-credits-ready" }
       );
-      // Auto-refresh to grant credits
       fetchCredits();
     }, remaining);
 
@@ -151,24 +158,16 @@ export const useCredits = () => {
   useEffect(() => {
     fetchCredits();
 
-    // In-app sync between multiple useCredits() instances
     const unsubscribe = onCreditsChanged(() => {
       fetchCredits();
     });
 
-    // Set up realtime subscription
     const channel = supabase
       .channel("user_credits_changes")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "user_credits",
-        },
-        () => {
-          fetchCredits();
-        }
+        { event: "*", schema: "public", table: "user_credits" },
+        () => { fetchCredits(); }
       )
       .subscribe();
 
@@ -178,6 +177,7 @@ export const useCredits = () => {
     };
   }, [fetchCredits]);
 
+  // FIX: earnCredits now uses atomic RPC — no more SELECT + UPDATE race condition
   const earnCredits = useCallback(async (level: number, source: string): Promise<boolean> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -185,61 +185,18 @@ export const useCredits = () => {
 
       const amount = LEVEL_CREDITS[level] || 5;
 
-      // Get current credits
-      const { data: currentData, error: fetchError } = await supabase
-        .from("user_credits")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      const { error } = await supabase.rpc("earn_credits", {
+        p_user_id: user.id,
+        p_amount: amount,
+        p_source: source,
+      });
 
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching current credits:", fetchError);
+      if (error) {
+        console.error("Error earning credits:", error);
         return false;
       }
 
-      const currentTotal = currentData?.total_credits ?? 0;
-      const currentLifetime = currentData?.lifetime_earned ?? 0;
-
-      if (currentData) {
-        // Update existing record
-        const { error: updateError } = await supabase
-          .from("user_credits")
-          .update({
-            total_credits: currentTotal + amount,
-            lifetime_earned: currentLifetime + amount,
-          })
-          .eq("user_id", user.id);
-
-        if (updateError) {
-          console.error("Error updating credits:", updateError);
-          return false;
-        }
-      } else {
-        // Create new record
-        const { error: insertError } = await supabase
-          .from("user_credits")
-          .insert({
-            user_id: user.id,
-            total_credits: amount,
-            lifetime_earned: amount,
-          });
-
-        if (insertError) {
-          console.error("Error inserting credits:", insertError);
-          return false;
-        }
-      }
-
-      // Record transaction
-      await supabase
-        .from("credit_transactions")
-        .insert({
-          user_id: user.id,
-          amount,
-          transaction_type: "earned",
-          source,
-        });
-
+      // Optimistic local update — realtime will reconcile if needed
       setState(prev => ({
         ...prev,
         totalCredits: prev.totalCredits + amount,
@@ -254,38 +211,40 @@ export const useCredits = () => {
     }
   }, []);
 
+  // FIX: spendCredits now uses atomic RPC with FOR UPDATE lock — prevents double-spend
   const spendCredits = useCallback(async (amount: number, source: string): Promise<boolean> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
+      // Optimistic check before hitting the DB (UX only — DB is the source of truth)
       if (state.totalCredits < amount) {
         toast.error(`Not enough credits. You need ${amount} credits.`);
         return false;
       }
 
-      const { error: updateError } = await supabase
-        .from("user_credits")
-        .update({
-          total_credits: state.totalCredits - amount,
-        })
-        .eq("user_id", user.id);
+      // FIX: atomic RPC uses SELECT FOR UPDATE + UPDATE in one transaction
+      const { data: success, error } = await supabase.rpc("spend_credits", {
+        p_user_id: user.id,
+        p_amount: amount,
+        p_source: source,
+      });
 
-      if (updateError) {
-        console.error("Error spending credits:", updateError);
+      if (error) {
+        console.error("Error spending credits:", error);
+        toast.error("Failed to process credits. Please try again.");
         return false;
       }
 
-      // Record transaction
-      await supabase
-        .from("credit_transactions")
-        .insert({
-          user_id: user.id,
-          amount,
-          transaction_type: "spent",
-          source,
-        });
+      if (!success) {
+        // DB returned false — balance was actually insufficient (race condition caught)
+        toast.error(`Not enough credits. You need ${amount} credits.`);
+        // Refresh local state to sync with DB reality
+        await fetchCredits();
+        return false;
+      }
 
+      // Optimistic local update
       setState(prev => ({
         ...prev,
         totalCredits: prev.totalCredits - amount,
@@ -297,7 +256,7 @@ export const useCredits = () => {
       console.error("Error spending credits:", error);
       return false;
     }
-  }, [state.totalCredits]);
+  }, [state.totalCredits, fetchCredits]);
 
   const checkCanAfford = useCallback((amount: number): boolean => {
     return state.totalCredits >= amount;
