@@ -1,119 +1,86 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// Simple in-memory rate limiter
-const rateLimitStore = new Map<string, { tokens: number; lastRefill: number }>();
-
-function checkRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
-  const maxTokens = 5;
-  const refillRate = 0.5; // 1 token per 2 seconds
-  const now = Date.now();
-  
-  let entry = rateLimitStore.get(userId);
-  if (!entry) {
-    entry = { tokens: maxTokens, lastRefill: now };
-    rateLimitStore.set(userId, entry);
-  }
-  
-  const timePassed = (now - entry.lastRefill) / 1000;
-  const tokensToAdd = Math.floor(timePassed * refillRate);
-  
-  if (tokensToAdd > 0) {
-    entry.tokens = Math.min(maxTokens, entry.tokens + tokensToAdd);
-    entry.lastRefill = now;
-  }
-  
-  if (entry.tokens >= 1) {
-    entry.tokens -= 1;
-    rateLimitStore.set(userId, entry);
-    return { allowed: true };
-  }
-  
-  const retryAfter = Math.ceil((1 - entry.tokens) / refillRate);
-  return { allowed: false, retryAfter };
+  'Access-Control-Allow-Origin': 'https://ocodx.store',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CUSTOMER-PORTAL] ${step}${detailsStr}`);
-};
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  // FIX: protect this endpoint with a shared secret
+  // Set CLEANUP_SECRET in your Supabase Edge Function environment variables.
+  // Then call this function with the header: x-cleanup-secret: <your-secret>
+  // Your Supabase cron job should include this header too.
+  const cleanupSecret = Deno.env.get('CLEANUP_SECRET')
+  if (cleanupSecret) {
+    const providedSecret = req.headers.get('x-cleanup-secret')
+    if (!providedSecret || providedSecret !== cleanupSecret) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+  } else {
+    // No secret configured — log a warning but allow through so existing
+    // cron jobs don't break while you set up the secret.
+    console.warn('[cleanup-empty-rooms] WARNING: CLEANUP_SECRET is not set. Endpoint is unprotected.')
   }
 
   try {
-    logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logStep("Stripe key verified");
-
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
+    // Delete messages from rooms that haven't had activity in the last hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    const { data: oldRooms, error: roomsError } = await supabaseClient
+      .from('ephemeral_rooms')
+      .select('id')
+      .lt('created_at', oneHourAgo)
 
-    // Rate limiting check
-    const rateLimit = checkRateLimit(user.id);
-    if (!rateLimit.allowed) {
-      logStep("Rate limited", { userId: user.id });
+    if (roomsError) throw roomsError
+
+    if (oldRooms && oldRooms.length > 0) {
+      const roomIds = oldRooms.map(room => room.id)
+
+      const { error: deleteError } = await supabaseClient
+        .from('ephemeral_messages')
+        .delete()
+        .in('room_id', roomIds)
+
+      if (deleteError) throw deleteError
+
+      const { error: deleteRoomsError } = await supabaseClient
+        .from('ephemeral_rooms')
+        .delete()
+        .in('id', roomIds)
+
+      if (deleteRoomsError) throw deleteRoomsError
+
       return new Response(
-        JSON.stringify({ error: "Too many requests. Please try again later." }),
-        { 
-          status: 429, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json",
-            "Retry-After": String(rateLimit.retryAfter || 5)
-          } 
-        }
-      );
+        JSON.stringify({
+          success: true,
+          cleaned: roomIds.length,
+          message: `Cleaned up ${roomIds.length} inactive rooms`,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (customers.data.length === 0) {
-      throw new Error("No Stripe customer found for this user");
-    }
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
-
-    const origin = req.headers.get("origin") || "http://localhost:3000";
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: `${origin}/`,
-    });
-    logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url });
-
-    return new Response(JSON.stringify({ url: portalSession.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({ success: true, cleaned: 0, message: 'No rooms to clean up' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in customer-portal", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
-});
+})
