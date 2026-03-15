@@ -3,9 +3,41 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://ocodx.store',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// FIX: rate limiter added — prevents abuse / accidental loops
+const rateLimitStore = new Map<string, { tokens: number; lastRefill: number }>();
+
+function checkRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
+  const maxTokens = 3;   // only 3 attempts
+  const refillRate = 0.1; // 1 token per 10 seconds
+  const now = Date.now();
+
+  let entry = rateLimitStore.get(userId);
+  if (!entry) {
+    entry = { tokens: maxTokens, lastRefill: now };
+    rateLimitStore.set(userId, entry);
+  }
+
+  const timePassed = (now - entry.lastRefill) / 1000;
+  const tokensToAdd = Math.floor(timePassed * refillRate);
+
+  if (tokensToAdd > 0) {
+    entry.tokens = Math.min(maxTokens, entry.tokens + tokensToAdd);
+    entry.lastRefill = now;
+  }
+
+  if (entry.tokens >= 1) {
+    entry.tokens -= 1;
+    rateLimitStore.set(userId, entry);
+    return { allowed: true };
+  }
+
+  const retryAfter = Math.ceil((1 - entry.tokens) / refillRate);
+  return { allowed: false, retryAfter };
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -24,6 +56,22 @@ serve(async (req) => {
 
     if (userError || !user) {
       throw new Error('Unauthorized');
+    }
+
+    // FIX: rate limit check before any destructive operation
+    const rateLimit = checkRateLimit(user.id);
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'Retry-After': String(rateLimit.retryAfter || 10),
+          },
+        }
+      );
     }
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
@@ -47,20 +95,15 @@ serve(async (req) => {
     }
 
     // Delete user data from all tables
-    // Note: Some tables have ON DELETE CASCADE, but we'll be explicit
     await supabaseClient.from('active_sessions').delete().eq('user_id', user.id);
     await supabaseClient.from('subscriptions').delete().eq('user_id', user.id);
     await supabaseClient.from('user_roles').delete().eq('user_id', user.id);
-    
-    // Delete ephemeral messages (if user_id is set)
     await supabaseClient.from('ephemeral_messages').delete().eq('user_id', user.id);
-    
-    // Delete ephemeral rooms created by user
     await supabaseClient.from('ephemeral_rooms').delete().eq('created_by', user.id);
 
     // Finally, delete the auth user
     const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(user.id);
-    
+
     if (deleteError) {
       throw deleteError;
     }
@@ -73,9 +116,9 @@ serve(async (req) => {
     console.error('Error deleting account:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to delete account' }),
-      { 
+      {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
