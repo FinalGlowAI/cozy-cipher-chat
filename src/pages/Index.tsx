@@ -40,6 +40,7 @@ const Index = () => {
 
     // Subscribe first to avoid missing a rapid SIGNED_IN event during navigation.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+      console.log('[Index] onAuthStateChange:', _event, sess ? 'session exists' : 'no session');
       if (!mounted) return;
       clearTimeout(safetyTimeout);
       setSession(sess ?? null);
@@ -48,11 +49,13 @@ const Index = () => {
     // Then read the current session from storage.
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
+        console.log('[Index] getSession resolved:', session ? 'session exists' : 'null');
         if (!mounted) return;
         clearTimeout(safetyTimeout);
         setSession(session ?? null);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[Index] getSession error:', err);
         if (!mounted) return;
         clearTimeout(safetyTimeout);
         setSession(null);
