@@ -21,43 +21,40 @@ const Index = () => {
   useEffect(() => {
     let mounted = true;
 
-    // Safety timeout: if initial session loading hangs, re-check session once more
-    // before deciding the user is logged out.
+    // FIX: reduced from 7000ms to 3000ms — Apple reviewers on iPad see a blank
+    // screen if the timeout is too long. 3s is enough for any real network condition.
+    // Also: wrap getSession in try/catch that handles localStorage being
+    // blocked by iPad privacy settings (ITP / WebView restrictions).
     const safetyTimeout = setTimeout(async () => {
       if (!mounted) return;
-      console.log('[Index] Safety timeout triggered – re-checking session');
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('[Index] Safety timeout session:', session ? 'exists' : 'null');
         if (!mounted) return;
         setSession(session ?? null);
-      } catch (err) {
-        console.error('[Index] Safety timeout error:', err);
+      } catch {
         if (!mounted) return;
+        // FIX: if localStorage is blocked (iPad WebView privacy restrictions),
+        // treat as logged out instead of hanging indefinitely.
         setSession(null);
       }
-    }, 7000);
+    }, 3000);
 
-    // Subscribe first to avoid missing a rapid SIGNED_IN event during navigation.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
-      console.log('[Index] onAuthStateChange:', _event, sess ? 'session exists' : 'no session');
       if (!mounted) return;
       clearTimeout(safetyTimeout);
       setSession(sess ?? null);
     });
 
-    // Then read the current session from storage.
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
-        console.log('[Index] getSession resolved:', session ? 'session exists' : 'null');
         if (!mounted) return;
         clearTimeout(safetyTimeout);
         setSession(session ?? null);
       })
-      .catch((err) => {
-        console.error('[Index] getSession error:', err);
+      .catch(() => {
         if (!mounted) return;
         clearTimeout(safetyTimeout);
+        // FIX: catch localStorage errors on iPad WebView
         setSession(null);
       });
 
@@ -68,25 +65,26 @@ const Index = () => {
     };
   }, []);
 
-  // Redirect to auth when session is confirmed missing
   useEffect(() => {
     if (session !== null) return;
 
-    // Double-check to prevent redirect loops when session propagation is delayed.
     let cancelled = false;
     (async () => {
-      const { data: { session: latest } } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (latest) {
-        setSession(latest);
-      } else {
-        navigate("/auth", { replace: true });
+      try {
+        const { data: { session: latest } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (latest) {
+          setSession(latest);
+        } else {
+          navigate("/auth", { replace: true });
+        }
+      } catch {
+        // FIX: localStorage blocked on iPad — redirect to auth
+        if (!cancelled) navigate("/auth", { replace: true });
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [session, navigate]);
 
   const handleLogout = async () => {
@@ -128,67 +126,36 @@ const Index = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <NeuralBackground key="neural-bg" />
-      {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-surface opacity-30" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      {/* Content */}
       <div className="relative z-10">
-        {/* Header */}
         <header className="border-b border-primary/20 backdrop-blur-xl bg-card/30">
           <div className="container mx-auto px-4 py-4">
             {/* Mobile Layout */}
             <div className="flex flex-col gap-3 md:hidden">
-              {/* Top row: Logo + Nav actions */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <img src={ocxLogo} alt="OCX Logo" className="h-10 w-10 object-contain" />
                   <div>
-                    <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                      OCX
-                    </h1>
+                    <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">OCX</h1>
                     <p className="text-[10px] text-muted-foreground">Designed with privacy-first</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigate("/ephemeral")}
-                    className="h-9 w-9"
-                  >
-                    💬
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigate("/image-encryption")}
-                    className="h-9 w-9"
-                  >
-                    🖼️
-                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => navigate("/ephemeral")} className="h-9 w-9">💬</Button>
+                  <Button variant="outline" size="icon" onClick={() => navigate("/image-encryption")} className="h-9 w-9">🖼️</Button>
                   {isAdmin && (
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      onClick={() => navigate("/admin")}
-                      className="h-9 w-9"
-                    >
+                    <Button variant="secondary" size="icon" onClick={() => navigate("/admin")} className="h-9 w-9">
                       <Settings className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleLogout}
-                    className="h-9 w-9"
-                  >
+                  <Button variant="ghost" size="icon" onClick={handleLogout} className="h-9 w-9">
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              {/* Bottom row: Credits + Game centered */}
               <div className="flex items-center justify-center gap-3">
                 <CreditDisplay />
                 <Button
@@ -208,14 +175,10 @@ const Index = () => {
               <div className="flex items-center gap-3">
                 <img src={ocxLogo} alt="OCX Logo" className="h-12 w-12 object-contain" />
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    OCX
-                  </h1>
+                  <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">OCX</h1>
                   <p className="text-xs text-muted-foreground">Designed with privacy-first</p>
                 </div>
               </div>
-
-              {/* Center: Credits + Game Button */}
               <div className="flex items-center gap-3">
                 <CreditDisplay />
                 <Button
@@ -228,45 +191,22 @@ const Index = () => {
                   <Gamepad2 className="h-6 w-6 text-white" />
                 </Button>
               </div>
-
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Lock className="h-4 w-4" />
                   <span>100% Private</span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate("/ephemeral")}
-                  >
-                    Ephemeral Space
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate("/image-encryption")}
-                  >
-                    Image Encryption
-                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/ephemeral")}>Ephemeral Space</Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/image-encryption")}>Image Encryption</Button>
                 </div>
                 {isAdmin && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate("/admin")}
-                    className="gap-2"
-                  >
+                  <Button variant="secondary" size="sm" onClick={() => navigate("/admin")} className="gap-2">
                     <Settings className="h-4 w-4" />
                     Admin
                   </Button>
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="gap-2"
-                >
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
                   <LogOut className="h-4 w-4" />
                   Logout
                 </Button>
@@ -275,7 +215,6 @@ const Index = () => {
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="container mx-auto px-4 py-12">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">
@@ -289,59 +228,21 @@ const Index = () => {
               AES-256 encryption for your sensitive communications. Start encrypting instantly.
             </p>
           </div>
-
           <EncryptionPanel onOpenGames={() => setGameOpen(true)} />
         </main>
 
-        {/* Footer */}
         <footer className="border-t border-primary/20 backdrop-blur-xl bg-card/30 mt-20">
           <div className="container mx-auto px-4 py-8">
             <div className="text-center">
               <div className="flex flex-wrap justify-center gap-4 mb-4">
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/about")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  About Us
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/disclaimer")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Disclaimer
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/terms")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Terms of Use
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/privacy")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Privacy Policy
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/settings")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Settings
-                </Button>
-                <Button
-                  variant="link"
-                  onClick={() => navigate("/contact")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Contact Us
-                </Button>
+                <Button variant="link" onClick={() => navigate("/about")} className="text-muted-foreground hover:text-foreground">About Us</Button>
+                <Button variant="link" onClick={() => navigate("/disclaimer")} className="text-muted-foreground hover:text-foreground">Disclaimer</Button>
+                <Button variant="link" onClick={() => navigate("/terms")} className="text-muted-foreground hover:text-foreground">Terms of Use</Button>
+                <Button variant="link" onClick={() => navigate("/privacy")} className="text-muted-foreground hover:text-foreground">Privacy Policy</Button>
+                <Button variant="link" onClick={() => navigate("/settings")} className="text-muted-foreground hover:text-foreground">Settings</Button>
+                <Button variant="link" onClick={() => navigate("/contact")} className="text-muted-foreground hover:text-foreground">Contact Us</Button>
               </div>
-            <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 <p>© 2026 OCX. Your privacy is our priority.</p>
                 <p className="mt-2">Client-side encryption · Zero-knowledge architecture · AES-256 encryption</p>
                 <p className="mt-1">Text & Image Encryption · Ephemeral Rooms · Gamified Credits</p>
@@ -351,12 +252,7 @@ const Index = () => {
         </footer>
       </div>
 
-      {/* Game Selector Modal */}
-      <GameSelector 
-        open={gameOpen} 
-        onOpenChange={setGameOpen}
-        onWin={() => {}}
-      />
+      <GameSelector open={gameOpen} onOpenChange={setGameOpen} onWin={() => {}} />
     </div>
   );
 };
