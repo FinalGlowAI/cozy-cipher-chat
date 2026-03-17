@@ -21,10 +21,14 @@ const Index = () => {
   useEffect(() => {
     let mounted = true;
 
-    // FIX: reduced from 7000ms to 3000ms — Apple reviewers on iPad see a blank
-    // screen if the timeout is too long. 3s is enough for any real network condition.
-    // Also: wrap getSession in try/catch that handles localStorage being
-    // blocked by iPad privacy settings (ITP / WebView restrictions).
+    // If OAuth tokens are in the URL hash, clear them from the address bar
+    // immediately. The Supabase client (detectSessionInUrl) will still pick
+    // them up because it reads the hash synchronously on init.
+    const hash = window.location.hash;
+    if (hash && (hash.includes('access_token') || hash.includes('refresh_token') || hash.includes('type=recovery'))) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
     const safetyTimeout = setTimeout(async () => {
       if (!mounted) return;
       try {
@@ -33,8 +37,6 @@ const Index = () => {
         setSession(session ?? null);
       } catch {
         if (!mounted) return;
-        // FIX: if localStorage is blocked (iPad WebView privacy restrictions),
-        // treat as logged out instead of hanging indefinitely.
         setSession(null);
       }
     }, 3000);
@@ -54,7 +56,6 @@ const Index = () => {
       .catch(() => {
         if (!mounted) return;
         clearTimeout(safetyTimeout);
-        // FIX: catch localStorage errors on iPad WebView
         setSession(null);
       });
 
