@@ -28,3 +28,28 @@ export const isIOSPWA = (): boolean => {
 
   return isStandalone && isIOS();
 };
+
+/**
+ * Returns a safe storage implementation for Supabase auth.
+ * Falls back to an in-memory store when localStorage is unavailable
+ * (e.g. some private browsing modes or restricted environments).
+ */
+export const getSafeStorage = (): Storage => {
+  try {
+    const test = '__storage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return localStorage;
+  } catch {
+    // In-memory fallback
+    const store: Record<string, string> = {};
+    return {
+      getItem: (key: string) => store[key] ?? null,
+      setItem: (key: string, value: string) => { store[key] = value; },
+      removeItem: (key: string) => { delete store[key]; },
+      clear: () => { Object.keys(store).forEach(k => delete store[k]); },
+      get length() { return Object.keys(store).length; },
+      key: (index: number) => Object.keys(store)[index] ?? null,
+    } as Storage;
+  }
+};
