@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
 import { Lock, LogOut, Settings, Loader2, Gamepad2 } from "lucide-react";
+import LandingPage from "@/components/LandingPage";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAdmin } from "@/hooks/useAdmin";
