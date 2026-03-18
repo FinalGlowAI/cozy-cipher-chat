@@ -1,3 +1,6 @@
+// IMPORTANT: Capture OAuth hash BEFORE anything else (React Router strips it)
+import "./lib/oauthHashCapture";
+
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
