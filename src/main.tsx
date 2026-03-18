@@ -1,11 +1,6 @@
-// PostHog MUST be the very first import — it runs init synchronously on import
-import './posthog-init';
-
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { registerNotificationListeners, requestNotificationPermission, isNotificationsAvailable } from "./lib/notifications";
-import { initAnalytics, trackError } from "./lib/analytics";
 
 // === Hard reload: clear all caches & unregister stale service workers ===
 if ('caches' in window) {
@@ -19,57 +14,53 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Track when app started loading
-const loadStartTime = Date.now();
-const MIN_LOADER_TIME = 1500;
-
 const hideInitialLoader = () => {
   const loader = document.getElementById("initial-loader");
   if (loader) {
-    const elapsed = Date.now() - loadStartTime;
-    const remainingTime = Math.max(0, MIN_LOADER_TIME - elapsed);
-    setTimeout(() => {
-      loader.style.opacity = "0";
-      loader.style.transition = "opacity 0.3s ease-out";
-      setTimeout(() => loader.remove(), 300);
-    }, remainingTime);
+    loader.style.opacity = "0";
+    loader.style.transition = "opacity 0.3s ease-out";
+    setTimeout(() => loader.remove(), 300);
   }
 };
 
-// Initialize analytics (registers global props + additional events)
-try {
-  initAnalytics();
-} catch (_) {
-  // Analytics should never crash the app
-}
+// Defer non-critical init to after React mounts
+const deferredInit = () => {
+  // PostHog & analytics — loaded async, never blocks rendering
+  import('./posthog-init').catch(() => {});
+  import('./lib/analytics').then(({ initAnalytics, trackError }) => {
+    try { initAnalytics(); } catch (_) {}
+    window.addEventListener('error', (e) => {
+      try { trackError(e.message, window.location.pathname); } catch (_) {}
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      try { trackError(String(e.reason), window.location.pathname); } catch (_) {}
+    });
+  }).catch(() => {});
 
-// Global error handler
-window.addEventListener('error', (e) => {
-  try { trackError(e.message, window.location.pathname); } catch (_) {}
-});
-window.addEventListener('unhandledrejection', (e) => {
-  try { trackError(String(e.reason), window.location.pathname); } catch (_) {}
-});
-
-// Initialize notifications on app start
-if (isNotificationsAvailable()) {
-  try {
-    registerNotificationListeners();
-    requestNotificationPermission();
-  } catch (_) {}
-}
+  // Notifications — loaded async
+  import('./lib/notifications').then(({ isNotificationsAvailable, registerNotificationListeners, requestNotificationPermission }) => {
+    if (isNotificationsAvailable()) {
+      try {
+        registerNotificationListeners();
+        requestNotificationPermission();
+      } catch (_) {}
+    }
+  }).catch(() => {});
+};
 
 try {
   const root = createRoot(document.getElementById("root")!);
   root.render(<App />);
 
-  // Only hide loader after React successfully renders
+  // Hide loader immediately after React renders (no artificial delay)
   requestAnimationFrame(() => {
     requestAnimationFrame(hideInitialLoader);
   });
+
+  // Kick off analytics & notifications after paint
+  setTimeout(deferredInit, 100);
 } catch (e) {
   console.error('React failed to mount:', e);
-  // Show error in the initial loader instead of blank screen
   const loader = document.getElementById("initial-loader");
   if (loader) {
     loader.innerHTML = `
