@@ -87,11 +87,10 @@ const Index = () => {
         if (cancelled) return;
         if (latest) {
           setSession(latest);
-        } else {
-          navigate("/auth", { replace: true });
         }
+        // Don't redirect — let the component render the landing page instead
       } catch {
-        if (!cancelled) navigate("/auth", { replace: true });
+        // No-op: session stays null, landing page will show
       }
     })();
 
