@@ -1,11 +1,6 @@
-// PostHog MUST be the very first import — it runs init synchronously on import
-import './posthog-init';
-
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { registerNotificationListeners, requestNotificationPermission, isNotificationsAvailable } from "./lib/notifications";
-import { initAnalytics, trackError } from "./lib/analytics";
 
 // === Hard reload: clear all caches & unregister stale service workers ===
 if ('caches' in window) {
