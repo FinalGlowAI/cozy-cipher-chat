@@ -120,18 +120,7 @@ const Index = () => {
   }
 
   if (session === null) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-surface opacity-30" />
-        <div className="relative z-10 flex flex-col items-center gap-4">
-          <img src={ocxLogo} alt="OCX Logo" className="h-16 w-16 object-contain animate-pulse" />
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span>Redirecting…</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LandingPage />;
   }
 
   return (
