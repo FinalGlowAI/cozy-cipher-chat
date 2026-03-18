@@ -58,33 +58,38 @@ export const useCredits = () => {
         const now = new Date();
         const timeSinceDecay = now.getTime() - lastDecayAt.getTime();
 
-        // Check if 24 hours have passed — grant daily free credits via atomic RPC
+        // Check if 24 hours have passed — top up to minimum 10 if below
         if (timeSinceDecay >= TWENTY_FOUR_HOURS) {
-          // FIX: use atomic earn_credits RPC to avoid race condition
-          const { error: rpcError } = await supabase.rpc("earn_credits", {
-            p_user_id: user.id,
-            p_amount: DAILY_FREE_CREDITS,
-            p_source: "daily_bonus",
-          });
+          const currentBalance = data.total_credits;
 
-          // Update last_decay_at separately (earn_credits doesn't touch it)
-          if (!rpcError) {
-            await supabase
-              .from("user_credits")
-              .update({ last_decay_at: now.toISOString() })
-              .eq("user_id", user.id);
+          if (currentBalance < DAILY_FREE_CREDITS) {
+            const topUpAmount = DAILY_FREE_CREDITS - currentBalance;
 
-            toast.info(`Daily bonus: +${DAILY_FREE_CREDITS} credits!`);
-            showNotification(
-              "Daily Bonus Available! 🎁",
-              `You received ${DAILY_FREE_CREDITS} free credits. Play games to earn more!`,
-              { tag: "daily-credits" }
-            );
-          } else {
-            console.error("Error granting daily credits:", rpcError);
+            const { error: rpcError } = await supabase.rpc("earn_credits", {
+              p_user_id: user.id,
+              p_amount: topUpAmount,
+              p_source: "daily_topup",
+            });
+
+            if (!rpcError) {
+              toast.info(`Daily top-up: +${topUpAmount} credits!`);
+              showNotification(
+                "Daily Top-Up! 🎁",
+                `Your credits were topped up to ${DAILY_FREE_CREDITS}. Play games to earn more!`,
+                { tag: "daily-credits" }
+              );
+            } else {
+              console.error("Error granting daily credits:", rpcError);
+            }
           }
 
-          // Re-fetch to get the updated balance after RPC
+          // Always update last_decay_at to reset the 24h timer
+          await supabase
+            .from("user_credits")
+            .update({ last_decay_at: now.toISOString() })
+            .eq("user_id", user.id);
+
+          // Re-fetch to get the updated balance
           const { data: refreshed } = await supabase
             .from("user_credits")
             .select("*")
@@ -92,8 +97,8 @@ export const useCredits = () => {
             .single();
 
           setState({
-            totalCredits: refreshed?.total_credits ?? data.total_credits + DAILY_FREE_CREDITS,
-            lifetimeEarned: refreshed?.lifetime_earned ?? data.lifetime_earned + DAILY_FREE_CREDITS,
+            totalCredits: refreshed?.total_credits ?? Math.max(currentBalance, DAILY_FREE_CREDITS),
+            lifetimeEarned: refreshed?.lifetime_earned ?? data.lifetime_earned,
             loading: false,
             decayTime: new Date(now.getTime() + TWENTY_FOUR_HOURS),
           });
