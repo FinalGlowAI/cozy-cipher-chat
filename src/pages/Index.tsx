@@ -80,13 +80,6 @@ const Index = () => {
   useEffect(() => {
     if (session !== null) return;
 
-    // Don't redirect to /auth if OAuth tokens are present in the URL hash —
-    // the Supabase client needs time to process them.
-    const hash = window.location.hash;
-    if (hash && (hash.includes('access_token') || hash.includes('type=recovery') || hash.includes('refresh_token'))) {
-      return;
-    }
-
     let cancelled = false;
     (async () => {
       try {
@@ -98,7 +91,6 @@ const Index = () => {
           navigate("/auth", { replace: true });
         }
       } catch {
-        // FIX: localStorage blocked on iPad — redirect to auth
         if (!cancelled) navigate("/auth", { replace: true });
       }
     })();
