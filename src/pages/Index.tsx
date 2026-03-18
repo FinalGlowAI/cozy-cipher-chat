@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { EncryptionPanel } from "@/components/EncryptionPanel";
 import { Lock, LogOut, Settings, Loader2, Gamepad2 } from "lucide-react";
+import LandingPage from "@/components/LandingPage";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -87,11 +88,10 @@ const Index = () => {
         if (cancelled) return;
         if (latest) {
           setSession(latest);
-        } else {
-          navigate("/auth", { replace: true });
         }
+        // Don't redirect — let the component render the landing page instead
       } catch {
-        if (!cancelled) navigate("/auth", { replace: true });
+        // No-op: session stays null, landing page will show
       }
     })();
 
@@ -120,18 +120,7 @@ const Index = () => {
   }
 
   if (session === null) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-surface opacity-30" />
-        <div className="relative z-10 flex flex-col items-center gap-4">
-          <img src={ocxLogo} alt="OCX Logo" className="h-16 w-16 object-contain animate-pulse" />
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span>Redirecting…</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LandingPage />;
   }
 
   return (
