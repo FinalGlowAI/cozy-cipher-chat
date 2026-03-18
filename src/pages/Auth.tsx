@@ -11,6 +11,7 @@ import { NeuralBackground } from "@/components/NeuralBackground";
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { isNativeApp, nativeGoogleSignIn } from "@/lib/nativeGoogleAuth";
+import { consumeCapturedOAuthTokens } from "@/lib/oauthHashCapture";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Auth = () => {
@@ -23,27 +24,42 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Handle OAuth tokens in the URL hash (access_token, refresh_token)
-    const hash = window.location.hash;
-    if (hash && (hash.includes('access_token') || hash.includes('type=recovery'))) {
-      // Supabase client will pick up the tokens automatically via detectSessionInUrl
-      // Just wait for onAuthStateChange to fire
+    let cancelled = false;
+
+    // Try to restore session from captured OAuth hash tokens
+    const tokens = consumeCapturedOAuthTokens();
+    if (tokens) {
+      supabase.auth.setSession({
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+      }).then(({ error }) => {
+        if (cancelled) return;
+        if (!error) {
+          navigate("/", { replace: true });
+          return;
+        }
+        // Fall through — onAuthStateChange / getSession will handle it
+        console.warn("setSession from hash failed, falling back:", error.message);
+      });
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
+      if (!cancelled && session) {
         navigate("/", { replace: true });
       }
     });
 
     // Check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (!cancelled && session) {
         navigate("/", { replace: true });
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {

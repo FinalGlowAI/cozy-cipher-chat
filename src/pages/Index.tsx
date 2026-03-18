@@ -10,6 +10,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { GameSelector } from "@/components/GameSelector";
 import { CreditDisplay } from "@/components/CreditDisplay";
+import { consumeCapturedOAuthTokens } from "@/lib/oauthHashCapture";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 const Index = () => {
@@ -21,12 +22,22 @@ const Index = () => {
   useEffect(() => {
     let mounted = true;
 
-    // If OAuth tokens are in the URL hash, clear them from the address bar
-    // immediately. The Supabase client (detectSessionInUrl) will still pick
-    // them up because it reads the hash synchronously on init.
-    const hash = window.location.hash;
-    if (hash && (hash.includes('access_token') || hash.includes('refresh_token') || hash.includes('type=recovery'))) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    // Try to restore session from captured OAuth hash tokens (captured before React Router mounted)
+    const tokens = consumeCapturedOAuthTokens();
+    if (tokens) {
+      supabase.auth.setSession({
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+      }).then(({ data, error }) => {
+        if (!mounted) return;
+        if (!error && data.session) {
+          setSession(data.session);
+        }
+        // If setSession fails, the normal getSession() flow below will handle it
+        if (error) {
+          console.warn("setSession from hash failed, falling back:", error.message);
+        }
+      });
     }
 
     const safetyTimeout = setTimeout(async () => {
@@ -69,13 +80,6 @@ const Index = () => {
   useEffect(() => {
     if (session !== null) return;
 
-    // Don't redirect to /auth if OAuth tokens are present in the URL hash —
-    // the Supabase client needs time to process them.
-    const hash = window.location.hash;
-    if (hash && (hash.includes('access_token') || hash.includes('type=recovery') || hash.includes('refresh_token'))) {
-      return;
-    }
-
     let cancelled = false;
     (async () => {
       try {
@@ -87,7 +91,6 @@ const Index = () => {
           navigate("/auth", { replace: true });
         }
       } catch {
-        // FIX: localStorage blocked on iPad — redirect to auth
         if (!cancelled) navigate("/auth", { replace: true });
       }
     })();
