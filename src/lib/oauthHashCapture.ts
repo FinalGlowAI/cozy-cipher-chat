@@ -12,6 +12,7 @@
 export interface CapturedOAuthTokens {
   access_token: string;
   refresh_token: string;
+  type?: string;
 }
 
 let captured: CapturedOAuthTokens | null = null;
@@ -22,11 +23,13 @@ if (hash && hash.length > 1) {
   const params = new URLSearchParams(hash.substring(1));
   const accessToken = params.get("access_token");
   const refreshToken = params.get("refresh_token");
+  const tokenType = params.get("type");
 
   if (accessToken && refreshToken) {
     captured = {
       access_token: accessToken,
       refresh_token: refreshToken,
+      type: tokenType || undefined,
     };
     // Clear the hash immediately so React Router never sees it
     window.history.replaceState(null, "", window.location.pathname + window.location.search);
