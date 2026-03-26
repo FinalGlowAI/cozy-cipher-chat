@@ -26,6 +26,23 @@ const Index = () => {
     // Try to restore session from captured OAuth hash tokens (captured before React Router mounted)
     const tokens = consumeCapturedOAuthTokens();
     if (tokens) {
+      // If this is a password recovery flow, redirect to reset-password page
+      if (tokens.type === "recovery") {
+        supabase.auth.setSession({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+        }).then(({ error }) => {
+          if (!mounted) return;
+          if (!error) {
+            navigate("/reset-password", { replace: true });
+          } else {
+            console.warn("Recovery setSession failed:", error.message);
+            toast.error("Reset link expired or invalid. Please request a new one.");
+          }
+        });
+        return;
+      }
+
       supabase.auth.setSession({
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
@@ -34,7 +51,6 @@ const Index = () => {
         if (!error && data.session) {
           setSession(data.session);
         }
-        // If setSession fails, the normal getSession() flow below will handle it
         if (error) {
           console.warn("setSession from hash failed, falling back:", error.message);
         }

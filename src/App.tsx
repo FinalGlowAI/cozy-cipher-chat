@@ -22,6 +22,7 @@ import Install from "./pages/Install";
 import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
 import Features from "./pages/Features";
+import ResetPassword from "./pages/ResetPassword";
 import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/subscription" element={<Subscription />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/features" element={<Features />} />
             <Route path="/contact" element={<Contact />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
