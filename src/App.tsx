@@ -22,6 +22,7 @@ import Install from "./pages/Install";
 import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
 import Features from "./pages/Features";
+import ResetPassword from "./pages/ResetPassword";
 import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
