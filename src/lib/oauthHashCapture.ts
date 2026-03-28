@@ -16,6 +16,7 @@ export interface CapturedOAuthTokens {
 }
 
 let captured: CapturedOAuthTokens | null = null;
+const PASSWORD_RESET_CANONICAL_ORIGIN = "https://ocodx.store";
 
 // Run synchronously on import
 const hash = window.location.hash;
@@ -24,6 +25,15 @@ if (hash && hash.length > 1) {
   const accessToken = params.get("access_token");
   const refreshToken = params.get("refresh_token");
   const tokenType = params.get("type");
+
+   if (
+    tokenType === "recovery" &&
+    window.location.origin !== PASSWORD_RESET_CANONICAL_ORIGIN &&
+    window.location.hostname.endsWith(".lovable.app")
+  ) {
+    const canonicalUrl = `${PASSWORD_RESET_CANONICAL_ORIGIN}${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.location.replace(canonicalUrl);
+  }
 
   if (accessToken && refreshToken) {
     captured = {
