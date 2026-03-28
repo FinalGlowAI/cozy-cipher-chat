@@ -156,7 +156,7 @@ const ResetPassword = () => {
             <div className="text-center mt-4">
               <button
                 type="button"
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/")}
                 className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
               >
                 <ArrowLeft className="h-3 w-3" /> Back to sign in

@@ -117,7 +117,7 @@ const Index = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
-    navigate("/auth");
+    navigate("/", { replace: true });
   };
 
   if (session === undefined) {

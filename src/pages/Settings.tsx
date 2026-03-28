@@ -128,7 +128,7 @@ const Settings = () => {
       
       // Sign out and redirect
       await supabase.auth.signOut();
-      navigate("/auth");
+      navigate("/", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Failed to delete account");
     } finally {
