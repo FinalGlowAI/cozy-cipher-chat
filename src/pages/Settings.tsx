@@ -62,14 +62,14 @@ const Settings = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (!session) {
-        navigate("/auth");
+        navigate("/", { replace: true });
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
-        navigate("/auth");
+        navigate("/", { replace: true });
       }
     });
 
@@ -128,7 +128,7 @@ const Settings = () => {
       
       // Sign out and redirect
       await supabase.auth.signOut();
-      navigate("/auth");
+      navigate("/", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Failed to delete account");
     } finally {
