@@ -42,7 +42,7 @@ const ResetPassword = () => {
         setHasSession(true);
       } else {
         toast.error("Invalid or expired reset link. Please request a new one.");
-        navigate("/auth", { replace: true });
+        navigate("/", { replace: true });
       }
     });
   }, [navigate]);
@@ -60,7 +60,7 @@ const ResetPassword = () => {
       
       // Sign out so they log in fresh with the new password
       await supabase.auth.signOut();
-      navigate("/auth", { replace: true });
+      navigate("/", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
     } finally {
