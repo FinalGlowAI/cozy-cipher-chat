@@ -53,6 +53,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: normalizedEmail,
+      options: {
+        redirectTo: 'https://ocodx.store/reset-password',
+      },
     });
 
     if (error) {
