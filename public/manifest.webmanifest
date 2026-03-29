@@ -1,0 +1,67 @@
+{
+  "name": "OCX - Encrypted Texts/Images Secure",
+  "short_name": "OCX",
+  "description": "Privacy-focused encrypted message & images app. Secure text encryption with local processing—no data storage, 100% private.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#8B5CF6",
+  "dir": "ltr",
+  "categories": ["utilities", "productivity", "security"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Encrypt Message",
+      "short_name": "Encrypt",
+      "description": "Quick access to encryption",
+      "url": "/?action=encrypt",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Decrypt Message",
+      "short_name": "Decrypt",
+      "description": "Quick access to decryption",
+      "url": "/?action=decrypt",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Image Encryption",
+      "short_name": "Images",
+      "description": "Direct to image encryption",
+      "url": "/image-encryption",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Ephemeral Chat",
+      "short_name": "Chat",
+      "description": "Start secure chat instantly",
+      "url": "/ephemeral",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
