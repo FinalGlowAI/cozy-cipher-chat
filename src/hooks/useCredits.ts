@@ -25,6 +25,10 @@ const LEVEL_CREDITS: Record<number, number> = {
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 const DAILY_FREE_CREDITS = 10;
 
+// NOTE: Credits are NEVER reduced automatically.
+// The `last_decay_at` DB column is a legacy name — it only tracks
+// the last daily-top-up cycle reset. No decay/reduction logic exists.
+
 export const useCredits = () => {
   const [state, setState] = useState<CreditState>({
     totalCredits: 0,
