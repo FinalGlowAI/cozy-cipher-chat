@@ -60,7 +60,13 @@ const ResetPassword = () => {
       
       // Sign out so they log in fresh with the new password
       await supabase.auth.signOut();
-      navigate("/", { replace: true });
+      
+      // Redirect to the branded auth page for fresh login
+      if (window.location.hostname !== "ocodx.store") {
+        window.location.replace("https://ocodx.store/auth");
+      } else {
+        navigate("/auth", { replace: true });
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
     } finally {
