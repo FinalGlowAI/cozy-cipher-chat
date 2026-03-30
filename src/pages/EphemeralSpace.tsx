@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Info, Coins, Lock, GraduationCap } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { useCredits } from "@/hooks/useCredits";
-import { FeatureGateModal } from "@/components/FeatureGateModal";
+
 import { GameSelector } from "@/components/GameSelector";
 import { EphemeralSpaceTutorial } from "@/components/EphemeralSpaceTutorial";
 import {
