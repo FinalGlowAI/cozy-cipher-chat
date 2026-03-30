@@ -38,7 +38,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [keyValidity, setKeyValidity] = useState<string>("never");
-  const [showGateModal, setShowGateModal] = useState(false);
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [lastEncryptionType, setLastEncryptionType] = useState<"keyless" | "password" | "secure" | null>(null);
