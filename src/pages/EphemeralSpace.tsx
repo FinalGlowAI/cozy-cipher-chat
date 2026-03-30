@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Info, Coins, Lock, GraduationCap } from "lucide-react";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { useCredits } from "@/hooks/useCredits";
-import { FeatureGateModal } from "@/components/FeatureGateModal";
+
 import { GameSelector } from "@/components/GameSelector";
 import { EphemeralSpaceTutorial } from "@/components/EphemeralSpaceTutorial";
 import {
@@ -26,7 +26,6 @@ const EPHEMERAL_SPACE_TUTORIAL_KEY = "ocx_ephemeral_space_tutorial_seen";
 const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showGateModal, setShowGateModal] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
@@ -65,7 +64,8 @@ const EphemeralSpace = () => {
   const createNewRoom = async () => {
     // Check if user can afford room creation
     if (!checkCanAfford(ROOM_CREATION_COST)) {
-      setShowGateModal(true);
+      toast.error(`You need ${ROOM_CREATION_COST} credits. Play games to earn more!`);
+      setGameOpen(true);
       return;
     }
 
@@ -307,15 +307,6 @@ const EphemeralSpace = () => {
         </CardContent>
       </Card>
 
-      {/* Feature Gate Modal */}
-      <FeatureGateModal
-        open={showGateModal}
-        onOpenChange={setShowGateModal}
-        featureName="Ephemeral Room Creation"
-        creditCost={ROOM_CREATION_COST}
-        currentCredits={credits}
-        onPlayGames={() => setGameOpen(true)}
-      />
 
       {/* Game Selector */}
       <GameSelector 

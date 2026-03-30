@@ -12,7 +12,7 @@ import { encryptText, decryptText, encryptWithKey, decryptWithKey, encryptKeyles
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { useDailyUsage } from "@/hooks/useDailyUsage";
 import { useCredits } from "@/hooks/useCredits";
-import { FeatureGateModal } from "./FeatureGateModal";
+
 import { EncryptionTutorial } from "./EncryptionTutorial";
 import {
   Dialog,
@@ -38,7 +38,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [keyValidity, setKeyValidity] = useState<string>("never");
-  const [showGateModal, setShowGateModal] = useState(false);
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [lastEncryptionType, setLastEncryptionType] = useState<"keyless" | "password" | "secure" | null>(null);
@@ -79,7 +79,8 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
     // Check if user needs credits
     if (!withinFreeLimit) {
       if (credits < TEXT_CREDIT_COST) {
-        setShowGateModal(true);
+        toast.error(`You need ${TEXT_CREDIT_COST} credits. Play games to earn more!`);
+        onOpenGames?.();
         return;
       }
       
@@ -682,16 +683,6 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           </div>
         )}
       </Card>
-
-      {/* Feature Gate Modal */}
-      <FeatureGateModal
-        open={showGateModal}
-        onOpenChange={setShowGateModal}
-        featureName={mode === "encrypt" ? "Text Encryption" : "Text Decryption"}
-        creditCost={TEXT_CREDIT_COST}
-        currentCredits={credits}
-        onPlayGames={() => onOpenGames?.()}
-      />
 
       {/* Tutorial Overlay */}
       <EncryptionTutorial

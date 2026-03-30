@@ -14,7 +14,7 @@ import { storeImage, retrieveImage, cleanupExpiredImages } from "@/lib/imageStor
 import { supabase } from "@/integrations/supabase/client";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { useCredits } from "@/hooks/useCredits";
-import { FeatureGateModal } from "@/components/FeatureGateModal";
+
 import { GameSelector } from "@/components/GameSelector";
 import {
   Dialog,
@@ -37,7 +37,7 @@ const ImageEncryption = () => {
   const [decryptedImage, setDecryptedImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
-  const [showGateModal, setShowGateModal] = useState(false);
+  
   const [gameOpen, setGameOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -101,7 +101,8 @@ const ImageEncryption = () => {
 
     // Check if user can afford
     if (!checkCanAfford(IMAGE_ENCRYPT_COST)) {
-      setShowGateModal(true);
+      toast.error(`You need ${IMAGE_ENCRYPT_COST} credits. Play games to earn more!`);
+      setGameOpen(true);
       return;
     }
 
@@ -135,7 +136,8 @@ const ImageEncryption = () => {
 
     // Check if user can afford
     if (!checkCanAfford(IMAGE_DECRYPT_COST)) {
-      setShowGateModal(true);
+      toast.error(`You need ${IMAGE_DECRYPT_COST} credits. Play games to earn more!`);
+      setGameOpen(true);
       return;
     }
 
@@ -438,16 +440,6 @@ const ImageEncryption = () => {
           )}
         </div>
       </div>
-
-      {/* Feature Gate Modal */}
-      <FeatureGateModal
-        open={showGateModal}
-        onOpenChange={setShowGateModal}
-        featureName={mode === "encrypt" ? "Image Encryption" : "Image Decryption"}
-        creditCost={currentCost}
-        currentCredits={credits}
-        onPlayGames={() => setGameOpen(true)}
-      />
 
       {/* Game Selector */}
       <GameSelector 
