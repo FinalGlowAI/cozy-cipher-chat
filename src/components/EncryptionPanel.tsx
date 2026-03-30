@@ -79,7 +79,8 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
     // Check if user needs credits
     if (!withinFreeLimit) {
       if (credits < TEXT_CREDIT_COST) {
-        setShowGateModal(true);
+        toast.error(`You need ${TEXT_CREDIT_COST} credits. Play games to earn more!`);
+        onOpenGames?.();
         return;
       }
       

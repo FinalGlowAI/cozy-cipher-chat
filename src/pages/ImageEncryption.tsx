@@ -136,7 +136,8 @@ const ImageEncryption = () => {
 
     // Check if user can afford
     if (!checkCanAfford(IMAGE_DECRYPT_COST)) {
-      setShowGateModal(true);
+      toast.error(`You need ${IMAGE_DECRYPT_COST} credits. Play games to earn more!`);
+      setGameOpen(true);
       return;
     }
 

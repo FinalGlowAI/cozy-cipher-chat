@@ -65,7 +65,8 @@ const EphemeralSpace = () => {
   const createNewRoom = async () => {
     // Check if user can afford room creation
     if (!checkCanAfford(ROOM_CREATION_COST)) {
-      setShowGateModal(true);
+      toast.error(`You need ${ROOM_CREATION_COST} credits. Play games to earn more!`);
+      setGameOpen(true);
       return;
     }
 
