@@ -308,15 +308,6 @@ const EphemeralSpace = () => {
         </CardContent>
       </Card>
 
-      {/* Feature Gate Modal */}
-      <FeatureGateModal
-        open={showGateModal}
-        onOpenChange={setShowGateModal}
-        featureName="Ephemeral Room Creation"
-        creditCost={ROOM_CREATION_COST}
-        currentCredits={credits}
-        onPlayGames={() => setGameOpen(true)}
-      />
 
       {/* Game Selector */}
       <GameSelector 
