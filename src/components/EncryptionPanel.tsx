@@ -12,7 +12,7 @@ import { encryptText, decryptText, encryptWithKey, decryptWithKey, encryptKeyles
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { useDailyUsage } from "@/hooks/useDailyUsage";
 import { useCredits } from "@/hooks/useCredits";
-import { FeatureGateModal } from "./FeatureGateModal";
+
 import { EncryptionTutorial } from "./EncryptionTutorial";
 import {
   Dialog,

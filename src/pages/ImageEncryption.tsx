@@ -14,7 +14,7 @@ import { storeImage, retrieveImage, cleanupExpiredImages } from "@/lib/imageStor
 import { supabase } from "@/integrations/supabase/client";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { useCredits } from "@/hooks/useCredits";
-import { FeatureGateModal } from "@/components/FeatureGateModal";
+
 import { GameSelector } from "@/components/GameSelector";
 import {
   Dialog,
