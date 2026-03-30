@@ -26,7 +26,6 @@ const EPHEMERAL_SPACE_TUTORIAL_KEY = "ocx_ephemeral_space_tutorial_seen";
 const EphemeralSpace = () => {
   const [roomCode, setRoomCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
