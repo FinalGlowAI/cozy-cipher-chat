@@ -37,7 +37,7 @@ const ImageEncryption = () => {
   const [decryptedImage, setDecryptedImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [validity, setValidity] = useState<string>("60"); // minutes
-  const [showGateModal, setShowGateModal] = useState(false);
+  
   const [gameOpen, setGameOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
