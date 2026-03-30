@@ -684,16 +684,6 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         )}
       </Card>
 
-      {/* Feature Gate Modal */}
-      <FeatureGateModal
-        open={showGateModal}
-        onOpenChange={setShowGateModal}
-        featureName={mode === "encrypt" ? "Text Encryption" : "Text Decryption"}
-        creditCost={TEXT_CREDIT_COST}
-        currentCredits={credits}
-        onPlayGames={() => onOpenGames?.()}
-      />
-
       {/* Tutorial Overlay */}
       <EncryptionTutorial
         isVisible={showTutorial}
