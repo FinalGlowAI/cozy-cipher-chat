@@ -441,16 +441,6 @@ const ImageEncryption = () => {
         </div>
       </div>
 
-      {/* Feature Gate Modal */}
-      <FeatureGateModal
-        open={showGateModal}
-        onOpenChange={setShowGateModal}
-        featureName={mode === "encrypt" ? "Image Encryption" : "Image Decryption"}
-        creditCost={currentCost}
-        currentCredits={credits}
-        onPlayGames={() => setGameOpen(true)}
-      />
-
       {/* Game Selector */}
       <GameSelector 
         open={gameOpen} 
