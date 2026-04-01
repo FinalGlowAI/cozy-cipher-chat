@@ -94,6 +94,14 @@ serve(async (req) => {
       }
     }
 
+    // Log deletion for audit purposes BEFORE removing data
+    await supabaseClient.from('account_deletion_log').insert({
+      user_id: user.id,
+      user_email: user.email ?? 'unknown',
+      had_subscription: !!subscription?.stripe_subscription_id,
+      stripe_subscription_id: subscription?.stripe_subscription_id ?? null,
+    });
+
     // Delete user data from all tables
     await supabaseClient.from('credit_transactions').delete().eq('user_id', user.id);
     await supabaseClient.from('user_credits').delete().eq('user_id', user.id);

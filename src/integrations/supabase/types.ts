@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_log: {
+        Row: {
+          deleted_at: string
+          had_subscription: boolean
+          id: string
+          stripe_subscription_id: string | null
+          user_email: string
+          user_id: string
+        }
+        Insert: {
+          deleted_at?: string
+          had_subscription?: boolean
+          id?: string
+          stripe_subscription_id?: string | null
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          deleted_at?: string
+          had_subscription?: boolean
+          id?: string
+          stripe_subscription_id?: string | null
+          user_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       active_sessions: {
         Row: {
           created_at: string
