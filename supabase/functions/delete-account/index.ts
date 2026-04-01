@@ -95,11 +95,17 @@ serve(async (req) => {
     }
 
     // Delete user data from all tables
+    await supabaseClient.from('credit_transactions').delete().eq('user_id', user.id);
+    await supabaseClient.from('user_credits').delete().eq('user_id', user.id);
+    await supabaseClient.from('daily_usage').delete().eq('user_id', user.id);
     await supabaseClient.from('active_sessions').delete().eq('user_id', user.id);
     await supabaseClient.from('subscriptions').delete().eq('user_id', user.id);
     await supabaseClient.from('user_roles').delete().eq('user_id', user.id);
+    await supabaseClient.from('kicked_participants').delete().eq('user_id', user.id);
+    await supabaseClient.from('room_participants').delete().eq('user_id', user.id);
     await supabaseClient.from('ephemeral_messages').delete().eq('user_id', user.id);
     await supabaseClient.from('ephemeral_rooms').delete().eq('created_by', user.id);
+    await supabaseClient.from('free_users').delete().eq('email', user.email ?? '');
 
     // Finally, delete the auth user
     const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(user.id);
