@@ -1,15 +1,10 @@
-[
-  {
-    "relation": [
-      "delegate_permission/common.handle_all_urls",
-      "delegate_permission/common.get_login_creds"
-    ],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "website.ocodx.twa",
-      "sha256_cert_fingerprints": [
-        "8F:5F:DB:04:0B:4C:67:55:9A:48:A8:13:D4:6D:82:BA:82:9F:81:D7:7F:31:CE:24:60:FF:86:E0:9E:C8:30:BE"
-      ]
-    }
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "store.ocodx.twa",
+    "sha256_cert_fingerprints": [
+      "68:20:69:B4:2D:97:13:F6:0E:A7:EC:D3:E9:32:20:2E:6E:58:1F:85:AA:AF:32:DC:2B:8E:EA:B0:C5:8E:ED:C8"
+    ]
   }
-]
+}]
