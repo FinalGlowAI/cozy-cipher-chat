@@ -12,6 +12,7 @@ import { encryptText, decryptText, encryptWithKey, decryptWithKey, encryptKeyles
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { useDailyUsage } from "@/hooks/useDailyUsage";
 import { useCredits } from "@/hooks/useCredits";
+import { celebrate } from "@/lib/confetti";
 
 import { EncryptionTutorial } from "./EncryptionTutorial";
 import {
@@ -105,6 +106,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           setDecryptionKey("");
           setLastEncryptionType("keyless");
           toast.success("Encrypted successfully! No key needed to decrypt.");
+          celebrate();
           return;
         } else if (secureMode) {
           const expirationMinutes = keyValidity === "never" ? undefined : parseInt(keyValidity);
@@ -134,6 +136,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         }
 
         toast.success("Encrypted successfully!");
+        celebrate();
         return;
       }
 
@@ -146,6 +149,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         setOutputText(decrypted);
         setLastEncryptionType("keyless");
         toast.success("Decrypted successfully! (Keyless message)");
+        celebrate();
         return;
       }
 
@@ -173,6 +177,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
 
       setOutputText(decrypted);
       toast.success("Decrypted successfully!");
+      celebrate();
     } catch (error) {
       if (error instanceof Error && error.message === "Decryption key has expired") {
         toast.error("Decryption key has expired and can no longer decrypt this message.");

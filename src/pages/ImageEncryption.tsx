@@ -14,6 +14,7 @@ import { storeImage, retrieveImage, cleanupExpiredImages } from "@/lib/imageStor
 import { supabase } from "@/integrations/supabase/client";
 import { NeuralBackground } from "@/components/NeuralBackground";
 import { useCredits } from "@/hooks/useCredits";
+import { celebrate } from "@/lib/confetti";
 
 import { GameSelector } from "@/components/GameSelector";
 import {
@@ -123,6 +124,7 @@ const ImageEncryption = () => {
         ? "never expires" 
         : `expires in ${validityNum >= 60 ? validityNum / 60 + "h" : validityNum + "min"}`;
       toast.success(`Image encrypted! Code ${expiryText}. ${IMAGE_ENCRYPT_COST} credits used.`);
+      celebrate();
     } catch (error) {
       toast.error("Encryption failed. Please try again.");
     }
@@ -152,6 +154,7 @@ const ImageEncryption = () => {
       const imageData = await retrieveImage(imageCode);
       setDecryptedImage(imageData);
       toast.success(`Image decrypted successfully! ${IMAGE_DECRYPT_COST} credits used.`);
+      celebrate();
     } catch (error) {
       if (error instanceof Error) {
         if (error.message === "Code not found") {
