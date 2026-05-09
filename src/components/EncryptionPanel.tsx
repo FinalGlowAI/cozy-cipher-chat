@@ -367,107 +367,36 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
       {/* Encryption Mode Selector - Only show in encrypt mode */}
       {mode === "encrypt" && (
         <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20">
-          {/* Keyless Mode Toggle */}
+          {/* Hint */}
+          <div className="mb-3 px-3 py-2 rounded-md bg-primary/10 border border-primary/20 text-xs text-foreground/90">
+            <strong className="text-primary">Default:</strong> messages use <strong>Keyless Mode</strong> (anyone can decrypt). Turn on <strong>Secure Mode</strong> to generate a unique key only you can share.
+          </div>
+
+          {/* Secure Mode Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Zap className="h-5 w-5 text-accent" />
+              <ShieldCheck className="h-5 w-5 text-primary" />
               <div>
-                <Label htmlFor="keyless-mode" className="text-base font-medium">
-                  Keyless Mode
+                <Label htmlFor="secure-mode" className="text-base font-medium">
+                  Secure Mode
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Encrypt without password - anyone can decrypt
+                  Generate a unique key for enhanced security
                 </p>
               </div>
             </div>
             <Switch
-              id="keyless-mode"
-              checked={keylessMode}
+              id="secure-mode"
+              checked={secureMode}
               onCheckedChange={(checked) => {
-                setKeylessMode(checked);
-                if (checked) setSecureMode(false);
+                setSecureMode(checked);
+                setKeylessMode(!checked);
               }}
             />
           </div>
 
-          {/* Secure Mode Toggle - Only show if keyless is off */}
-          {!keylessMode && (
-            <div className="mt-4 pt-4 border-t border-primary/20">
-              <div className="mb-3 px-3 py-2 rounded-md bg-primary/10 border border-primary/20 text-xs text-foreground/90">
-                <strong className="text-primary">Choose one:</strong> turn on <strong>Secure Mode</strong> to auto-generate a unique key, <em>or</em> leave it off and enter <strong>your own password</strong> below.
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                  <div>
-                    <Label htmlFor="secure-mode" className="text-base font-medium">
-                      Secure Mode
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Generate a unique key for enhanced security
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id="secure-mode"
-                  checked={secureMode}
-                  onCheckedChange={setSecureMode}
-                />
-              </div>
-            </div>
-          )}
-          
-          {/* Password input for standard mode (not keyless, not secure) */}
-          {!keylessMode && !secureMode && (
-            <div className="mt-4 pt-4 border-t border-primary/20">
-              <div className="flex items-center gap-2 mb-3">
-                <KeyRound className="h-4 w-4 text-primary" />
-                <Label className="text-sm font-medium">Your Password</Label>
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your secret password (min 8 characters)"
-                  className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleCopy(password)}
-                  disabled={!password}
-                  title="Copy password"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleShare(password)}
-                  disabled={!password}
-                  title="Share password"
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              </div>
-              <PasswordStrengthIndicator password={password} />
-              <p className="text-xs text-muted-foreground mt-2">
-                You must use the same password to decrypt the message later.
-              </p>
-            </div>
-          )}
-          
           {/* Key Validity Selector - Only show with secure mode enabled */}
-          {!keylessMode && secureMode && (
+          {secureMode && (
             <div className="mt-4 pt-4 border-t border-primary/20">
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="h-4 w-4 text-primary" />
