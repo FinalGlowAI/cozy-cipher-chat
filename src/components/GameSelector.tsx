@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Brain, Zap, Hash } from "lucide-react";
+import { Brain, Zap, Hash, Palette } from "lucide-react";
 import { MemoryGame } from "./MemoryGame";
 import { SymbolMatchGame } from "./SymbolMatchGame";
 import { FlashNumberGame } from "./FlashNumberGame";
+import { ColorSequenceGame } from "./ColorSequenceGame";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 interface GameSelectorProps {
