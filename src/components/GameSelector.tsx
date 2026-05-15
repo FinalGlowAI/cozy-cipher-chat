@@ -151,6 +151,24 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
                 </div>
               </div>
             </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 justify-start hover:border-primary hover:bg-primary/10 transition-all"
+              onClick={() => setSelectedGame("color-sequence")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20">
+                  <Palette className="h-6 w-6 text-purple-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold">Color Sequence</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Watch and repeat color patterns
+                  </p>
+                </div>
+              </div>
+            </Button>
           </div>
         </div>
       </DialogContent>
