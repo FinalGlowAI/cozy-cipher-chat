@@ -315,11 +315,17 @@ export const ColorSequenceGame = ({ open, onOpenChange, onWin }: Props) => {
                       type="button"
                       disabled={gameState !== "input"}
                       onClick={() => handleColorTap(color.id)}
-                      className={`aspect-square rounded-2xl transition-all duration-150 border-2 border-white/10 ${
-                        isActive ? `${color.active} scale-95 shadow-lg` : color.className
-                      } ${gameState === "input" ? "hover:scale-105 cursor-pointer" : "cursor-default"}`}
+                      className={`aspect-square flex items-center justify-center transition-all duration-150 ${
+                        gameState === "input" ? "hover:scale-105 cursor-pointer" : "cursor-default"
+                      }`}
                       aria-label={color.name}
-                    />
+                    >
+                      <span
+                        className={`w-3/4 h-3/4 border-2 border-white/10 transition-all duration-150 ${color.shape} ${
+                          isActive ? `${color.active} scale-95 shadow-lg` : color.className
+                        }`}
+                      />
+                    </button>
                   );
                 })}
               </div>
