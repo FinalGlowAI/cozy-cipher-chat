@@ -7,10 +7,10 @@ import { Progress } from "@/components/ui/progress";
 import { useCredits, LEVEL_CREDITS } from "@/hooks/useCredits";
 
 const COLORS = [
-  { id: 0, name: "Red", className: "bg-red-500", active: "bg-red-300" },
-  { id: 1, name: "Blue", className: "bg-blue-500", active: "bg-blue-300" },
-  { id: 2, name: "Green", className: "bg-green-500", active: "bg-green-300" },
-  { id: 3, name: "Yellow", className: "bg-yellow-500", active: "bg-yellow-300" },
+  { id: 0, name: "Red Circle", className: "bg-red-500", active: "bg-red-300", shape: "rounded-full" },
+  { id: 1, name: "Blue Square", className: "bg-blue-500", active: "bg-blue-300", shape: "rounded-md" },
+  { id: 2, name: "Green Diamond", className: "bg-green-500", active: "bg-green-300", shape: "rounded-md rotate-45" },
+  { id: 3, name: "Yellow Triangle", className: "bg-yellow-500", active: "bg-yellow-300", shape: "[clip-path:polygon(50%_0%,0%_100%,100%_100%)]" },
 ];
 
 const LEVELS = [
