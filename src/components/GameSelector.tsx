@@ -69,6 +69,19 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
     );
   }
 
+  if (selectedGame === "color-sequence") {
+    return (
+      <ColorSequenceGame
+        open={true}
+        onOpenChange={(isOpen) => {
+          handleGameClose(isOpen);
+          if (!isOpen) onOpenChange(false);
+        }}
+        onWin={onWin}
+      />
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-primary/30">
