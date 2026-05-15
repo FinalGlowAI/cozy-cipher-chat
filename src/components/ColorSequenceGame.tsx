@@ -359,7 +359,7 @@ export const ColorSequenceGame = ({ open, onOpenChange, onWin }: Props) => {
                     {sequence.map((id, i) => (
                       <span
                         key={i}
-                        className={`w-8 h-8 rounded-md ${COLORS[id].className} border border-white/10`}
+                        className={`w-8 h-8 ${COLORS[id].shape} ${COLORS[id].className} border border-white/10`}
                       />
                     ))}
                   </div>
