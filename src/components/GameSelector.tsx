@@ -14,7 +14,7 @@ interface GameSelectorProps {
   onWin?: () => void;
 }
 
-type SelectedGame = "none" | "memory" | "symbol-match" | "flash-number";
+type SelectedGame = "none" | "memory" | "symbol-match" | "flash-number" | "color-sequence";
 
 export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) => {
   const [selectedGame, setSelectedGame] = useState<SelectedGame>("none");
