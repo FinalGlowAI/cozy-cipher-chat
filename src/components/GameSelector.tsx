@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Brain, Zap, Hash } from "lucide-react";
+import { Brain, Zap, Hash, Palette } from "lucide-react";
 import { MemoryGame } from "./MemoryGame";
 import { SymbolMatchGame } from "./SymbolMatchGame";
 import { FlashNumberGame } from "./FlashNumberGame";
+import { ColorSequenceGame } from "./ColorSequenceGame";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 interface GameSelectorProps {
@@ -13,7 +14,7 @@ interface GameSelectorProps {
   onWin?: () => void;
 }
 
-type SelectedGame = "none" | "memory" | "symbol-match" | "flash-number";
+type SelectedGame = "none" | "memory" | "symbol-match" | "flash-number" | "color-sequence";
 
 export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) => {
   const [selectedGame, setSelectedGame] = useState<SelectedGame>("none");
@@ -58,6 +59,19 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
   if (selectedGame === "flash-number") {
     return (
       <FlashNumberGame
+        open={true}
+        onOpenChange={(isOpen) => {
+          handleGameClose(isOpen);
+          if (!isOpen) onOpenChange(false);
+        }}
+        onWin={onWin}
+      />
+    );
+  }
+
+  if (selectedGame === "color-sequence") {
+    return (
+      <ColorSequenceGame
         open={true}
         onOpenChange={(isOpen) => {
           handleGameClose(isOpen);
@@ -133,6 +147,24 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
                   <h3 className="font-semibold">Flash Number</h3>
                   <p className="text-xs text-muted-foreground">
                     Remember flashing number sequences
+                  </p>
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 justify-start hover:border-primary hover:bg-primary/10 transition-all"
+              onClick={() => setSelectedGame("color-sequence")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20">
+                  <Palette className="h-6 w-6 text-purple-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold">Color Sequence</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Watch and repeat color patterns
                   </p>
                 </div>
               </div>
