@@ -7,10 +7,10 @@ import { Progress } from "@/components/ui/progress";
 import { useCredits, LEVEL_CREDITS } from "@/hooks/useCredits";
 
 const COLORS = [
-  { id: 0, name: "Red", className: "bg-red-500", active: "bg-red-300" },
-  { id: 1, name: "Blue", className: "bg-blue-500", active: "bg-blue-300" },
-  { id: 2, name: "Green", className: "bg-green-500", active: "bg-green-300" },
-  { id: 3, name: "Yellow", className: "bg-yellow-500", active: "bg-yellow-300" },
+  { id: 0, name: "Red Circle", className: "bg-red-500", active: "bg-red-300", shape: "rounded-full" },
+  { id: 1, name: "Blue Square", className: "bg-blue-500", active: "bg-blue-300", shape: "rounded-md" },
+  { id: 2, name: "Green Diamond", className: "bg-green-500", active: "bg-green-300", shape: "rounded-md rotate-45" },
+  { id: 3, name: "Yellow Triangle", className: "bg-yellow-500", active: "bg-yellow-300", shape: "[clip-path:polygon(50%_0%,0%_100%,100%_100%)]" },
 ];
 
 const LEVELS = [
@@ -315,11 +315,17 @@ export const ColorSequenceGame = ({ open, onOpenChange, onWin }: Props) => {
                       type="button"
                       disabled={gameState !== "input"}
                       onClick={() => handleColorTap(color.id)}
-                      className={`aspect-square rounded-2xl transition-all duration-150 border-2 border-white/10 ${
-                        isActive ? `${color.active} scale-95 shadow-lg` : color.className
-                      } ${gameState === "input" ? "hover:scale-105 cursor-pointer" : "cursor-default"}`}
+                      className={`aspect-square flex items-center justify-center transition-all duration-150 ${
+                        gameState === "input" ? "hover:scale-105 cursor-pointer" : "cursor-default"
+                      }`}
                       aria-label={color.name}
-                    />
+                    >
+                      <span
+                        className={`w-3/4 h-3/4 border-2 border-white/10 transition-all duration-150 ${color.shape} ${
+                          isActive ? `${color.active} scale-95 shadow-lg` : color.className
+                        }`}
+                      />
+                    </button>
                   );
                 })}
               </div>
@@ -353,7 +359,7 @@ export const ColorSequenceGame = ({ open, onOpenChange, onWin }: Props) => {
                     {sequence.map((id, i) => (
                       <span
                         key={i}
-                        className={`w-8 h-8 rounded-md ${COLORS[id].className} border border-white/10`}
+                        className={`w-8 h-8 ${COLORS[id].shape} ${COLORS[id].className} border border-white/10`}
                       />
                     ))}
                   </div>
