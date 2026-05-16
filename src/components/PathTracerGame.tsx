@@ -79,7 +79,7 @@ export const getGameProgress = () => {
   }
 };
 
-const saveGameProgress = (level: number) => {
+export const saveGameProgress = (level: number) => {
   try {
     const existing = localStorage.getItem(STORAGE_KEY);
     let savedAt = Date.now();
