@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Brain, Zap, Hash, Palette } from "lucide-react";
+import { Brain, Zap, Hash, Palette, Eye, Route } from "lucide-react";
 import { MemoryGame } from "./MemoryGame";
 import { SymbolMatchGame } from "./SymbolMatchGame";
 import { FlashNumberGame } from "./FlashNumberGame";
 import { ColorSequenceGame } from "./ColorSequenceGame";
+import { ChimpTestGame } from "./ChimpTestGame";
+import { PathTracerGame } from "./PathTracerGame";
 import ocxLogo from "@/assets/ocx-logo.png";
 
 interface GameSelectorProps {
@@ -14,7 +16,7 @@ interface GameSelectorProps {
   onWin?: () => void;
 }
 
-type SelectedGame = "none" | "memory" | "symbol-match" | "flash-number" | "color-sequence";
+type SelectedGame = "none" | "memory" | "symbol-match" | "flash-number" | "color-sequence" | "chimp-test" | "path-tracer";
 
 export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) => {
   const [selectedGame, setSelectedGame] = useState<SelectedGame>("none");
@@ -72,6 +74,32 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
   if (selectedGame === "color-sequence") {
     return (
       <ColorSequenceGame
+        open={true}
+        onOpenChange={(isOpen) => {
+          handleGameClose(isOpen);
+          if (!isOpen) onOpenChange(false);
+        }}
+        onWin={onWin}
+      />
+    );
+  }
+
+  if (selectedGame === "chimp-test") {
+    return (
+      <ChimpTestGame
+        open={true}
+        onOpenChange={(isOpen) => {
+          handleGameClose(isOpen);
+          if (!isOpen) onOpenChange(false);
+        }}
+        onWin={onWin}
+      />
+    );
+  }
+
+  if (selectedGame === "path-tracer") {
+    return (
+      <PathTracerGame
         open={true}
         onOpenChange={(isOpen) => {
           handleGameClose(isOpen);
@@ -165,6 +193,42 @@ export const GameSelector = ({ open, onOpenChange, onWin }: GameSelectorProps) =
                   <h3 className="font-semibold">Color Sequence</h3>
                   <p className="text-xs text-muted-foreground">
                     Watch and repeat color patterns
+                  </p>
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 justify-start hover:border-primary hover:bg-primary/10 transition-all"
+              onClick={() => setSelectedGame("chimp-test")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-pink-500/20">
+                  <Eye className="h-6 w-6 text-pink-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold">Chimp Test</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Memorize numbers, then tap in order
+                  </p>
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-auto py-4 justify-start hover:border-primary hover:bg-primary/10 transition-all"
+              onClick={() => setSelectedGame("path-tracer")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-cyan-500/20">
+                  <Route className="h-6 w-6 text-cyan-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold">Path Tracer</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Watch the glowing path, then retrace it
                   </p>
                 </div>
               </div>
