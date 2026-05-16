@@ -17,8 +17,9 @@ const LEVELS = [
 ];
 
 const ROUNDS_PER_LEVEL = 5;
-const STORAGE_KEY = "path-tracer-game-progress";
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+export const STORAGE_KEY = "path-tracer-game-progress";
+export const STORAGE_RESET_MS = 24 * 60 * 60 * 1000;
+const TWENTY_FOUR_HOURS = STORAGE_RESET_MS;
 
 interface GameProgress {
   unlockedLevel: number;
