@@ -17,8 +17,9 @@ const LEVELS = [
 ];
 
 const ROUNDS_PER_LEVEL = 5;
-const STORAGE_KEY = "path-tracer-game-progress";
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+export const STORAGE_KEY = "path-tracer-game-progress";
+export const STORAGE_RESET_MS = 24 * 60 * 60 * 1000;
+const TWENTY_FOUR_HOURS = STORAGE_RESET_MS;
 
 interface GameProgress {
   unlockedLevel: number;
@@ -59,7 +60,7 @@ const generatePath = (grid: number, length: number): number[] => {
   return Array.from({ length }, (_, i) => i % total);
 };
 
-const getGameProgress = () => {
+export const getGameProgress = () => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return { unlockedLevel: 1, timeRemaining: 0 };
@@ -78,7 +79,7 @@ const getGameProgress = () => {
   }
 };
 
-const saveGameProgress = (level: number) => {
+export const saveGameProgress = (level: number) => {
   try {
     const existing = localStorage.getItem(STORAGE_KEY);
     let savedAt = Date.now();
