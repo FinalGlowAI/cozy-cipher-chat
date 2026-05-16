@@ -60,7 +60,7 @@ const generatePath = (grid: number, length: number): number[] => {
   return Array.from({ length }, (_, i) => i % total);
 };
 
-const getGameProgress = () => {
+export const getGameProgress = () => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return { unlockedLevel: 1, timeRemaining: 0 };
