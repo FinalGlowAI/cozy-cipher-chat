@@ -4,17 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MessageSquare, Image, Users, Gamepad2, Shield, Key, Clock, Zap } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
-import textEncryptionVideo from "@/assets/feature-text-encryption.mp4";
-import imageEncryptionVideo from "@/assets/feature-image-encryption.mp4";
-import ephemeralRoomsVideo from "@/assets/feature-ephemeral-rooms.mp4";
-import creditsGamesVideo from "@/assets/feature-credits-games.mp4";
+import textEncryptionImage from "@/assets/feature-text-encryption.jpg";
+import imageEncryptionImage from "@/assets/feature-image-encryption.jpg";
+import ephemeralRoomsImage from "@/assets/feature-ephemeral-rooms.jpg";
+import creditsGamesImage from "@/assets/feature-credits-games.jpg";
 
 const features = [
   {
     id: "text-encryption",
     title: "Text Encryption",
     description: "AES-256-GCM encryption for your messages",
-    video: textEncryptionVideo,
+    image: textEncryptionImage,
     icon: MessageSquare,
     badge: null,
     details: [
@@ -28,7 +28,7 @@ const features = [
     id: "image-encryption",
     title: "Image Encryption",
     description: "Secure image sharing with unique 6-character codes",
-    video: imageEncryptionVideo,
+    image: imageEncryptionImage,
     icon: Image,
     badge: "Premium",
     details: [
@@ -42,7 +42,7 @@ const features = [
     id: "ephemeral-rooms",
     title: "Ephemeral Rooms",
     description: "Temporary encrypted chat rooms that leave no trace",
-    video: ephemeralRoomsVideo,
+    image: ephemeralRoomsImage,
     icon: Users,
     badge: "Premium",
     details: [
@@ -56,7 +56,7 @@ const features = [
     id: "credits-games",
     title: "Gamified Credits",
     description: "Earn credits by playing brain-training games",
-    video: creditsGamesVideo,
+    image: creditsGamesImage,
     icon: Gamepad2,
     badge: null,
     details: [
@@ -116,14 +116,14 @@ const Features = () => {
                 className="border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden"
               >
                 <div className={`grid md:grid-cols-2 gap-6 ${index % 2 === 1 ? 'md:grid-flow-dense' : ''}`}>
-                  {/* Video Section */}
+                  {/* Image Section */}
                   <div className={`relative aspect-video ${index % 2 === 1 ? 'md:col-start-2' : ''}`}>
-                    <video
-                      src={feature.video}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
+                    <img
+                      src={feature.image}
+                      alt={feature.title}
+                      loading="lazy"
+                      width={1280}
+                      height={720}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
