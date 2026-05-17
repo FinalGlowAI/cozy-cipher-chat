@@ -14,7 +14,7 @@ const features = [
     id: "text-encryption",
     title: "Text Encryption",
     description: "AES-256-GCM encryption for your messages",
-    video: textEncryptionVideo,
+    image: textEncryptionImage,
     icon: MessageSquare,
     badge: null,
     details: [
@@ -28,7 +28,7 @@ const features = [
     id: "image-encryption",
     title: "Image Encryption",
     description: "Secure image sharing with unique 6-character codes",
-    video: imageEncryptionVideo,
+    image: imageEncryptionImage,
     icon: Image,
     badge: "Premium",
     details: [
@@ -42,7 +42,7 @@ const features = [
     id: "ephemeral-rooms",
     title: "Ephemeral Rooms",
     description: "Temporary encrypted chat rooms that leave no trace",
-    video: ephemeralRoomsVideo,
+    image: ephemeralRoomsImage,
     icon: Users,
     badge: "Premium",
     details: [
@@ -56,7 +56,7 @@ const features = [
     id: "credits-games",
     title: "Gamified Credits",
     description: "Earn credits by playing brain-training games",
-    video: creditsGamesVideo,
+    image: creditsGamesImage,
     icon: Gamepad2,
     badge: null,
     details: [
