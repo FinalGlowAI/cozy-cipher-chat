@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MessageSquare, Image, Users, Gamepad2, Shield, Key, Clock, Zap } from "lucide-react";
 import ocxLogo from "@/assets/ocx-logo.png";
-import textEncryptionVideo from "@/assets/feature-text-encryption.mp4";
-import imageEncryptionVideo from "@/assets/feature-image-encryption.mp4";
-import ephemeralRoomsVideo from "@/assets/feature-ephemeral-rooms.mp4";
-import creditsGamesVideo from "@/assets/feature-credits-games.mp4";
+import textEncryptionImage from "@/assets/feature-text-encryption.jpg";
+import imageEncryptionImage from "@/assets/feature-image-encryption.jpg";
+import ephemeralRoomsImage from "@/assets/feature-ephemeral-rooms.jpg";
+import creditsGamesImage from "@/assets/feature-credits-games.jpg";
 
 const features = [
   {
