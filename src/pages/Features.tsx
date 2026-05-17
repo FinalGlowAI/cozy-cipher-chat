@@ -116,14 +116,14 @@ const Features = () => {
                 className="border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden"
               >
                 <div className={`grid md:grid-cols-2 gap-6 ${index % 2 === 1 ? 'md:grid-flow-dense' : ''}`}>
-                  {/* Video Section */}
+                  {/* Image Section */}
                   <div className={`relative aspect-video ${index % 2 === 1 ? 'md:col-start-2' : ''}`}>
-                    <video
-                      src={feature.video}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
+                    <img
+                      src={feature.image}
+                      alt={feature.title}
+                      loading="lazy"
+                      width={1280}
+                      height={720}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
