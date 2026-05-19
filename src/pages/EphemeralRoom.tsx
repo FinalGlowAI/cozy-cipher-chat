@@ -253,6 +253,7 @@ const EphemeralRoom = () => {
   }, [roomId, userColor, roomCode, navigate]);
 
   useEffect(() => {
+    messagesRef.current = messages;
     if (isInitialLoad.current && messages.length > 0) {
       scrollToBottom();
       isInitialLoad.current = false;
