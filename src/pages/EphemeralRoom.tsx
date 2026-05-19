@@ -67,6 +67,7 @@ const EphemeralRoom = () => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isInitialLoad = useRef(true);
+  const messagesRef = useRef<Message[]>([]);
   
   
 
