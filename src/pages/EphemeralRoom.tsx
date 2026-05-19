@@ -104,6 +104,52 @@ const EphemeralRoom = () => {
     };
   }, [roomCode]);
 
+  // Disable browser pull-to-refresh ONLY while inside the ephemeral room
+  useEffect(() => {
+    const prevHtml = document.documentElement.style.overscrollBehaviorY;
+    const prevBody = document.body.style.overscrollBehaviorY;
+    document.documentElement.style.overscrollBehaviorY = "contain";
+    document.body.style.overscrollBehaviorY = "contain";
+    return () => {
+      document.documentElement.style.overscrollBehaviorY = prevHtml;
+      document.body.style.overscrollBehaviorY = prevBody;
+    };
+  }, []);
+
+  // Auto-refresh: fetch new messages every 3 seconds without disturbing the input
+  useEffect(() => {
+    if (!roomId) return;
+    const interval = setInterval(async () => {
+      try {
+        // Determine latest known timestamp; fetch only newer messages
+        const latestTs = messagesRef.current.length > 0
+          ? messagesRef.current[messagesRef.current.length - 1].created_at
+          : new Date(0).toISOString();
+
+        const { data, error } = await supabase
+          .from("ephemeral_messages")
+          .select("*")
+          .eq("room_id", roomId)
+          .gt("created_at", latestTs)
+          .order("created_at", { ascending: true })
+          .limit(MESSAGES_PER_PAGE);
+
+        if (error || !data || data.length === 0) return;
+
+        setMessages((current) => {
+          const existingIds = new Set(current.map((m) => m.id));
+          const fresh = (data as Message[]).filter((m) => !existingIds.has(m.id));
+          if (fresh.length === 0) return current;
+          return [...current, ...fresh];
+        });
+      } catch (err) {
+        console.error("[EphemeralRoom] Auto-refresh error:", err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [roomId]);
+
   useEffect(() => {
     if (!roomId || !userColor) return;
 
