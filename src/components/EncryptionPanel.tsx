@@ -109,22 +109,31 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           celebrate();
           return;
         } else if (secureMode) {
-          const expirationMinutes = keyValidity === "never" ? undefined : parseInt(keyValidity);
-          const { encrypted, key } = await encryptWithKey(inputText, expirationMinutes);
-          setOutputText(encrypted);
-          setDecryptionKey(key);
-          setLastEncryptionType("secure");
-        } else {
-          // Standard mode with user password
+          // Secure mode - password-based AES-256-GCM encryption
           if (!password || password.length < 8) {
             toast.error("Please enter a password (at least 8 characters)");
             return;
           }
-          // Check for password strength
           const hasUppercase = /[A-Z]/.test(password);
           const hasLowercase = /[a-z]/.test(password);
           const hasNumber = /[0-9]/.test(password);
-          
+          if (!hasUppercase || !hasLowercase || !hasNumber) {
+            toast.error("Password must contain uppercase, lowercase, and a number");
+            return;
+          }
+          const encrypted = await encryptText(inputText, password);
+          setOutputText(encrypted);
+          setDecryptionKey("");
+          setLastEncryptionType("secure");
+        } else {
+          // Fallback: standard password mode
+          if (!password || password.length < 8) {
+            toast.error("Please enter a password (at least 8 characters)");
+            return;
+          }
+          const hasUppercase = /[A-Z]/.test(password);
+          const hasLowercase = /[a-z]/.test(password);
+          const hasNumber = /[0-9]/.test(password);
           if (!hasUppercase || !hasLowercase || !hasNumber) {
             toast.error("Password must contain uppercase, lowercase, and a number");
             return;
