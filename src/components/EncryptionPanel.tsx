@@ -367,34 +367,33 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
       {/* Encryption Mode Selector - Only show in encrypt mode */}
       {mode === "encrypt" && (
         <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20">
-          {/* Keyless Mode Toggle */}
+          {/* Secure Mode Toggle (keyless is default when OFF) */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Zap className="h-5 w-5 text-accent" />
+              <ShieldCheck className="h-5 w-5 text-primary" />
               <div>
-                <Label htmlFor="keyless-mode" className="text-base font-medium">
-                  Keyless Mode
+                <Label htmlFor="secure-mode" className="text-base font-medium">
+                  Secure Mode
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Encrypt without password - anyone can decrypt
+                  {secureMode
+                    ? "Protect your message with your own password"
+                    : "Keyless mode is on - anyone can decrypt without a password"}
                 </p>
               </div>
             </div>
             <Switch
-              id="keyless-mode"
-              checked={keylessMode}
+              id="secure-mode"
+              checked={secureMode}
               onCheckedChange={(checked) => {
-                setKeylessMode(checked);
-                if (checked) setSecureMode(false);
+                setSecureMode(checked);
+                setKeylessMode(!checked);
               }}
             />
           </div>
 
-          {/* Secure Mode now uses Your Password only */}
-
-          
-          {/* Password input for standard mode (not keyless, not secure) */}
-          {!keylessMode && !secureMode && (
+          {/* Password input when Secure Mode is ON */}
+          {secureMode && (
             <div className="mt-4 pt-4 border-t border-primary/20">
               <div className="flex items-center gap-2 mb-3">
                 <KeyRound className="h-4 w-4 text-primary" />
@@ -441,7 +440,6 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
               </p>
             </div>
           )}
-          
         </Card>
       )}
 
