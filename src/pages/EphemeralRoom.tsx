@@ -62,12 +62,15 @@ const EphemeralRoom = () => {
   const [kickedUsers, setKickedUsers] = useState<Set<string>>(new Set());
   const [kickedUserDetails, setKickedUserDetails] = useState<{ user_id: string; kicked_at: string; color?: string }[]>([]);
   const [showKickedPanel, setShowKickedPanel] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isAtBottom, setIsAtBottom] = useState(true);
   const kickedUsersRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isInitialLoad = useRef(true);
   const messagesRef = useRef<Message[]>([]);
+  const isAtBottomRef = useRef(true);
   
   
 
