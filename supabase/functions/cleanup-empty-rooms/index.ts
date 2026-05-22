@@ -10,23 +10,14 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  // FIX: protect this endpoint with a shared secret
-  // Set CLEANUP_SECRET in your Supabase Edge Function environment variables.
-  // Then call this function with the header: x-cleanup-secret: <your-secret>
-  // Your Supabase cron job should include this header too.
+  // Require shared secret — fail closed when secret is not configured
   const cleanupSecret = Deno.env.get('CLEANUP_SECRET')
-  if (cleanupSecret) {
-    const providedSecret = req.headers.get('x-cleanup-secret')
-    if (!providedSecret || providedSecret !== cleanupSecret) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-  } else {
-    // No secret configured — log a warning but allow through so existing
-    // cron jobs don't break while you set up the secret.
-    console.warn('[cleanup-empty-rooms] WARNING: CLEANUP_SECRET is not set. Endpoint is unprotected.')
+  const providedSecret = req.headers.get('x-cleanup-secret')
+  if (!cleanupSecret || !providedSecret || providedSecret !== cleanupSecret) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 
   try {
@@ -35,13 +26,11 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Delete messages from rooms that haven't had activity in the last hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-
+    // Only delete rooms that have actually expired (24h TTL)
     const { data: oldRooms, error: roomsError } = await supabaseClient
       .from('ephemeral_rooms')
       .select('id')
-      .lt('created_at', oneHourAgo)
+      .lt('expires_at', new Date().toISOString())
 
     if (roomsError) throw roomsError
 
