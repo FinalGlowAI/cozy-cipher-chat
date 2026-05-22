@@ -256,16 +256,29 @@ const EphemeralRoom = () => {
   }, [roomId, userColor, roomCode, navigate]);
 
   useEffect(() => {
+    const prevLen = messagesRef.current.length;
     messagesRef.current = messages;
     if (isInitialLoad.current && messages.length > 0) {
       scrollToBottom();
       isInitialLoad.current = false;
+      return;
     }
-  }, [messages]);
+    if (messages.length > prevLen) {
+      const newOnes = messages.slice(prevLen);
+      const onlyMine = newOnes.every((m) => m.user_id === currentUserId);
+      if (isAtBottomRef.current || onlyMine) {
+        scrollToBottom();
+      } else {
+        setUnreadCount((c) => c + newOnes.length);
+      }
+    }
+  }, [messages, currentUserId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setUnreadCount(0);
   };
+
 
   const loadMoreMessages = useCallback(async () => {
     if (!roomId || loadingMore || !hasMore || messages.length === 0) return;
