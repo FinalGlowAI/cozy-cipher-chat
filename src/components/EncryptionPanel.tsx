@@ -153,22 +153,13 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         return;
       }
 
-      if (secureMode) {
-        if (!decryptionKey.trim()) {
-          toast.error("This message requires a decryption key. Please enter the key to decrypt.");
-          return;
-        }
-        decrypted = await decryptWithKey(inputText, decryptionKey);
-        setLastEncryptionType("secure");
-      } else {
-        // Standard mode with user password
-        if (!password) {
-          toast.error("Please enter your password to decrypt the message");
-          return;
-        }
-        decrypted = await decryptText(inputText, password);
-        setLastEncryptionType("password");
+      // Both secure mode and standard mode use password-based decryption
+      if (!password) {
+        toast.error("Please enter your password to decrypt the message");
+        return;
       }
+      decrypted = await decryptText(inputText, password);
+      setLastEncryptionType(secureMode ? "secure" : "password");
 
       // If we don't get a real plaintext back, don't claim success.
       if (!decrypted || !decrypted.trim()) {
