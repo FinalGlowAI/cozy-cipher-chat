@@ -443,36 +443,29 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
         </Card>
       )}
 
-      {/* Decrypt Mode Options */}
-      {mode === "decrypt" && detectedKeyless !== true && (
+      {/* Decrypt Mode Options - only show password card when a password-required message is detected */}
+      {mode === "decrypt" && detectedKeyless === false && inputText.trim() && (
         <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20">
-          <p className="text-xs text-muted-foreground mb-3 p-2 bg-accent/10 rounded">
-            💡 <strong>Tip:</strong> Keyless messages are auto-detected and decrypted without any password.
-          </p>
-
-          {/* Password input for standard decrypt mode */}
-          <div className="mt-4 pt-4 border-t border-primary/20">
-            <div className="flex items-center gap-2 mb-3">
-              <KeyRound className="h-4 w-4 text-primary" />
-              <Label className="text-sm font-medium">Your Password</Label>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password to decrypt"
-                className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setShowPassword(!showPassword)}
-                title={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-            </div>
+          <div className="flex items-center gap-2 mb-3">
+            <KeyRound className="h-4 w-4 text-primary" />
+            <Label className="text-sm font-medium">Your Password</Label>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password to decrypt"
+              className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setShowPassword(!showPassword)}
+              title={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
           </div>
         </Card>
       )}
