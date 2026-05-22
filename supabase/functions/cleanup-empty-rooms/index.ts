@@ -26,13 +26,11 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Delete messages from rooms that haven't had activity in the last hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-
+    // Only delete rooms that have actually expired (24h TTL)
     const { data: oldRooms, error: roomsError } = await supabaseClient
       .from('ephemeral_rooms')
       .select('id')
-      .lt('created_at', oneHourAgo)
+      .lt('expires_at', new Date().toISOString())
 
     if (roomsError) throw roomsError
 
