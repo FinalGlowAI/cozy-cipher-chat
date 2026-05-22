@@ -62,12 +62,15 @@ const EphemeralRoom = () => {
   const [kickedUsers, setKickedUsers] = useState<Set<string>>(new Set());
   const [kickedUserDetails, setKickedUserDetails] = useState<{ user_id: string; kicked_at: string; color?: string }[]>([]);
   const [showKickedPanel, setShowKickedPanel] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isAtBottom, setIsAtBottom] = useState(true);
   const kickedUsersRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isInitialLoad = useRef(true);
   const messagesRef = useRef<Message[]>([]);
+  const isAtBottomRef = useRef(true);
   
   
 
@@ -253,16 +256,29 @@ const EphemeralRoom = () => {
   }, [roomId, userColor, roomCode, navigate]);
 
   useEffect(() => {
+    const prevLen = messagesRef.current.length;
     messagesRef.current = messages;
     if (isInitialLoad.current && messages.length > 0) {
       scrollToBottom();
       isInitialLoad.current = false;
+      return;
     }
-  }, [messages]);
+    if (messages.length > prevLen) {
+      const newOnes = messages.slice(prevLen);
+      const onlyMine = newOnes.every((m) => m.user_id === currentUserId);
+      if (isAtBottomRef.current || onlyMine) {
+        scrollToBottom();
+      } else {
+        setUnreadCount((c) => c + newOnes.length);
+      }
+    }
+  }, [messages, currentUserId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setUnreadCount(0);
   };
+
 
   const loadMoreMessages = useCallback(async () => {
     if (!roomId || loadingMore || !hasMore || messages.length === 0) return;
@@ -308,16 +324,24 @@ const EphemeralRoom = () => {
     }
   }, [roomId, loadingMore, hasMore, messages]);
 
-  // Handle scroll for infinite scroll
+  // Handle scroll for infinite scroll + bottom tracking
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
+
+    // Track if user is at bottom (within 80px threshold)
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const atBottom = distanceFromBottom < 80;
+    isAtBottomRef.current = atBottom;
+    setIsAtBottom(atBottom);
+    if (atBottom && unreadCount > 0) setUnreadCount(0);
 
     // Load more when scrolled near the top
     if (container.scrollTop < 100 && hasMore && !loadingMore) {
       loadMoreMessages();
     }
-  }, [hasMore, loadingMore, loadMoreMessages]);
+  }, [hasMore, loadingMore, loadMoreMessages, unreadCount]);
+
 
   const checkRoomAndLoadMessages = async () => {
     try {
@@ -720,6 +744,7 @@ const EphemeralRoom = () => {
       </div>
 
       {/* Messages Area */}
+      <div className="flex-1 relative overflow-hidden flex flex-col">
       <div 
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-4"
@@ -829,6 +854,20 @@ const EphemeralRoom = () => {
           <div ref={messagesEndRef} />
         </div>
       </div>
+
+      {/* New messages indicator */}
+      {!isAtBottom && unreadCount > 0 && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-glow-primary border border-primary-foreground/10 text-sm font-medium hover:scale-105 transition-transform animate-in fade-in slide-in-from-bottom-2"
+        >
+          <ChevronDown className="h-4 w-4" />
+          {unreadCount} new message{unreadCount !== 1 ? "s" : ""}
+        </button>
+      )}
+      </div>
+
+
 
       {/* Input Area */}
       <div className="p-4 border-t border-border bg-card/50 backdrop-blur-xl">
