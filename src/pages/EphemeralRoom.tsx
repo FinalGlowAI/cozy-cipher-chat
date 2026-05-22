@@ -744,6 +744,7 @@ const EphemeralRoom = () => {
       </div>
 
       {/* Messages Area */}
+      <div className="flex-1 relative overflow-hidden flex flex-col">
       <div 
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-4"
