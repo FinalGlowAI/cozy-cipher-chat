@@ -573,25 +573,6 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           placeholder={mode === "encrypt" ? "Encrypted text will appear here..." : "Decrypted text will appear here..."}
           className="min-h-[150px] resize-none bg-background/50 border-accent/30"
         />
-        {mode === "encrypt" && secureMode && decryptionKey && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-medium">Decryption Key</Label>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleCopy(decryptionKey)}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-            <Textarea
-              value={decryptionKey}
-              readOnly
-              className="min-h-[80px] resize-none bg-background/50 border-accent/30 font-mono text-sm"
-            />
-          </div>
-        )}
       </Card>
 
       {/* Tutorial Overlay */}
