@@ -324,16 +324,24 @@ const EphemeralRoom = () => {
     }
   }, [roomId, loadingMore, hasMore, messages]);
 
-  // Handle scroll for infinite scroll
+  // Handle scroll for infinite scroll + bottom tracking
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
+
+    // Track if user is at bottom (within 80px threshold)
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const atBottom = distanceFromBottom < 80;
+    isAtBottomRef.current = atBottom;
+    setIsAtBottom(atBottom);
+    if (atBottom && unreadCount > 0) setUnreadCount(0);
 
     // Load more when scrolled near the top
     if (container.scrollTop < 100 && hasMore && !loadingMore) {
       loadMoreMessages();
     }
-  }, [hasMore, loadingMore, loadMoreMessages]);
+  }, [hasMore, loadingMore, loadMoreMessages, unreadCount]);
+
 
   const checkRoomAndLoadMessages = async () => {
     try {
