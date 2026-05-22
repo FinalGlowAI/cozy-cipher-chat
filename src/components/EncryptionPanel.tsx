@@ -390,32 +390,8 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
             />
           </div>
 
-          {/* Secure Mode Toggle - Only show if keyless is off */}
-          {!keylessMode && (
-            <div className="mt-4 pt-4 border-t border-primary/20">
-              <div className="mb-3 px-3 py-2 rounded-md bg-primary/10 border border-primary/20 text-xs text-foreground/90">
-                <strong className="text-primary">Choose one:</strong> turn on <strong>Secure Mode</strong> to auto-generate a unique key, <em>or</em> leave it off and enter <strong>your own password</strong> below.
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                  <div>
-                    <Label htmlFor="secure-mode" className="text-base font-medium">
-                      Secure Mode
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Generate a unique key for enhanced security
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id="secure-mode"
-                  checked={secureMode}
-                  onCheckedChange={setSecureMode}
-                />
-              </div>
-            </div>
-          )}
+          {/* Secure Mode now uses Your Password only */}
+
           
           {/* Password input for standard mode (not keyless, not secure) */}
           {!keylessMode && !secureMode && (
