@@ -444,7 +444,7 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
       )}
 
       {/* Decrypt Mode Options */}
-      {mode === "decrypt" && (
+      {mode === "decrypt" && detectedKeyless !== true && (
         <Card className="p-4 backdrop-blur-xl bg-card/50 border-primary/20">
           <p className="text-xs text-muted-foreground mb-3 p-2 bg-accent/10 rounded">
             💡 <strong>Tip:</strong> Keyless messages are auto-detected and decrypted without any password.
