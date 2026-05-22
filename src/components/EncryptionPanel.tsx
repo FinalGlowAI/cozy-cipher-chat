@@ -442,41 +442,6 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
             </div>
           )}
           
-          {/* Key Validity Selector - Only show with secure mode enabled */}
-          {!keylessMode && secureMode && (
-            <div className="mt-4 pt-4 border-t border-primary/20">
-              <div className="flex items-center gap-2 mb-3">
-                <Clock className="h-4 w-4 text-primary" />
-                <Label className="text-sm font-medium">Key Validity Duration</Label>
-              </div>
-              <RadioGroup value={keyValidity} onValueChange={setKeyValidity} className="grid grid-cols-3 gap-3">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="5" id="5min" />
-                  <Label htmlFor="5min" className="text-sm cursor-pointer">5 min</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="15" id="15min" />
-                  <Label htmlFor="15min" className="text-sm cursor-pointer">15 min</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="30" id="30min" />
-                  <Label htmlFor="30min" className="text-sm cursor-pointer">30 min</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="60" id="1h" />
-                  <Label htmlFor="1h" className="text-sm cursor-pointer">1 hour</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="720" id="12h" />
-                  <Label htmlFor="12h" className="text-sm cursor-pointer">12 hours</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="never" id="never" />
-                  <Label htmlFor="never" className="text-sm cursor-pointer">Never</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
         </Card>
       )}
 
