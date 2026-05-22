@@ -511,17 +511,6 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
           placeholder={mode === "encrypt" ? "Type your message here..." : "Paste encrypted text here..."}
           className="min-h-[150px] resize-none bg-background/50 border-primary/30 focus:border-primary"
         />
-        {mode === "decrypt" && secureMode && (
-          <div className="mt-4">
-            <Label className="text-sm font-medium mb-2 block">Decryption Key</Label>
-            <Textarea
-              value={decryptionKey}
-              onChange={(e) => setDecryptionKey(e.target.value)}
-              placeholder="Paste your decryption key here..."
-              className="min-h-[80px] resize-none bg-background/50 border-primary/30 focus:border-primary"
-            />
-          </div>
-        )}
       </Card>
 
       {/* Process Button */}
