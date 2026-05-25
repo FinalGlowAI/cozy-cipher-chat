@@ -15,6 +15,7 @@ import { useCredits } from "@/hooks/useCredits";
 import { celebrate } from "@/lib/confetti";
 
 import { EncryptionTutorial } from "./EncryptionTutorial";
+import { TapToReveal } from "./TapToReveal";
 import {
   Dialog,
   DialogContent,
