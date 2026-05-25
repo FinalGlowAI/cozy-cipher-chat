@@ -225,7 +225,7 @@ export const useCredits = () => {
       console.error("Error earning credits:", error);
       return false;
     }
-  }, []);
+  }, [fetchCredits]);
 
   // FIX: spendCredits now uses atomic RPC with FOR UPDATE lock — prevents double-spend
   const spendCredits = useCallback(async (amount: number, source: string): Promise<boolean> => {
