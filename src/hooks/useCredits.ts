@@ -171,8 +171,12 @@ export const useCredits = () => {
       fetchCredits();
     });
 
+    // FIX: unique channel name per hook instance — otherwise multiple
+    // useCredits() consumers (CreditDisplay + game dialogs) collide on the
+    // same topic, and unmounting one tears down realtime for the others.
+    const channelName = `user_credits_changes_${Math.random().toString(36).slice(2)}`;
     const channel = supabase
-      .channel("user_credits_changes")
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_credits" },
@@ -213,12 +217,15 @@ export const useCredits = () => {
       }));
 
       emitCreditsChanged();
+      // FIX: force DB-truth refetch so all hook instances converge on the
+      // same value (realtime can be flaky in mobile webviews / on reconnects).
+      fetchCredits();
       return true;
     } catch (error) {
       console.error("Error earning credits:", error);
       return false;
     }
-  }, []);
+  }, [fetchCredits]);
 
   // FIX: spendCredits now uses atomic RPC with FOR UPDATE lock — prevents double-spend
   const spendCredits = useCallback(async (amount: number, source: string): Promise<boolean> => {
