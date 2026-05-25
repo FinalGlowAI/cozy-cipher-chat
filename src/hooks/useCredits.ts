@@ -171,8 +171,12 @@ export const useCredits = () => {
       fetchCredits();
     });
 
+    // FIX: unique channel name per hook instance — otherwise multiple
+    // useCredits() consumers (CreditDisplay + game dialogs) collide on the
+    // same topic, and unmounting one tears down realtime for the others.
+    const channelName = `user_credits_changes_${Math.random().toString(36).slice(2)}`;
     const channel = supabase
-      .channel("user_credits_changes")
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_credits" },
