@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { RouteTracker } from "./components/RouteTracker";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { PrivacyShield } from "./components/PrivacyShield";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -31,6 +32,7 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <PrivacyShield />
         <Toaster />
         <Sonner />
         <BrowserRouter>
