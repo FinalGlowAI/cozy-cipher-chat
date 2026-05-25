@@ -15,6 +15,7 @@ import { useCredits } from "@/hooks/useCredits";
 import { celebrate } from "@/lib/confetti";
 
 import { EncryptionTutorial } from "./EncryptionTutorial";
+import { TapToReveal } from "./TapToReveal";
 import {
   Dialog,
   DialogContent,
@@ -567,12 +568,23 @@ export const EncryptionPanel = ({ onOpenGames }: EncryptionPanelProps) => {
             </Button>
           </div>
         </div>
-        <Textarea
-          value={outputText}
-          readOnly
-          placeholder={mode === "encrypt" ? "Encrypted text will appear here..." : "Decrypted text will appear here..."}
-          className="min-h-[150px] resize-none bg-background/50 border-accent/30"
-        />
+        {mode === "decrypt" && outputText ? (
+          <TapToReveal label="Tap to reveal decrypted message">
+            <Textarea
+              value={outputText}
+              readOnly
+              placeholder="Decrypted text will appear here..."
+              className="min-h-[150px] resize-none bg-background/50 border-accent/30"
+            />
+          </TapToReveal>
+        ) : (
+          <Textarea
+            value={outputText}
+            readOnly
+            placeholder={mode === "encrypt" ? "Encrypted text will appear here..." : "Decrypted text will appear here..."}
+            className="min-h-[150px] resize-none bg-background/50 border-accent/30"
+          />
+        )}
       </Card>
 
       {/* Tutorial Overlay */}
