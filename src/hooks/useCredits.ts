@@ -217,6 +217,9 @@ export const useCredits = () => {
       }));
 
       emitCreditsChanged();
+      // FIX: force DB-truth refetch so all hook instances converge on the
+      // same value (realtime can be flaky in mobile webviews / on reconnects).
+      fetchCredits();
       return true;
     } catch (error) {
       console.error("Error earning credits:", error);
