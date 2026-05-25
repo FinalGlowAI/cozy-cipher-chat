@@ -17,6 +17,7 @@ import { useCredits } from "@/hooks/useCredits";
 import { celebrate } from "@/lib/confetti";
 
 import { GameSelector } from "@/components/GameSelector";
+import { TapToReveal } from "@/components/TapToReveal";
 import {
   Dialog,
   DialogContent,
