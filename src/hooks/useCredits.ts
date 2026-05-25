@@ -177,7 +177,8 @@ export const useCredits = () => {
     };
   }, [fetchCredits]);
 
-  // FIX: earnCredits now uses atomic RPC — no more SELECT + UPDATE race condition
+  // Award credits through the authenticated backend function. The database RPCs
+  // are intentionally service-only, so the client must not call them directly.
   const earnCredits = useCallback(async (level: number, source: string): Promise<boolean> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -225,7 +226,8 @@ export const useCredits = () => {
     }
   }, [fetchCredits]);
 
-  // FIX: spendCredits now uses atomic RPC with FOR UPDATE lock — prevents double-spend
+  // Spend credits through the authenticated backend function. The database
+  // function still performs the atomic FOR UPDATE balance check server-side.
   const spendCredits = useCallback(async (amount: number, source: string): Promise<boolean> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
