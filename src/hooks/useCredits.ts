@@ -25,6 +25,30 @@ const LEVEL_CREDITS: Record<number, number> = {
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 const DAILY_FREE_CREDITS = 10;
 
+type CreditRow = {
+  total_credits: number;
+  lifetime_earned: number;
+  last_decay_at: string;
+};
+
+type ManageCreditsResponse = {
+  success?: boolean;
+  amount?: number;
+  alreadyAwarded?: boolean;
+  credits?: CreditRow | null;
+  error?: string;
+};
+
+const getNextGrantTime = (lastDecayAt: string | Date) =>
+  new Date(new Date(lastDecayAt).getTime() + TWENTY_FOUR_HOURS);
+
+const invokeManageCredits = async (body: Record<string, unknown>) => {
+  const { data, error } = await supabase.functions.invoke<ManageCreditsResponse>("manage-credits", { body });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
+};
+
 // NOTE: Credits are NEVER reduced automatically.
 // The `last_decay_at` DB column is a legacy name — it only tracks
 // the last daily-top-up cycle reset. No decay/reduction logic exists.
@@ -64,74 +88,37 @@ export const useCredits = () => {
 
         // Check if 24 hours have passed — top up to minimum 10 if below
         if (timeSinceDecay >= TWENTY_FOUR_HOURS) {
-          const currentBalance = data.total_credits;
+          const result = await invokeManageCredits({ action: "daily_topup" });
+          const refreshed = result?.credits;
 
-          if (currentBalance < DAILY_FREE_CREDITS) {
-            const topUpAmount = DAILY_FREE_CREDITS - currentBalance;
-
-            const { error: rpcError } = await supabase.rpc("earn_credits", {
-              p_user_id: user.id,
-              p_amount: topUpAmount,
-              p_source: "daily_topup",
-            });
-
-            if (!rpcError) {
-              toast.info(`Daily top-up: +${topUpAmount} credits!`);
-              showNotification(
-                "Daily Top-Up! 🎁",
-                `Your credits were topped up to ${DAILY_FREE_CREDITS}. Play games to earn more!`,
-                { tag: "daily-credits" }
-              );
-            } else {
-              console.error("Error granting daily credits:", rpcError);
-            }
+          if ((result?.amount ?? 0) > 0) {
+            toast.info(`Daily top-up: +${result.amount} credits!`);
+            showNotification(
+              "Daily Top-Up! 🎁",
+              `Your credits were topped up to ${DAILY_FREE_CREDITS}. Play games to earn more!`,
+              { tag: "daily-credits" }
+            );
           }
 
-          // Always update last_decay_at to reset the 24h timer
-          await supabase
-            .from("user_credits")
-            .update({ last_decay_at: now.toISOString() })
-            .eq("user_id", user.id);
-
-          // Re-fetch to get the updated balance
-          const { data: refreshed } = await supabase
-            .from("user_credits")
-            .select("*")
-            .eq("user_id", user.id)
-            .single();
-
           setState({
-            totalCredits: refreshed?.total_credits ?? Math.max(currentBalance, DAILY_FREE_CREDITS),
+            totalCredits: refreshed?.total_credits ?? data.total_credits,
             lifetimeEarned: refreshed?.lifetime_earned ?? data.lifetime_earned,
             loading: false,
-            decayTime: new Date(now.getTime() + TWENTY_FOUR_HOURS),
+            decayTime: refreshed?.last_decay_at ? getNextGrantTime(refreshed.last_decay_at) : new Date(now.getTime() + TWENTY_FOUR_HOURS),
           });
         } else {
-          const nextGrantTime = new Date(lastDecayAt.getTime() + TWENTY_FOUR_HOURS);
           setState({
             totalCredits: data.total_credits,
             lifetimeEarned: data.lifetime_earned,
             loading: false,
-            decayTime: nextGrantTime,
+            decayTime: getNextGrantTime(lastDecayAt),
           });
         }
       } else {
         // Create initial credits record
         const now = new Date();
-        const { data: newData, error: insertError } = await supabase
-          .from("user_credits")
-          .insert({
-            user_id: user.id,
-            total_credits: 0,
-            lifetime_earned: 0,
-            last_decay_at: now.toISOString(),
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error("Error creating credits record:", insertError);
-        }
+        const result = await invokeManageCredits({ action: "daily_topup" });
+        const newData = result?.credits;
 
         setState({
           totalCredits: newData?.total_credits ?? 0,
