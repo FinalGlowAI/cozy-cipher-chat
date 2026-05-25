@@ -433,11 +433,14 @@ const ImageEncryption = () => {
               {decryptedImage && (
                 <div className="border border-border rounded-lg p-4">
                   <Label className="mb-2 block">Decrypted Image</Label>
-                  <img
-                    src={decryptedImage}
-                    alt="Decrypted"
-                    className="max-w-full rounded-lg mx-auto"
-                  />
+                  <TapToReveal label="Tap to reveal decrypted image">
+                    <img
+                      src={decryptedImage}
+                      alt="Decrypted"
+                      className="max-w-full rounded-lg mx-auto"
+                      draggable={false}
+                    />
+                  </TapToReveal>
                 </div>
               )}
             </div>
