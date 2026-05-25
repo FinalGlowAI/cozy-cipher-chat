@@ -185,29 +185,40 @@ export const useCredits = () => {
 
       const amount = LEVEL_CREDITS[level] || 5;
 
-      const { error } = await supabase.rpc("earn_credits", {
-        p_user_id: user.id,
-        p_amount: amount,
-        p_source: source,
+      const result = await invokeManageCredits({
+        action: "earn_game",
+        level,
+        source,
       });
 
-      if (error) {
-        console.error("Error earning credits:", error);
+      if (!result?.success) {
+        console.error("Error earning credits:", result?.error);
         return false;
       }
 
-      // Optimistic local update — realtime will reconcile if needed
-      setState(prev => ({
-        ...prev,
-        totalCredits: prev.totalCredits + amount,
-        lifetimeEarned: prev.lifetimeEarned + amount,
-      }));
+      const awardedAmount = result.amount ?? amount;
+
+      if (result.credits) {
+        setState(prev => ({
+          ...prev,
+          totalCredits: result.credits?.total_credits ?? prev.totalCredits,
+          lifetimeEarned: result.credits?.lifetime_earned ?? prev.lifetimeEarned,
+          decayTime: result.credits?.last_decay_at ? getNextGrantTime(result.credits.last_decay_at) : prev.decayTime,
+        }));
+      } else if (awardedAmount > 0) {
+        // Fallback optimistic local update — explicit refetch below reconciles with DB truth
+        setState(prev => ({
+          ...prev,
+          totalCredits: prev.totalCredits + awardedAmount,
+          lifetimeEarned: prev.lifetimeEarned + awardedAmount,
+        }));
+      }
 
       emitCreditsChanged();
       // FIX: force DB-truth refetch so all hook instances converge on the
       // same value (realtime can be flaky in mobile webviews / on reconnects).
       fetchCredits();
-      return true;
+      return awardedAmount > 0;
     } catch (error) {
       console.error("Error earning credits:", error);
       return false;
@@ -226,20 +237,19 @@ export const useCredits = () => {
         return false;
       }
 
-      // FIX: atomic RPC uses SELECT FOR UPDATE + UPDATE in one transaction
-      const { data: success, error } = await supabase.rpc("spend_credits", {
-        p_user_id: user.id,
-        p_amount: amount,
-        p_source: source,
+      const result = await invokeManageCredits({
+        action: "spend",
+        amount,
+        source,
       });
 
-      if (error) {
-        console.error("Error spending credits:", error);
+      if (!result) {
+        console.error("Error spending credits: empty response");
         toast.error("Failed to process credits. Please try again.");
         return false;
       }
 
-      if (!success) {
+      if (!result.success) {
         // DB returned false — balance was actually insufficient (race condition caught)
         toast.error(`Not enough credits. You need ${amount} credits.`);
         // Refresh local state to sync with DB reality
@@ -247,13 +257,23 @@ export const useCredits = () => {
         return false;
       }
 
-      // Optimistic local update
-      setState(prev => ({
-        ...prev,
-        totalCredits: prev.totalCredits - amount,
-      }));
+      if (result.credits) {
+        setState(prev => ({
+          ...prev,
+          totalCredits: result.credits?.total_credits ?? prev.totalCredits,
+          lifetimeEarned: result.credits?.lifetime_earned ?? prev.lifetimeEarned,
+          decayTime: result.credits?.last_decay_at ? getNextGrantTime(result.credits.last_decay_at) : prev.decayTime,
+        }));
+      } else {
+        // Optimistic local update
+        setState(prev => ({
+          ...prev,
+          totalCredits: prev.totalCredits - amount,
+        }));
+      }
 
       emitCreditsChanged();
+      fetchCredits();
       return true;
     } catch (error) {
       console.error("Error spending credits:", error);
